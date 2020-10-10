@@ -1,0 +1,84 @@
+/* Toolbar Button Hover Brightening Effect */
+.toolbarbtn:hover { filter: brightness(1.1); }
+.toolbarbtn:hover { cursor: pointer; }
+
+/* File toolbar directory input */
+#filedirinput { display: inline; }
+
+/* General Toolbar spacing */
+.apptoolbar { margin: 0px 0px 0px 0px; border-top: 1px solid lightgray; border-bottom: 1px solid gray; padding: 1px 2px 1px 2px; }
+
+/* Snapshot List */
+#snapshotlist { margin: 1px 0px 1px 0px; padding: 0px; border: 1px solid gray; }
+.textcentered { width: 50%; margin: 0 auto; }
+.snapdarkheading { background-color: darkgray; }
+#snapnow { cursor: pointer; }
+
+/* Shortcuts & Files container */
+.appcontainer { padding: 0px; margin: 1px; border: 1px solid gray; }
+/* Column Headings */
+.snapheading { border: 0px 1px 0px 1px; border-color: solid fuchsia; padding: 1px 2px 1px 2px; }
+/* Column data */
+.snaprow { margin: 0px; padding: 1px 2px 1px 2px; }
+.snapcolumn { border: 0px 1px 0px 1px; border-color: solid lightgray; padding: 1px 2px 1px 2px; cursor: pointer; }
+.inclexclsel { background-color: gainsboro; }
+
+/* Profiles section */
+.appselectlabel { margin: 5px 2px 0px 0px; font-style: italic; }
+.appselect { display: inline; width: auto; margin: 0px 2px 0px 2px; }
+.settingsrow { margin: 2px; }
+
+.appinputlabel { font-style: italic; }
+.encryptinput { margin: 15px; }
+.smartremoverow { margin: 15px; }
+
+/* Default hide the SSH items */
+.modelocalencrypted, .modessh, .modesshencrypted { display: none; }
+
+/* classes for the Spinner - https://www.w3schools.com/howto/howto_css_loader.asp */
+.loader {
+  z-index: 1;
+  border: 4px solid #f3f3f3; /* Light grey */
+  border-top: 4px solid #000000; /* Blue #3498db */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 2s linear infinite;
+}
+
+.loaderlarge {
+  z-index: 1;
+  border: 12px solid #f3f3f3; /* Light grey */
+  border-top: 12px solid #000000; /* Blue #3498db */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.filebrowse {
+  margin-top: 2px;
+  display: none;
+  padding: 0px;
+  background-color: white;
+  border: 1px solid black;
+}
+.filebrowseinner {
+  margin: 2px;
+  border: 1px solid black;
+  padding: 2px;
+  border-radius: 5px;
+}
+.filebrowsehead {}
+.filebrowsebody { 
+  margin-left: 0px; 
+  }
+.filebrowsebuttons {
+  margin: 2px;
+  padding: 2px;
+}

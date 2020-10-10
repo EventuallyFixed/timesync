@@ -1,0 +1,20 @@
+Package: TimeSync
+Section: Apps
+Version: 0.01
+Packager: Steven Tierney
+Email: st101@tiernet.co.uk
+Homepage: http://support.timesync.com
+Description: An incremental backup system for the WD NAS, based on rsync
+AddonShowName: TimeSync
+Icon: timesync.png
+AddonIndexPage: index.html
+AddonUsedPort: 8900
+InstDepend:
+InstConflict:
+StartDepend:
+StartConflict:
+CenterType: 0
+UserControl: 1
+MinFWVer:
+MaxFWVer:
+IndividualFlag: Note: Support for each App should be obtained through the developer directly.
