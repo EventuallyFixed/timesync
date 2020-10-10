@@ -1,4 +1,4 @@
-# timesync
+# TimeSync
 An incremental backup system for WD Personal Cloud devices
 
 # Why
