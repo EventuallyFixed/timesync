@@ -1,13 +1,16 @@
 # TimeSync
-An incremental backup system for WD Personal Cloud devices
+An incremental backup system for [Western Digital Personal Cloud](https://shop.westerndigital.com/en-gb/c/nas-and-cloud-storage) devices.
 
 # Why
-Because the only backup options for the WD Personal Cloud devices are either one-time copies, or online, paid-for services.
+Because the only backup options for these devices are either one-time copies, or online, paid-for services.
 
 # Aim
-- To create a user-friendly, and incremental backup system.
-- To use only the software that is bundled with the devices.
-- To have a mobile friendly, modern User Interface.
+- To create a user-friendly, and incremental, backup system.
+- To use only the software that is bundled with the device.
+- To have a mobile friendly, modern, User Interface.
+
+# Inspiration
+The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 
 # Technologies
 - HTML
@@ -16,6 +19,7 @@ Because the only backup options for the WD Personal Cloud devices are either one
 - PHP
 - SQLite
 - rSync
+- csh
 
 # Development status
 - Ongoing
