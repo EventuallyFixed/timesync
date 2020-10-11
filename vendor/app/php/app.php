@@ -141,6 +141,250 @@ function getFileSpecId($ProfileId, $InclExcl, $Pattern) {
   return $rtn;
 }
 
+function delProfile($ProfileId) {
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    $ret = $db->exec("DELETE FROM profiles WHERE id = ".$ProfileId.";");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Profile Deleted";
+    }
+  }
+  return $arr;
+}
+
+function delProfileSettings($ProfileId) {
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    $ret = $db->exec("DELETE FROM profilesettings WHERE profileid = ".$ProfileId.";");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Profile Settings Deleted";
+    }
+  }
+  return $arr;
+}
+
+function db_create_schema() {
+  $db = new MyDB();
+  $arr = array();
+
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+
+    $sql =<<<EOF
+      CREATE TABLE IF NOT EXISTS profiles (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profilename                   CHAR(250) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS profilesettings (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profileid                     INTEGER NOT NULL,
+        profilekey                    CHAR(50) NOT NULL,
+        profilevalue                  CHAR(250) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS snapshots (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profileid                     INTEGER NOT NULL,
+        basepath                      TEXT    NOT NULL,
+        description                   TEXT    NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS appversion (
+        appversion                    CHAR(50)  NOT NULL
+      );
+
+      CREATE TEMP TABLE IF NOT EXISTS variables (
+        varname                       CHAR(50)  NOT NULL,
+        varvalue                      CHAR(250) NOT NULL
+      );
+EOF;
+
+    $ret = $db->exec($sql);
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Init success";
+    }
+    $db->close();
+  }
+
+  return $arr;
+} // db_create_schema
+
+
+function insertProfile($ProfileName) {
+  // Create a profile, and return the ID & description
+
+  $arr = array();
+  // Does it exist?
+  $ProfileId = getProfileId($ProfileName);
+
+  // No profile on file, so create
+  if ($ProfileId <= 0) {
+
+    $db = new MyDB();
+
+    if(!$db) {
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    } else {
+      $ret = $db->exec("INSERT INTO profiles (profilename) VALUES ('".$ProfileName."');");
+      if(!$ret){
+        $arr["result"] = "ko";
+        $arr["message"] = $db->lastErrorMsg();
+      }
+    }
+    $db->close();
+
+    // Does it exist
+    $ProfileId = getProfileId($ProfileName);
+    if ($ProfileId > 0) {
+      // Set some default values
+      $DefaultsArr = insertDefaultProfileValues($ProfileId);
+
+      $arr["result"] = "ok";
+      $arr["message"] = "Profile Created";
+      $arr["id"] = $ProfileId;
+      $arr["defaults"] = $DefaultsArr;
+    }
+  }
+
+  return $arr;
+}
+
+function createDefaultProfile() {
+  return insertProfile("Default");
+}
+
+function insertDefaultProfileValues($ProfileId) {
+
+  $arr = array();
+
+  $arr["settingssaveto"] = insertProfileValue($ProfileId, "settingssaveto", "/shares/backup");
+  $arr["selectmode"] = insertProfileValue($ProfileId, "selectmode", "modelocal");
+  $arr["settingshost"] = insertProfileValue($ProfileId, "settingshost", "mycloud");
+  $arr["settingsuser"] = insertProfileValue($ProfileId, "settingsuser", "root");
+  $arr["settingsprofile"] = insertProfileValue($ProfileId, "settingsprofile", "1");
+  $arr["settingsdeletebackupolderthanperiod"] = insertProfileValue($ProfileId, "settingsdeletebackupolderthanperiod", "years");
+  $arr["settingsdeletefreespacelessthanunit"] = insertProfileValue($ProfileId, "settingsdeletefreespacelessthanunit", "gib");
+  $arr["selectschedule"] = insertProfileValue($ProfileId, "selectschedule", "xminutes");
+  $arr["defaultexcludes"] = insertDefaultExcludes($ProfileId);
+  return $arr;
+}
+
+function insertProfileValue($ProfileId, $ProfileKey, $ProfileValue) {
+
+  $SettingsId = 0;
+  $SettingsId = getProfileSettingsId($ProfileId, $ProfileKey);
+
+  $arr = array();
+
+  if (!$SettingsId || $SettingsId <= 0) {
+    $db = new MyDB();
+
+    // Insert a new record
+    $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$ProfileKey."','".$ProfileValue."');");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Profile Setting '".$ProfileKey."' saved as: '".$ProfileValue."'";
+    }
+    $db->close();
+  }
+
+  return $arr;
+}
+
+function insertDefaultExcludes($ProfileId) {
+
+  $arr = array();
+  $rtn = array();
+  
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "*.backup*");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "*~");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".Private");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".cache/*");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".dropbox*");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".gvfs");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".thumbnails*");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".[Tt]rash*");
+  array_push($rtn, $arr);
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".lost+found/*");
+  array_push($rtn, $arr);
+  
+  return $rtn;
+}
+
+function insertIncludeExcludeValue($ProfileId, $InclExcl, $Pattern) {
+
+  $arr = array();
+
+  $ProfileSettingsId = getFileSpecId($ProfileId, $InclExcl, $Pattern);
+  if ($ProfileSettingsId <= 0) {
+
+    $db = new MyDB();
+    if(!$db) {
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    } else {
+      // Insert
+      $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$InclExcl."','".$Pattern."');");
+      if(!$ret){
+        $arr["result"] = "ko";
+        $arr["message"] = $db->lastErrorMsg();
+      }
+      else {
+        $arr["result"] = "ok";
+        $arr["message"] = "Value stored";
+      }
+
+      $db->close();
+
+    } // ProfileSetting does not exist
+  }
+
+  return $arr;
+}
+
+// Web Method Functions ===========================
+
+
 function getDirectoryContentsFromShell() {
 
   $chk = array();
@@ -221,166 +465,46 @@ function getDirectoryContentsFromShell() {
   return $arr;
 }
 
-
-// Web Method Functions ===========================
-/*
-function getDirectoryContents() {
-
-  $DirPath = SQLite3::escapeString($_POST["dir"]);
-
-  $DirContentsArray = getDirectoryContentsFromShell($DirPath);
-//  getDirectoryContentsBE($DirPath);
-
-  echo json_encode($DirContentsArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-}
-*/
-
-function db_create_schema() {
-  $db = new MyDB();
-  $rtn = "ok";
-
-  if(!$db) {
-    $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-  } else {
-
-    $sql =<<<EOF
-      CREATE TABLE IF NOT EXISTS profiles (
-        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        profilename                   CHAR(250) NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS profilesettings (
-        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        profileid                     INTEGER NOT NULL,
-        profilekey                    CHAR(50) NOT NULL,
-        profilevalue                  CHAR(250) NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS snapshots (
-        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        profileid                     INTEGER NOT NULL,
-        basepath                      TEXT    NOT NULL,
-        description                   TEXT    NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS appversion (
-        appversion                    CHAR(50)  NOT NULL
-      );
-
-      CREATE TEMP TABLE IF NOT EXISTS variables (
-        varname                       CHAR(50)  NOT NULL,
-        varvalue                      CHAR(250) NOT NULL
-      );
-EOF;
-
-    $ret = $db->exec($sql);
-    if(!$ret){
-      $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    }
-    $db->close();
-  }
-
-  return $rtn;
-} // db_create_schema
-
-function createDefaultProfile() {
-  // If there is no profile, create one to default to
-
-  $ProfileName = "Default";
-  $ProfileId = getProfileId($ProfileName);
-
-  $rtn = "ok";
-
-  if ($ProfileId <= 0) {
-
-    $db = new MyDB();
-
-    if(!$db) {
-      $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    } else {
-      $ret = $db->exec("INSERT INTO profiles (profilename) VALUES ($ProfileName);");
-      if(!$ret){
-        $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-      }
-      $db->close();
-
-      $ProfileId = getProfileId($ProfileName);
-    }
-  }
-
-  insertDefaultProfileValues($ProfileId);
-
-  return $rtn;
-}
-
-function insertDefaultProfileValues($ProfileId) {
-
+function deleteProfile() {
+  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $arr = array();
 
-  $rtnarr["settingssaveto"] = insertProfileValue($ProfileId, "settingssaveto", "/shares/backup");
-  $rtnarr["selectmode"] = insertProfileValue($ProfileId, "selectmode", "modelocal");;
-  $rtnarr["settingshost"] = insertProfileValue($ProfileId, "settingshost", "mycloud");
-  $rtnarr["settingsuser"] = insertProfileValue($ProfileId, "settingsuser", "me");
-  $rtnarr["settingsdeletebackupolderthanperiod"] = insertProfileValue($ProfileId, "settingsdeletebackupolderthanperiod", "years");
-  $rtnarr["settingsdeletefreespacelessthanunit"] = insertProfileValue($ProfileId, "settingsdeletefreespacelessthanunit", "gib");
-  $rtnarr["selectschedule"] = insertProfileValue($ProfileId, "selectschedule", "xminutes");
-
-  return $rtnarr;
-}
-
-function insertProfileValue($ProfileId, $ProfileKey, $ProfileValue) {
-
-  $SettingsId = 0;
-  $SettingsId = getProfileSettingsId($ProfileId, $ProfileKey);
-
-  $arr = array();
-
-  if ($SettingsId <= 0) {
-    $db = new MyDB();
-
-    // Insert a new record
-    $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$ProfileKey."','".$ProfileValue."');");
-    if(!$ret){
-      $arr["result"] = "ko";
-      $arr["message"] = $db->lastErrorMsg();
+  // Never delete the 'default' profile (although it's settings can be changed)
+  $defaultId = getProfileId("Default");
+  if ($ProfileId == $defaultId) {
+    $arr["result"] = "ko";
+    $arr["message"] = "You cannot delete the Default Profile";
+  }
+  else {
+    // First, delete the profile settings
+    $arr["deletesettings"] = delProfileSettings($ProfileId);
+    // Then, if a success, delete the profile
+    if ($arr["deletesettings"]["result"] == "ok") {
+      $arr["deleteprofile"] = delProfile($ProfileId);
+      $arr["result"] = $arr["deleteprofile"]["result"];
+      $arr["result"] = "ok";
+      $arr["message"] = "Profile deleted";
     }
     else {
-      $arr["result"] = "ok";
-      $arr["message"] = "Value saved";
+      $arr["result"] = "ko";
+      $arr["message"] = "Error deleting profile id: ".$ProfileId;
     }
-    $db->close();
   }
 
-  return $arr;
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
+
 // Inserts default excludes: *.backup*, *~, .Private, .cache/*, .dropbox*, .gvfs, .thumbnails*, [Tt]rash*, lost+found/*
-function insertDefaultExcludes() {
+function addDefaultExcludes() {
 
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $arr = array();
-  $rtn = array();
 
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "*.backup*");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "*~");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".Private");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".cache/*");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".dropbox*");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".gvfs");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".thumbnails*");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".[Tt]rash*");
-  array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".lost+found/*");
-  array_push($rtn, $arr);
+  $arr = insertDefaultExcludes($ProfileId);
 
   $haserr = 0;
+  $res = "ok";
   foreach ($arr as $en) {
     if ($en["result"] != "ok") {
       $haserr = 1;
@@ -392,37 +516,6 @@ function insertDefaultExcludes() {
   echo "{ \"result\" : \"".$res."\" , \"message\" : ";
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
   echo " }";
-}
-
-function insertIncludeExcludeValue($ProfileId, $InclExcl, $Pattern) {
-
-  $arr = array();
-
-  $ProfileSettingsId = getFileSpecId($ProfileId, $InclExcl, $Pattern);
-  if ($ProfileSettingsId <= 0) {
-
-    $db = new MyDB();
-    if(!$db) {
-      $arr["result"] = "ko";
-      $arr["message"] = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    } else {
-      // Insert
-      $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$InclExcl."','".$Pattern."');");
-      if(!$ret){
-        $arr["result"] = "ko";
-        $arr["message"] = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-      }
-      else {
-        $arr["result"] = "ok";
-        $arr["message"] = "Value stored";
-      }
-
-      $db->close();
-
-    } // ProfileSetting does not exist
-  }
-
-  return $arr;
 }
 
 // Select all Include or Exclude Settings for a Profile ID
@@ -448,9 +541,16 @@ function selectIncludeExclude($InclExcl) {
 
 // Select all profiles from the Profiles list
 function selectProfilesList() {
+  $SelectedId = SQLite3::escapeString($_POST["selid"]);
+
+  // If SelectedId not specified, resort to Default
+  if (!$SelectedId) {
+    $SelectedId = getProfileId("Default");
+  }
+
   $db = new MyDB();
   // Sort in ascending order - this is default
-  $rows = $db->query("SELECT id, ProfileName profilename, case ProfileName WHEN 'Default' THEN 'selected' ELSE '' END selected FROM profiles ORDER BY ProfileName;");
+  $rows = $db->query("SELECT id, ProfileName profilename, case id WHEN ".$SelectedId." THEN 'selected' ELSE '' END selected FROM profiles ORDER BY ProfileName;");
 
   echo "{ \"result\" : \"ok\" , \"items\" : [ ";
   $rowcnt = 0;
@@ -461,6 +561,32 @@ function selectProfilesList() {
   }
   echo " ] }";
   $db->close();
+}
+
+// Adds a profile to the Profiles list, if not already existing
+function addProfile() {
+  $ProfileName = SQLite3::escapeString($_POST["profilename"]);
+  $arr = array();
+
+  // Is the new Profile Name on file?
+  $id = getProfileId($ProfileName);
+
+  if ($id > 0) {
+    // Already exists
+    $arr["result"] = "ok";
+    $arr["message"] = "Profile already exists";
+    $arr["id"] = getProfileId($ProfileName);
+    $arr["defaults"] = array();
+  }
+  else {
+    // Need to add
+    $arr = insertProfile($ProfileName);
+
+    // SJT Insert default excludes for the new Profile
+  }
+
+  // Output
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 // Select all Settings for a Profile ID, except the file includes
@@ -630,15 +756,10 @@ $WhatToRun = $_POST["fn"];
 switch ($WhatToRun) {
   case "init":
     $rtn = db_create_schema();
-    if ($rtn == "ok") {
+    if ($rtn["result"] == "ok") {
       $rtn = createDefaultProfile();
     }
-    if ($rtn == "ok") {
-      echo "{ \"result\" : \"ok\" , \"message\" : \"Init OK\" }";
-    }
-    else {
-      echo "{ \"result\" : \"ok\" , \"message\" : \"Init failed: ".$rtn."\" }";
-    }
+    echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
     break;
   case "selectprofileslist":
     selectProfilesList();
@@ -656,7 +777,7 @@ switch ($WhatToRun) {
     getDirectoryContentsFromShell();
     break;
   case "adddefaultexcludes":
-    insertDefaultExcludes();
+    addDefaultExcludes();
     break;
   case "getincludepatterns":
     selectIncludeExclude("include");
@@ -669,6 +790,12 @@ switch ($WhatToRun) {
     break;
   case "insertexcludefilefolder":
     insertExcludeFileFolder();
+    break;
+  case "addprofile":
+    addProfile();
+    break;
+  case "deleteprofile":
+    deleteProfile();
     break;
   default:
     writeErrorMsg();

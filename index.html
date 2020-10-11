@@ -152,16 +152,23 @@
           <h1 class="mt-4">Settings</h1>
           <div class="row" style="margin-bottom: 5px;">
             <div id="settingsprofilebar" class="col-12">
-                <div class="row settingsrow">
-                  <label class="appselectlabel" for="selectprofile">Profile:</label>
-                  <select class="form-control col-4 appselect" id="selectprofile">
-                  </select>
-                  <div class="btn-group btn-group-sm" role="group" aria-label="">
-                    <button type="button" class="btn btn-secondary">Edit</button>
-                    <button type="button" class="btn btn-secondary">Add</button>
-                    <button type="button" class="btn btn-secondary">Remove</button>
-                  </div>
+              <div id="selectprofilediv" class="row settingsrow">
+                <label class="appselectlabel" for="selectprofile">Profile:</label>
+                <select class="form-control appselect col-4" id="selectprofile">
+                </select>
+                <div class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button id="newprofilebtn" type="button" class="btn btn-secondary">New</button>
+                  <button id="delprofilebtn" type="button" class="btn btn-secondary">Remove</button>
                 </div>
+              </div>
+              <div id="addprofilediv" class="row settingsrow">
+                <label class="addprofilelabel" for="addprofileinp">Profile Name:</label>
+                <input id="addprofileinp" class="form-control appselect" type="text" placeholder="Key in new profile name" />
+                <div class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button id="addprofilebtn" type="button" class="btn btn-secondary">Add</button>
+                  <button id="canprofilebtn" type="button" class="btn btn-secondary">Cancel</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="row">

@@ -32,6 +32,9 @@
 .encryptinput { margin: 15px; }
 .smartremoverow { margin: 15px; }
 
+#addprofilediv { display: none; }
+#addprofileinp { margin-bottom: 2px; }
+
 /* Default hide the SSH items */
 .modelocalencrypted, .modessh, .modesshencrypted { display: none; }
 

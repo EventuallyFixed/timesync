@@ -506,6 +506,99 @@ $( document ).ready(function() {
     SetSettingsFullSnapshotPath();
   });
 
+  // Click of New Profile
+  $("#newprofilebtn").click(function(){
+    $("#selectprofilediv").css("display", "none");
+    $("#addprofilediv").fadeIn();
+  });
+  
+  // Click of Add Profile
+  $("#addprofilebtn").click(function(){
+    // Add items to the criteria
+    var pdata = new Object();
+    pdata.fn = "addprofile";
+    pdata.profilename = $('#addprofileinp').val();
+
+    // Provide feedback to the user
+    var spinelt = createSpinner('addprofilediv','');
+    spinelt.css('top','10px');
+    spinelt.css('left','130px');
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+        spinelt.remove();
+
+        // If OK, refresh the profiles list & select the new one
+        if (data.result == "ok") {
+          // Refresh the Profiles Select
+          $("#addprofilediv").css("display", "none");
+          $("addprofileinp").val();
+          $("#selectprofilediv").fadeIn();
+          
+          BuildProfilesSelect(data.id);
+        }
+        else {
+          
+        }
+        
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+        spinelt.remove();
+      }
+    });
+  });
+  
+  // Click of Delete Profile
+  $("#canprofilebtn").click(function(){    
+    $("#addprofilediv").css("display", "none");
+    $("addprofileinp").val();
+    $("#selectprofilediv").fadeIn();
+  });
+
+  // Click of Delete Profile
+  $("#delprofilebtn").click(function(){
+    // Callback object
+    var pdata = new Object();
+    pdata.fn = "deleteprofile";
+    pdata.profileid = $('#selectprofile').val();
+
+    // Provide feedback to the user
+    var spinelt = createSpinner('selectprofilediv','');
+    spinelt.css('top','10px');
+    spinelt.css('left','100px');
+    
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+        spinelt.remove();
+
+        // If OK, refresh the profiles list & select the new one
+        if (data.result == "ok") {
+          // Refresh the Profiles Select
+          BuildProfilesSelect(data.id);
+        }
+        else {
+          
+        }
+        
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+        spinelt.remove();
+      }
+    });    
+  });
+
   Init();
 
 }); // Page Ready
@@ -654,9 +747,10 @@ function getIncludeItems() {
     success: function (data,status,xhr) {
       console.log(data);
 
+      // Remove current items here
+      $('#includefilescontainer').find('.inclitem').remove();
+
       if (data.items.length > 0) {
-        // Remove current items here
-        $('#includefilescontainer').find('.inclitem').remove();
 
         // Populate new items
         $.each(data.items, function (i, item) {
@@ -715,10 +809,10 @@ function getExcludeItems() {
     data: pdata,
     success: function (data,status,xhr) {
       console.log(data);
+      // Remove current items here
+      $('#excludefilescontainer').find('.exclitem').remove();
 
       if (data.items.length > 0) {
-        // Remove current items here
-        $('#excludefilescontainer').find('.exclitem').remove();
 
         // Populate new items
         $.each(data.items, function (i, item) {
@@ -783,7 +877,7 @@ function Init() {
       console.log(data);
 
       // Get the Profiles select built
-      BuildProfilesSelect();
+      BuildProfilesSelect("");
 
       // SJT temporary convenience action for debugging
 	    $("#settingsmenu").trigger("click");
@@ -798,11 +892,17 @@ function Init() {
 }
 
 
-function BuildProfilesSelect() {
+function BuildProfilesSelect(selId) {
 
   // Get the Profiles List for the DDL
   var pdata = new Object();
   pdata.fn = "selectprofileslist";
+  pdata.selid = selId;
+
+  // Provide feedback to the user
+  var spinelt = createSpinner('selectprofilediv','');
+  spinelt.css('top','10px');
+  spinelt.css('left','100px');
 
   $.ajax('./vendor/app/php/app.php',
   {
@@ -835,10 +935,13 @@ function BuildProfilesSelect() {
         // Trigger a change to initialise the settings
         $("#selectprofile").trigger('change');
         $('#selectprofile').addClass('autoupd');
+
+        spinelt.remove();
       }
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
+      spinelt.remove();
     }
   }); 	
 
