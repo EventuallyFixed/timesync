@@ -72,6 +72,10 @@ $( document ).ready(function() {
   // On change of Profile ID, get and apply the new settings to screen
   $("#selectprofile").change(function(){
 
+    // Enable or disable delete
+    if ($(this).find('option:selected').attr("candel") == 1) { $("#delprofilebtn").removeAttr("disabled"); }
+    else { $("#delprofilebtn").attr("disabled","disabled"); }
+
     var pdata = new Object();
     pdata.fn = "selectprofilesettings";
     pdata.profileid = $('#selectprofile').val();
@@ -922,13 +926,15 @@ function BuildProfilesSelect(selId) {
           if (item.selected == 'selected') {
             $('#selectprofile').append($('<option>', {
               value: item.id,
-              text : item.profilename,
+              text: item.profilename,
+              candel: item.candelete,
               selected: item.selected
             }));
           } else {
             $('#selectprofile').append($('<option>', {
               value: item.id,
-              text : item.profilename
+              text : item.profilename,
+              candel: item.candelete
             }));
           }
         });

@@ -550,7 +550,7 @@ function selectProfilesList() {
 
   $db = new MyDB();
   // Sort in ascending order - this is default
-  $rows = $db->query("SELECT id, ProfileName profilename, case id WHEN ".$SelectedId." THEN 'selected' ELSE '' END selected FROM profiles ORDER BY ProfileName;");
+  $rows = $db->query("SELECT id, ProfileName profilename, CASE id WHEN ".$SelectedId." THEN 'selected' ELSE '' END selected, CASE ProfileName WHEN 'Default' THEN 0 ELSE 1 END candelete FROM profiles ORDER BY ProfileName;");
 
   echo "{ \"result\" : \"ok\" , \"items\" : [ ";
   $rowcnt = 0;
