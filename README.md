@@ -24,6 +24,27 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 # Development status
 - Ongoing
 
+#ToDo
+- Fill out the Settings Schedule, to be able to specify values
+  - And also save & recall these values
+- Include & Exclude:
+  - Issue with selection of symlinks pointing to files/folders.
+  - Show Icons for files and folders.
+- Revamp the Snapshots screen layout, to be mobile friendly.
+- Translate settings into rsync commands:
+  - Execute the rsync commands!
+- Translate schedules into cron job XMLs (See posts in WD Community: [Post 1](https://community.wd.com/t/crontab-on-mycloud-ex2/98653/21); [Post 2](https://community.wd.com/t/nas-to-usb-automatic-incremental-backup/193625)):
+  - Be able to reliably add/delete the cron entries using php's XML tools.
+- Wrap the application in the WD application wrapper (See: [WD Developer SDK](https://developer.westerndigital.com/develop/wd/sdk.html#intro)).
+- Implement SSH options.
+
+# Completed
+- Screens - Initial design prototypes.
+- Database - Initialise, Load & Save.
+- Settings - Initialise, Load & Save.
+- Include & Exclude folders - Initialise, Load, Save, Adds, Removes.
+- Profiles Add and Delete.
+
 # Licence
 Copyright (C) 2020 Steven Tierney
 
