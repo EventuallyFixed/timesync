@@ -104,7 +104,7 @@ function getProfileSettingsId($ProfileId, $ProfileKey) {
   return $rtn;
 }
 
-function getFileSpecId($ProfileId, $InclExcl, $Pattern) {
+function getFileSpecId($ProfileId, $InclExcl, $Type, $Pattern) {
 
   $Exists = 0;
   $rtn = "-1";
@@ -115,7 +115,7 @@ function getFileSpecId($ProfileId, $InclExcl, $Pattern) {
   } else {
 
     // Is there a profile of this profile ID?
-    $rows = $db->query("SELECT COUNT(*) AS count FROM profilesettings WHERE profileid = '".$ProfileId."' AND profilekey = '".$InclExcl."' AND profilevalue = '".$Pattern."';");
+    $rows = $db->query("SELECT COUNT(*) AS count FROM profileinclexcl WHERE profileid = '".$ProfileId."' AND profilekey = '".$InclExcl."' AND profiletype = '".$Type."' AND profilevalue = '".$Pattern."';");
     if (!$rows) {
       $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
     } else {
@@ -125,7 +125,7 @@ function getFileSpecId($ProfileId, $InclExcl, $Pattern) {
 
 
     if ($Exists > 0) {
-      $rows = $db->query("SELECT id AS id FROM profilesettings WHERE profileid = '".$ProfileId."' AND profilekey = '".$InclExcl."' AND profilevalue = '".$Pattern."';");
+      $rows = $db->query("SELECT id AS id FROM profileinclexcl WHERE profileid = '".$ProfileId."' AND profilekey = '".$InclExcl."' AND profiletype = '".$Type."' AND profilevalue = '".$Pattern."';");
       if(!$rows){
         $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
       }
@@ -183,6 +183,27 @@ function delProfileSettings($ProfileId) {
   return $arr;
 }
 
+function delProfileInclExcl($ProfileId) {
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    $ret = $db->exec("DELETE FROM profileinclexcl WHERE profileid = ".$ProfileId.";");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Profile Includes/Excludes Deleted";
+    }
+  }
+  return $arr;
+}
+
 function db_create_schema() {
   $db = new MyDB();
   $arr = array();
@@ -203,6 +224,14 @@ function db_create_schema() {
         profileid                     INTEGER NOT NULL,
         profilekey                    CHAR(50) NOT NULL,
         profilevalue                  CHAR(250) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS profileinclexcl (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profileid                     INTEGER NOT NULL,
+        profilekey                    CHAR(10) NOT NULL,
+        profiletype                   CHAR(2) NOT NULL,
+        profilevalue                  CHAR(500) NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS snapshots (
@@ -328,34 +357,33 @@ function insertDefaultExcludes($ProfileId) {
 
   $arr = array();
   $rtn = array();
-  
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "*.backup*");
+
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", "*.backup*");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "*~");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", "*~");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".Private");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", ".Private");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".cache/*");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", ".cache/*");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".dropbox*");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", ".dropbox*");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".gvfs");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", ".gvfs");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".thumbnails*");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", ".thumbnails*");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".[Tt]rash*");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", ".[Tt]rash*");
   array_push($rtn, $arr);
-  $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".lost+found/*");
+  $arr = insertIncludeExcludeValue($ProfileId, "exclude", "p", ".lost+found/*");
   array_push($rtn, $arr);
-  
-  return $rtn;
+   return $rtn;
 }
 
-function insertIncludeExcludeValue($ProfileId, $InclExcl, $Pattern) {
+function insertIncludeExcludeValue($ProfileId, $InclExcl, $Type, $Pattern) {
 
   $arr = array();
 
-  $ProfileSettingsId = getFileSpecId($ProfileId, $InclExcl, $Pattern);
+  $ProfileSettingsId = getFileSpecId($ProfileId, $InclExcl, $Type, $Pattern);
   if ($ProfileSettingsId <= 0) {
 
     $db = new MyDB();
@@ -364,7 +392,7 @@ function insertIncludeExcludeValue($ProfileId, $InclExcl, $Pattern) {
       $arr["message"] = $db->lastErrorMsg();
     } else {
       // Insert
-      $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$InclExcl."','".$Pattern."');");
+      $ret = $db->exec("INSERT INTO profileinclexcl (profileid, profilekey, profiletype, profilevalue) VALUES ('".$ProfileId."', '".$InclExcl."', '".$Type."','".$Pattern."');");
       if(!$ret){
         $arr["result"] = "ko";
         $arr["message"] = $db->lastErrorMsg();
@@ -478,16 +506,27 @@ function deleteProfile() {
   else {
     // First, delete the profile settings
     $arr["deletesettings"] = delProfileSettings($ProfileId);
-    // Then, if a success, delete the profile
     if ($arr["deletesettings"]["result"] == "ok") {
-      $arr["deleteprofile"] = delProfile($ProfileId);
-      $arr["result"] = $arr["deleteprofile"]["result"];
-      $arr["result"] = "ok";
-      $arr["message"] = "Profile deleted";
+      $arr["deleteinclexcl"] = delProfileInclExcl($ProfileId);
+      // Then, if a success, delete the profile
+      if ($arr["deleteinclexcl"]["result"] == "ok") {
+        $arr["deleteprofile"] = delProfile($ProfileId);
+        $arr["result"] = $arr["deleteprofile"]["result"];
+        if ($arr["result"] == "ok") {
+          $arr["message"] = "Profile deleted";
+        }
+        else {
+          $arr["message"] = "Error deleting profile";
+        }
+      }
+      else {
+        $arr["result"] = "ko";
+        $arr["message"] = "Error deleting inclexcl for profile id: ".$ProfileId;
+      }
     }
     else {
       $arr["result"] = "ko";
-      $arr["message"] = "Error deleting profile id: ".$ProfileId;
+      $arr["message"] = "Error deleting settings for profile id: ".$ProfileId;
     }
   }
 
@@ -525,15 +564,20 @@ function selectIncludeExclude($InclExcl) {
 
   $db = new MyDB();
   // Sort in ascending order - this is default
-  $rows = $db->query("SELECT id setid, profilekey setkey, profilevalue setval FROM profilesettings WHERE profileid = ".$ProfileId." AND profilekey = '".$InclExcl."';");
-
-  echo "{ \"result\" : \"ok\" , \"items\" : [ ";
-  $rowcnt = 0;
-  while($row = $rows->fetchArray(SQLITE3_ASSOC)){
-    if ($rowcnt > 0) { echo " , "; }
-    // echo json_encode(array_change_key_case($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    echo json_encode($row);
-    $rowcnt = $rowcnt + 1;
+  $rows = $db->query("SELECT id setid, profilekey setkey, profiletype settype, profilevalue setval FROM profileinclexcl WHERE profileid = ".$ProfileId." AND profilekey = '".$InclExcl."';");
+  if (!$rows) {
+    echo "{ \"result\" : \"ko\" , \"message\" : ";
+    echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+    echo " , \"items\" : [ ";
+  }
+  else {
+    echo "{ \"result\" : \"ok\" , \"items\" : [ ";
+    $rowcnt = 0;
+    while($row = $rows->fetchArray(SQLITE3_ASSOC)){
+      if ($rowcnt > 0) { echo " , "; }
+      echo json_encode(array_change_key_case($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+      $rowcnt = $rowcnt + 1;
+    }
   }
   echo " ] }";
   $db->close();
@@ -551,13 +595,19 @@ function selectProfilesList() {
   $db = new MyDB();
   // Sort in ascending order - this is default
   $rows = $db->query("SELECT id, ProfileName profilename, CASE id WHEN ".$SelectedId." THEN 'selected' ELSE '' END selected, CASE ProfileName WHEN 'Default' THEN 0 ELSE 1 END candelete FROM profiles ORDER BY ProfileName;");
-
-  echo "{ \"result\" : \"ok\" , \"items\" : [ ";
-  $rowcnt = 0;
-  while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
-    if ($rowcnt > 0) { echo " , "; }
-    echo json_encode(array_change_key_case($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    $rowcnt = $rowcnt + 1;
+  if (!$rows) {
+    echo "{ \"result\" : \"ko\" , \"message\" : ";
+    echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+    echo " , \"items\" : [ ";
+  }
+  else {
+    echo "{ \"result\" : \"ok\" , \"items\" : [ ";
+    $rowcnt = 0;
+    while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+      if ($rowcnt > 0) { echo " , "; }
+      echo json_encode(array_change_key_case($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+      $rowcnt = $rowcnt + 1;
+    }
   }
   echo " ] }";
   $db->close();
@@ -579,10 +629,8 @@ function addProfile() {
     $arr["defaults"] = array();
   }
   else {
-    // Need to add
+    // Add new profile & default values
     $arr = insertProfile($ProfileName);
-
-    // SJT Insert default excludes for the new Profile
   }
 
   // Output
@@ -597,16 +645,22 @@ function selectProfileSettings() {
   $db = new MyDB();
   // Sort in ascending order - this is default
   $rows = $db->query("SELECT profilekey setkey, profilevalue setval FROM profilesettings WHERE profileid = ".$ProfileId." AND profilekey != 'include' AND profilekey != 'exclude';");
-
-  echo "{ \"result\" : \"ok\" , \"items\" : [ ";
-  $rowcnt = 0;
-  while($row = $rows->fetchArray(SQLITE3_ASSOC)){
-    if ($rowcnt > 0) { echo " , "; }
-    echo json_encode(array_change_key_case($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    $rowcnt = $rowcnt + 1;
+  if (!$rows) {
+    echo "{ \"result\" : \"ko\" , \"message\" : ";
+    echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+    echo " , \"items\" : [ ";
+  }
+  else {
+    echo "{ \"result\" : \"ok\" , \"items\" : [ ";
+    $rowcnt = 0;
+    while($row = $rows->fetchArray(SQLITE3_ASSOC)){
+      if ($rowcnt > 0) { echo " , "; }
+      echo json_encode(array_change_key_case($row), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+      $rowcnt = $rowcnt + 1;
+    }
   }
   echo " ] }";
-  $db->close();
+   $db->close();
 }
 
 // Inserts or Updates a Profile Setting key/value pair
@@ -698,6 +752,48 @@ function deleteProfileSetting() {
 }
 
 
+function deleteProfileInclExcl() {
+
+  $SettingId = SQLite3::escapeString($_POST["settingid"]);
+  $Exists = "-1";
+
+  echo "{ \"result\" : ";
+
+  $db = new MyDB();
+  if(!$db) {
+    echo "\"ko\" , \"message\" : ";
+    echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+  } else {
+    // Is there a row with this Setting ID?
+    $rows = $db->query("SELECT COUNT(*) AS count FROM profileinclexcl WHERE id = ".$SettingId.";");
+    if(!$rows){
+      echo "\"ko\" , \"message\" : ";
+      echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+    }
+    else {
+      $row = $rows->fetchArray();
+      $Exists = $row['count'];
+
+      if ($Exists > 0) {
+        $ret = $db->exec("DELETE FROM profileinclexcl WHERE id = ".$SettingId.";");
+        if(!$ret){
+          echo "\"ko\" , \"message\" : ";
+          echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+        }
+        else {
+          echo "\"ok\" , \"message\" : \"Record deleted\"";
+        }
+      }
+      else {
+        echo "\"ko\" , \"message\" : \"No such id: ".$SettingId;
+      }
+    }
+  }
+
+  echo " }";
+}
+
+
 function insertIncludeFileFolder() {
   // Add the user's selected path
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
@@ -711,7 +807,7 @@ function insertIncludeFileFolder() {
   echo "{ \"result\" : ";
 
   // Is the entry already on file, if not add
-  $arr = insertIncludeExcludeValue ($ProfileId, "include", $FilePath);
+  $arr = insertIncludeExcludeValue ($ProfileId, "include", $FileType, $FilePath);
 
   echo "\"".$arr["result"]."\" , \"message\" : ";
   echo json_encode($arr["message"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
@@ -732,7 +828,7 @@ function insertExcludeFileFolder() {
   echo "{ \"result\" : ";
 
   // Is the entry already on file, if not add
-  $arr = insertIncludeExcludeValue ($ProfileId, "exclude", $FilePath);
+  $arr = insertIncludeExcludeValue ($ProfileId, "exclude", $FileType, $FilePath);
 
   echo "\"".$arr["result"]."\" , \"message\" : ";
   echo json_encode($arr["message"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
@@ -790,6 +886,9 @@ switch ($WhatToRun) {
     break;
   case "insertexcludefilefolder":
     insertExcludeFileFolder();
+    break;
+  case "deleteprofileinclexcl":
+    deleteProfileInclExcl();
     break;
   case "addprofile":
     addProfile();

@@ -7,7 +7,7 @@ var excludeFileBrowseDir;
 var excludeType;
 
 // OnLoad
-$( document ).ready(function() {
+$(document).ready(function() {
 
   $("#homelink").click(function(){
     var pdata = new Object();
@@ -229,7 +229,7 @@ $( document ).ready(function() {
     $("body").off("click", idtoremove); // remove the click event
 
     var pdata = new Object();
-    pdata.fn = "deleteprofilesetting";
+    pdata.fn = "deleteprofileinclexcl";
     pdata.settingid = $('#'+idtoremove).attr('setid');
 
     // Provide feedback to the user
@@ -267,7 +267,7 @@ $( document ).ready(function() {
     $("body").off("click", idtoremove); // remove the click event
 
     var pdata = new Object();
-    pdata.fn = "deleteprofilesetting";
+    pdata.fn = "deleteprofileinclexcl";
     pdata.settingid = $('#'+idtoremove).attr('setid');
 
     // Provide feedback to the user
@@ -347,6 +347,11 @@ $( document ).ready(function() {
     $("#includefilescontainer").fadeIn();
     $("#includefilesbuttons").fadeIn();
 
+    // Provide feedback to the user
+    var spinelt = createSpinner('includefilescontainer','');
+    spinelt.css('top','5px');
+    spinelt.css('left','190px');
+
     // Now add the path to the criteria
     var pdata = new Object();
     pdata.fn = "insertincludefilefolder";
@@ -361,6 +366,7 @@ $( document ).ready(function() {
       data: pdata,
       success: function (data,status,xhr) {
         console.log(data);
+        spinelt.remove();
 
         // If OK, refresh the include list
         getIncludeItems();
@@ -420,6 +426,11 @@ $( document ).ready(function() {
     $("#excludefilescontainer").fadeIn();
     $("#excludefilesbuttons").fadeIn();
 
+     // Provide feedback to the user
+    var spinelt = createSpinner('excludefilescontainer','');
+    spinelt.css('top','5px');
+    spinelt.css('left','250px');
+
     // Now add the path to the criteria
     var pdata = new Object();
     pdata.fn = "insertexcludefilefolder";
@@ -434,6 +445,7 @@ $( document ).ready(function() {
       data: pdata,
       success: function (data,status,xhr) {
         console.log(data);
+        spinelt.remove();
 
         // If OK, refresh the exclude list
         getExcludeItems();
@@ -472,6 +484,11 @@ $( document ).ready(function() {
     $("#excludefilescontainer").fadeIn();
     $("#excludefilesbuttons").fadeIn();
 
+    // Provide feedback to the user
+    var spinelt = createSpinner('excludefilescontainer','');
+    spinelt.css('top','5px');
+    spinelt.css('left','250px');
+
     // Now add the item to the criteria
     var pdata = new Object();
     pdata.fn = "insertexcludefilefolder";
@@ -486,6 +503,7 @@ $( document ).ready(function() {
       data: pdata,
       success: function (data,status,xhr) {
         console.log(data);
+        spinelt.remove();
 
         // If OK, refresh the exclude list
         getExcludeItems();
@@ -515,7 +533,7 @@ $( document ).ready(function() {
     $("#selectprofilediv").css("display", "none");
     $("#addprofilediv").fadeIn();
   });
-  
+
   // Click of Add Profile
   $("#addprofilebtn").click(function(){
     // Add items to the criteria
@@ -543,13 +561,10 @@ $( document ).ready(function() {
           $("#addprofilediv").css("display", "none");
           $("addprofileinp").val();
           $("#selectprofilediv").fadeIn();
-          
-          BuildProfilesSelect(data.id);
+                   BuildProfilesSelect(data.id);
         }
         else {
-          
         }
-        
       },
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
@@ -557,9 +572,9 @@ $( document ).ready(function() {
       }
     });
   });
-  
+
   // Click of Delete Profile
-  $("#canprofilebtn").click(function(){    
+  $("#canprofilebtn").click(function(){
     $("#addprofilediv").css("display", "none");
     $("addprofileinp").val();
     $("#selectprofilediv").fadeIn();
@@ -576,7 +591,7 @@ $( document ).ready(function() {
     var spinelt = createSpinner('selectprofilediv','');
     spinelt.css('top','10px');
     spinelt.css('left','100px');
-    
+
     $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
@@ -592,15 +607,13 @@ $( document ).ready(function() {
           BuildProfilesSelect(data.id);
         }
         else {
-          
         }
-        
       },
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
         spinelt.remove();
       }
-    });    
+    });
   });
 
   Init();
@@ -677,7 +690,7 @@ function getDirectoryContents(actiontype, type, dir, sel){
 
 // Draw the divs for the contents
 function createFileLine(actiontype, type, item, celt) {
-  var iconname = "";
+  var iconName = "";
   switch (item.filetype.toLowerCase()) {
     case "d":
       iconName = "mdi-folder-outline";
@@ -694,7 +707,7 @@ function createFileLine(actiontype, type, item, celt) {
   }
   var rowelt = $("<div/>").addClass("row snaprow").attr("id","file_"+item.id).attr("filetype",item.filetype.toLowerCase()).attr("filename",item.filename);
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(rowelt);
-  var namelt = $("<span/>").addClass("").attr("id","name_"+item.id).text(item.filename).appendTo(rowelt);
+  var namelt = $("<span/>").attr("id","name_"+item.id).text(item.filename).appendTo(rowelt);
   rowelt.appendTo(celt);
 
   // Add trigger
@@ -793,9 +806,26 @@ function getIncludeItems() {
 
 function insertIncludeItem(item) {
 
-  var cdiv = $('<div/>').attr('id','inclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow inclitem');
-  var fidiv = $('<div/>').attr('id','inclcell1_'+item.setid).addClass('snapcolumn col-1').text('O').appendTo(cdiv);
-  var fndiv = $('<div/>').attr('id','inclcell2_'+item.setid).addClass('snapcolumn col-11').text(item.setval).appendTo(cdiv);
+  var iconName = "";
+  switch (item.settype.toLowerCase()) {
+    case "d":
+      iconName = "mdi-folder-outline";
+      break;
+    case "f":
+    case "-":
+      iconName = "mdi-file-outline";
+      break;
+    case "l":
+      iconName = "mdi-file-link-outline";
+      break;
+    default:
+      iconName = "mdi-file-question-outline";
+      break;
+  }
+
+  var cdiv   = $('<div/>').attr('id','inclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow inclitem');
+  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.setid).attr("data-icon",iconName).appendTo(cdiv);
+  var namelt = $("<span/>").attr("id","name_"+item.setid).text(item.setval).appendTo(cdiv);
   cdiv.appendTo($('#includefilescontainer'));
 }
 
@@ -855,9 +885,26 @@ function getExcludeItems() {
 
 function insertExcludeItem(item) {
 
-  var cdiv = $('<div/>').attr('id','exclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow exclitem');
-  var fidiv = $('<div/>').attr('id','exclcell1_'+item.setid).addClass('snapcolumn col-1').text('O').appendTo(cdiv);
-  var fndiv = $('<div/>').attr('id','exclcell2_'+item.setid).addClass('snapcolumn col-11').text(item.setval).appendTo(cdiv);
+  var iconName = "";
+  switch (item.settype.toLowerCase()) {
+    case "d":
+      iconName = "mdi-folder-outline";
+      break;
+    case "f":
+    case "-":
+      iconName = "mdi-file-outline";
+      break;
+    case "l":
+      iconName = "mdi-file-link-outline";
+      break;
+    default:
+      iconName = "mdi-file-question-outline";
+      break;
+  }
+
+  var cdiv   = $('<div/>').attr('id','exclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow exclitem');
+  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.setid).attr("data-icon",iconName).appendTo(cdiv);
+  var namelt = $("<span/>").attr("id","name_"+item.setid).text(item.setval).appendTo(cdiv);
   cdiv.appendTo($('#excludefilescontainer'));
 }
 

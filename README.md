@@ -29,7 +29,8 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
   - And also save & recall these values
 - Include & Exclude:
   - Issue with selection of symlinks pointing to files/folders.
-  - Show Icons for files and folders.
+    - Perhaps these should be selectable as the linked-to type?
+      - How will rsync deal with the symlinks?
 - Revamp the Snapshots screen layout, to be mobile friendly.
 - Translate settings into rsync commands:
   - Execute the rsync commands!
@@ -42,7 +43,9 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 - Screens - Initial design prototypes.
 - Database - Initialise, Load, & Save.
 - Settings - Initialise, Load, & Save.
-- Include & Exclude folders - Initialise, Load, Save, Adds, Removes.
+- Include & Exclude folders 
+  - Initialise, Load, Save, Add, & Remove.
+  - Show Icons for files and folders.
 - Profiles Add, and Delete.
 
 # Licence
