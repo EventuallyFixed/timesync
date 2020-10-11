@@ -40,10 +40,10 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 
 # Completed
 - Screens - Initial design prototypes.
-- Database - Initialise, Load & Save.
-- Settings - Initialise, Load & Save.
+- Database - Initialise, Load, & Save.
+- Settings - Initialise, Load, & Save.
 - Include & Exclude folders - Initialise, Load, Save, Adds, Removes.
-- Profiles Add and Delete.
+- Profiles Add, and Delete.
 
 # Licence
 Copyright (C) 2020 Steven Tierney
