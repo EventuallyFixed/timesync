@@ -203,9 +203,7 @@
                   <label class="appselectlabel" for="selectmode">Mode:</label>
                   <select id="selectmode" class="form-control col-2 appselect autoupd">
                     <option value="modelocal">Local</option>
-                    <option value="modelocalencrypted">Local Encrypted</option>
                     <option value="modessh">SSH</option>
-                    <option value="modesshencrypted">SSH Encrypted</option>
                   </select>
                 </div>
 
@@ -235,9 +233,9 @@
                   </div>
                  </div>
 
-                <div class="row settingsrow modessh modesshencrypted"><h5>SSH Settings</h5></div>
+                <div class="row settingsrow modessh"><h5>SSH Settings</h5></div>
 
-                <div class="row settingsrow modessh modesshencrypted">
+                <div class="row settingsrow modessh">
                   <div class="col-4">
                     <label class="appinputlabel" for="settingssshhost">Host:</label>
                     <input id="settingssshhost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
@@ -254,38 +252,27 @@
                     <label class="appinputlabel" for="settingssshpath">Path:</label>
                     <input id="settingssshpath" class="form-control form-control-sm autoupd" type="text" placeholder="Path" />
                   </div>
-
-                  <div class="col-12 modessh modesshencrypted">
-                    <label class="appinputlabel" for="settingssshcipher">Cipher:</label>
-                    <input id="settingssshcipher" class="form-control form-control-sm autoupd" type="text" placeholder="Cipher" />
-                  </div>
-                  <div class="col-12 modessh modesshencrypted">
+                  <div class="col-12">
                     <label class="appinputlabel" for="settingssshprivatekey">Private Key:</label>
                     <input id="settingssshprivatekey" class="form-control form-control-sm autoupd" type="text" placeholder="Private Key" />
                   </div>
                 </div>
 
-                <div class="row settingsrow modelocalencrypted modessh modesshencrypted"><h5>Password</h5></div>
-
-                <div class="row settingsrow modelocalencrypted modesshencrypted">
+                <div class="row settingsrow modessh"><h5>Password</h5></div>
+                
+                <div class="row settingsrow modessh">
                   <div class="col-12">
                     <label class="appinputlabel" for="settingssshprivatekeypassword">SSH Private Key:</label>
                     <input id="settingssshprivatekeypassword" class="form-control form-control-sm autoupd" type="password" placeholder="Type Private Key Password" />
                   </div>
                 </div>
-                <div class="row settingsrow modelocalencrypted modesshencrypted">
-                  <div class="col-12">
-                    <label class="appinputlabel" for="settingsencryptionpassword">Encryption:</label>
-                    <input id="settingsencryptionpassword" class="form-control form-control-sm autoupd" type="password" placeholder="Key-in Encryption Password" />
-                  </div>
-                </div>
-                <div class="row settingsrow encryptinput modelocalencrypted modessh">
+                <div class="row settingsrow modessh">
                   <div class="form-check col-12">
                     <input id="settingssavepasswordtokeyring" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingssavepasswordtokeyring">Save Password To Keyring</label>
                   </div>
                 </div>
-                <div class="row settingsrow encryptinput modelocalencrypted modessh">
+                <div class="row settingsrow modessh">
                   <div class="form-check col-12">
                     <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingscachepasswordtocron">Cache Password To Cron</label>
