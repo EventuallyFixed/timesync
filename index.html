@@ -6,7 +6,7 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Cache-Control" content="no-cache">
   <meta http-equiv="Expires" content="-1">
- 
+
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="TimeSync - Simple incremental backups using rsync" content="">
@@ -19,7 +19,7 @@
 
   <!-- Custom styles for this template -->
   <link href="css/simple-sidebar.css" rel="stylesheet">
-  
+
   <!-- Application specific CSS -->
   <link href="vendor/app/css/app.css" rel="stylesheet">
 
@@ -181,17 +181,17 @@
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" role="tab" href="#settings-options" aria-controls="settings-options" aria-selected="false">Options</a>
               </li>
-<!--              
+<!--
               <li class="nav-item">
                 <a class="nav-link" data-toggle="tab" role="tab" href="#settings-expert" aria-controls="settings-expert" aria-selected="false">Expert Options</a>
               </li>
--->              
+-->
             </ul>
           </div>
 
             <div class="tab-content" id="SettingsTabsContent">
               <div class="tab-pane fade show active" id="settings-general" role="tabpanel" aria-labelledby="settings-general-tab">
-              
+
                 <div class="row settingsrow">
                   <label class="appselectlabel" for="selectmode">Mode:</label>
                   <select id="selectmode" class="form-control col-2 appselect autoupd">
@@ -206,7 +206,7 @@
                   <label class="appinputlabel" for="settingssaveto">Where to save snapshots:</label>
                   <input id="settingssaveto" class="form-control form-control-sm autoupd" type="text" placeholder="Save snapshots to" />
                 </div>
-                
+
                 <div class="row settingsrow"><h5>Advanced</h5></div>
 
                 <div class="row settingsrow">
@@ -282,9 +282,9 @@
                   <div class="form-check col-12">
                     <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingscachepasswordtocron">Cache Password To Cron</label>
-                  </div>                  
+                  </div>
                 </div>
-                
+
                 <div class="row settingsrow"><h5>Schedule</h5></div>
 
                 <div class="row settingsrow">
@@ -304,7 +304,7 @@
 
               </div>
               <div class="tab-pane fade" id="settings-include" role="tabpanel" aria-labelledby="settings-include-tab">
-              
+
                 <div id="includefilescontainer" class="appcontainer col-12">
                   <nav id="snapshotincludefiles" class="row navbar navbar-light bg-light apptoolbar">
                     <div class="snapheading col-12">Include Files And Folders</div>
@@ -316,7 +316,7 @@
                     <button type="button" class="btn btn-secondary" id="includeaddfile">Add File</button>
                     <button type="button" class="btn btn-secondary" id="includeaddfolder">Add Folder</button>
                     <button type="button" class="btn btn-secondary" id="includeremove" disabled="disabled">Remove</button>
-                  </div>              
+                  </div>
                 </div>
 
                 <div id="includeaddfilebrowse" class="filebrowse" class="row-8">
@@ -327,12 +327,12 @@
                     <button type="button" class="btn btn-secondary" id="includeaddselect">Select</button>
                     <button type="button" class="btn btn-secondary" id="includeaddcancel">Cancel</button>
                   </div>
-                </div>                
+                </div>
 
                 <input id="thisincludesetid" type="hidden" />
               </div>
               <div class="tab-pane fade" id="settings-exclude" role="tabpanel" aria-labelledby="settings-exclude-tab">
-              
+
                 <div id="excludefilescontainer" class="appcontainer col-12">
                   <nav id="snapshotexcludefiles" class="row navbar navbar-light bg-light apptoolbar">
                     <div class="snapheading col-12">Exclude patterns, files and folders</div>
@@ -349,7 +349,7 @@
                   </div>
                   <input id="thisexcludesetid" type="hidden" />
                 </div>
-                
+
                 <div id="excludeaddfilebrowse" class="filebrowse" class="row-8">
                   <nav class="row navbar navbar-light bg-light apptoolbar">Select item to exclude</nav>
                   Location: <span id="excludeaddfilelocation"></span>
@@ -358,7 +358,7 @@
                     <button type="button" class="btn btn-secondary" id="excludeaddselect">Select</button>
                     <button type="button" class="btn btn-secondary" id="excludeaddcancel">Cancel</button>
                   </div>
-                </div>                
+                </div>
 
                 <div id="excludeaddmiscitembrowse" class="filebrowse" class="row-8">
                   <nav class="row navbar navbar-light bg-light apptoolbar">Key in pattern to exclude</nav>
@@ -368,13 +368,13 @@
                     <button type="button" class="btn btn-secondary" id="excludeaddmiscitemselect">Add</button>
                     <button type="button" class="btn btn-secondary" id="excludeaddmiscitemcancel">Cancel</button>
                   </div>
-                </div>                
+                </div>
 
                 <div class="row settingsrow"><h5>Highly Recommended</h5></div>
-                <div>*.backup*, *~, .Private, .cache/*, .dropbox*, .gvfs, .thumbnails*, [Tt]rash*, lost+found/*</div>                
+                <div>*.backup*, *~, .Private, .cache/*, .dropbox*, .gvfs, .thumbnails*, [Tt]rash*, lost+found/*</div>
               </div>
               <div class="tab-pane fade" id="settings-autoremove" role="tabpanel" aria-labelledby="settings-autoremove-tab">
-              
+
                 <div class="row settingsrow">
                   <div class="col-3">
                     <input id="settingsdeleteolderthan" class="form-check-input autoupd" type="checkbox" value="">
@@ -389,12 +389,12 @@
                     <option value="years">Year(s)</option>
                   </select>
                 </div>
-                
+
                 <div class="row settingsrow">
                   <div class="form-check col-3">
                     <input id="settingsdeletefreespacelessthan" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingsdeletefreespacelessthan">If free space is less than</label>
-                  </div>                  
+                  </div>
                   <input id="settingsdeletefreespacelessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Space" />
                   <div class="col-1"></div>
                   <select id="settingsdeletefreespacelessthanunit" class="form-control appselect col-4 autoupd">
@@ -407,62 +407,62 @@
                   <div class="form-check col-3">
                     <input id="settingsdeleteinodeslessthan" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingsdeleteinodeslessthan">If free inodes is less than</label>
-                  </div>                  
+                  </div>
                   <input id="settingsdeleteinodeslessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Inodes" />
                 </div>
-                
+
                 <div class="row settingsrow">
                   <div class="form-check col-12">
                     <input id="settingssmartremove" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingssmartremove">Smart Remove</label>
-                  </div>                  
+                  </div>
                 </div>
-                
+
                 <div id="smartremovediv">
                   <div class="row settingsrow smartremoverow">
                     <div class="form-check col-3">
                       <input id="settingssmartkeepallfordays" class="form-check-input autoupd" type="checkbox" value="">
                       <label class="form-check-label" for="settingssmartkeepallfordays">Keep all snapshots for the last</label>
-                    </div>                  
+                    </div>
                     <input id="settingssmartkeepallfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
                     <div class="col-1"></div>
                     <label class="form-check-label" for="settingssmartkeepallfordaysvalue">day(s)</label>
                   </div>
-                  
+
                   <div class="row settingsrow smartremoverow">
                     <div class="form-check col-3">
                       <input id="settingssmartkeeponeperdayfordays" class="form-check-input autoupd" type="checkbox" value="">
                       <label class="form-check-label" for="settingssmartkeeponeperdayfordays">Keep one snapshot per day for the last</label>
-                    </div>                  
+                    </div>
                     <input id="settingssmartkeeponeperdayfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
                     <div class="col-1"></div>
                     <label class="form-check-label" for="settingssmartkeeponeperdayfordaysvalue">day(s)</label>
                   </div>
-                  
+
                   <div class="row settingsrow smartremoverow">
                     <div class="form-check col-3">
                       <input id="settingssmartkeeponeperdayforweeks" class="form-check-input autoupd" type="checkbox" value="">
                       <label class="form-check-label" for="settingssmartkeeponeperdayforweeks">Keep one snapshot per week for the last</label>
-                    </div>                  
+                    </div>
                     <input id="settingssmartkeeponeperdayforweeksvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Weeks" />
                     <div class="col-1"></div>
                     <label class="form-check-label" for="settingssmartkeeponeperdayforweeksvalue">week(s)</label>
                   </div>
-                  
+
                   <div class="row settingsrow smartremoverow">
                     <div class="form-check col-3">
                       <input id="settingssmartkeeponepermonthformonths" class="form-check-input autoupd" type="checkbox" value="">
                       <label class="form-check-label" for="settingssmartkeeponepermonthformonths">Keep one snapshot per month for the last</label>
-                    </div>                  
+                    </div>
                     <input id="settingssmartkeeponepermonthformonthsvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Months" />
                     <div class="col-1"></div>
                     <label class="form-check-label" for="settingssmartkeeponepermonthformonthsvalue">month(s)</label>
                   </div>
-                  
+
                   <div class="row settingsrow smartremoverow">
                     <div class="form-check col-12">
                       <label class="form-check-label" for="smartremovediv">Keep one snapshot per year for all years</label>
-                    </div>                  
+                    </div>
                   </div>
                 </div>
 
@@ -470,54 +470,54 @@
                   <div class="form-check col-12">
                     <input id="settingsdontremovenamed" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingsdontremovenamed">Don't Remove Named Snapshots</label>
-                  </div>                  
+                  </div>
                 </div>
-                
+
               </div>
               <div class="tab-pane fade" id="settings-options" role="tabpanel" aria-labelledby="settings-options-tab">
-              
+
                 <div class="row settingsrow">
                   <div class="form-check">
                     <input id="settingsreplaceonrestore" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingsreplaceonrestore">Backup replaced files on restore</label>
-                  </div>                  
+                  </div>
                 </div>
-                
+
                 <div class="row settingsrow">
                   <div class="form-check">
                     <input id="settingscontinueonerror" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingscontinueonerror">Continue on errors (keep incomplete snapshots)</label>
-                  </div>                  
+                  </div>
                 </div>
-              
+
                 <div class="row settingsrow">
                   <div class="form-check">
                     <input id="settingssnapshotifnochanges" class="form-check-input autoupd" type="checkbox" value="">
                     <label class="form-check-label" for="settingssnapshotifnochanges">Take a new snapshots, even if no changes are detected</label>
-                  </div>                  
+                  </div>
                 </div>
-              
+
                 <div class="row settingsrow">
                   <div class="form-check col-2">
                     <label class="form-check-label" for="settingsloglevel">Log Level</label>
-                  </div>                  
+                  </div>
                   <select id="settingsloglevel" class="form-control appselect col-4 autoupd">
                     <option value="1">1</option>
                     <option value="2">2</option>
                     <option value="3">3</option>
                   </select>
                 </div>
-              
+
                 <div class="row settingsrow">
                   <div class="form-check col-2">
                     <label class="form-check-label" for="settingsadditionalrsync">Additional Options</label>
-                  </div>                  
+                  </div>
                   <input id="settingsadditionalrsync" class="form-control form-control-sm col-8 autoupd" type="text" placeholder="Paste in additional options for rsync" />
                 </div>
               </div>
-              
+
               <!-- <div class="tab-pane fade" id="settings-expert" role="tabpanel" aria-labelledby="settings-expert-tab"></div>  -->
-            </div>        
+            </div>
 
         </div>
         <div class="contentsection" id="logssection" style="display: none;">
@@ -527,7 +527,7 @@
         <div class="contentsection" id="aboutsection" style="display: none;">
           <h1 class="mt-4">About TimeSync</h1>
           <p>Disappointed because there was no incremental backup system bundled with my Western Digital EX4100 NAS, I decided to embark on a project to build one.</p>
-          <p>It is heavily influenced by the <a href="https://backintime.readthedocs.io" title="BackInTime" target="_blank">BackInTime</a> project, 
+          <p>It is heavily influenced by the <a href="https://backintime.readthedocs.io" title="BackInTime" target="_blank">BackInTime</a> project,
           although it's a completely independent development that has been aimed at this range of devices.</p>
           <p>The target was to create a web-based, mobile-friendly application, making use of only the applications that are bundled with the Personal Cloud device:
           <ul>
@@ -544,8 +544,8 @@
           <li><a href="https://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> (and <a href="https://startbootstrap.com" title="StartBootstrap" target="_blank">StartBootstrap</a>)</li>
           <li><a href="https://www.w3.org/Style/CSS" title="CSS" target="_blank">CSS</a></li>
           </ul></p>
-          <p>A big thanks to the many sites and - of course - to the countless number of contributors over the years, that were used as a resource for tips and tricks,  
-          and without which the timeline of this project would have been greatly extended.  Thanks also to those who inspired the project, and who invented the platforms on which it sits.  
+          <p>A big thanks to the many sites and - of course - to the countless number of contributors over the years, that were used as a resource for tips and tricks,
+          and without which the timeline of this project would have been greatly extended.  Thanks also to those who inspired the project, and who invented the platforms on which it sits.
           In no particular order, some of these are:
           <ul>
           <li><a href="https://github.com/bit-team/backintime" title="Bit-Team's BackInTime" target="_blank">Bit-Team's BackInTime</a></li>
@@ -568,7 +568,7 @@
         </div>
       </div>
     </div>
-    
+
 
 
     <!-- /#page-content-wrapper -->

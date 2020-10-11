@@ -13,7 +13,7 @@ $( document ).ready(function() {
     var pdata = new Object();
     pdata.fn = "profiles_list";
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
@@ -25,17 +25,17 @@ $( document ).ready(function() {
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
       }
-    }); 
+    });
   });
 
 
   // Update a settings value on leaving the field
   $(".autoupd").change(function(){
-    
+
     // Is it a checkbox, or a radio button
     var eltType = $(this).attr('type');
     var eltVal = "";
-    
+
     // At the init stage we remove autoupd, but later reinstate it
     if ($(this).hasClass('autoupd')) {
       switch ($(this).attr('type')) {
@@ -46,14 +46,14 @@ $( document ).ready(function() {
         default:
           eltVal = $(this).val();
       }
-      
+
       var pdata = new Object();
       pdata.fn = "updateprofilesetting";
       pdata.profileid = $('#selectprofile').val();
       pdata.settingname = $(this).attr('id');
       pdata.settingvalue = eltVal;
 
-      $.ajax('./vendor/app/php/app.php', 
+      $.ajax('./vendor/app/php/app.php',
       {
         dataType: 'json',
         type: 'POST',
@@ -64,7 +64,7 @@ $( document ).ready(function() {
         error: function (jqXhr, textStatus, errorMessage) {
           console.log('Error: ' + errorMessage);
         }
-      }); 
+      });
     } // has autoupd class
   });
 
@@ -76,14 +76,14 @@ $( document ).ready(function() {
     pdata.fn = "selectprofilesettings";
     pdata.profileid = $('#selectprofile').val();
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
       data: pdata,
       success: function (data,status,xhr) {
         console.log(data);
-        
+
         // Temporarily remove the 'autoupd' class from the element
         var elts = $('.autoupd');
         elts.each(function(i, elt){
@@ -105,7 +105,7 @@ $( document ).ready(function() {
             }
           });
         }
-        
+
         // Trigger a change of those elements having dependent elements
         $('#settingsdeleteolderthan').trigger('change');
         $('#settingsdeletefreespacelessthan').trigger('change');
@@ -113,13 +113,13 @@ $( document ).ready(function() {
         $('#settingssmartkeepallfordays').trigger('change');
         $('#settingssmartkeeponeperdayfordays').trigger('change');
         $('#settingssmartkeeponeperdayforweeks').trigger('change');
-        $('#settingssmartkeeponepermonthformonths').trigger('change');      
+        $('#settingssmartkeeponepermonthformonths').trigger('change');
         $('#settingssmartremove').trigger('change');
         $('#settingshost').trigger('change');
 
         getIncludeItems();
         getExcludeItems();
-        
+
         // Reinstate the 'autoupd' class to the element
         elts.each(function(i, elt){
           $(elt).addClass('autoupd');
@@ -128,7 +128,7 @@ $( document ).ready(function() {
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
       }
-    }); 
+    });
 
   });
 
@@ -145,7 +145,7 @@ $( document ).ready(function() {
     // Enable or diable the dependent elements
     var ischecked = 0;
     if ($(this).is(":checked")) ischecked = 1;
-    
+
     $('#smartremovediv').find('input').each(function(i, elt) {
       if (ischecked == 0) $(elt).attr('disabled','disabled');
       else $(elt).removeAttr('disabled');
@@ -164,7 +164,7 @@ $( document ).ready(function() {
       $('#settingsdeletebackupolderthanperiod').attr('disabled','disabled');
     }
   });
-  
+
    $('#settingsdeletefreespacelessthan').change(function(){
     // Enable or diable the dependent elements
     if ($(this).is(":checked")) {
@@ -177,7 +177,7 @@ $( document ).ready(function() {
       $('#settingsdeletefreespacelessthanunit').attr('disabled','disabled');
     }
   });
-   
+
   $('#settingsdeleteinodeslessthan').change(function(){
     // Enable or diable the dependent elements
     if ($(this).is(":checked")) {
@@ -193,20 +193,20 @@ $( document ).ready(function() {
     var pdata = new Object();
     pdata.fn = "adddefaultexcludes";
     pdata.profileid = $('#selectprofile').val();
-    
+
     // Provide feedback to the user
     var spinelt = createSpinner('excludefilescontainer','');
     spinelt.css('top','5px');
     spinelt.css('left','250px');
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
       data: pdata,
       success: function (data,status,xhr) {
         console.log(data);
-        
+
         // Refresh the exclude list
         getExcludeItems()
         spinelt.remove();
@@ -215,7 +215,7 @@ $( document ).ready(function() {
         console.log('Error: ' + errorMessage);
         spinelt.remove();
       }
-    });    
+    });
   });
 
 
@@ -233,7 +233,7 @@ $( document ).ready(function() {
     spinelt.css('top','5px');
     spinelt.css('left','250px');
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
@@ -271,7 +271,7 @@ $( document ).ready(function() {
     spinelt.css('top','5px');
     spinelt.css('left','190px');
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
@@ -293,7 +293,7 @@ $( document ).ready(function() {
       }
     });
   });
-  
+
 
   // Click of Include Add Folder
   $("#includeaddfolder").click(function(){
@@ -304,16 +304,16 @@ $( document ).ready(function() {
     $("#includefilebrowsebody").empty();
     // Fade in the includeaddfilebrowse
     $("#includeaddfilebrowse").fadeIn();
-    
+
     includeFileBrowseDir = "/shares";
     includeType = "d";
     getDirectoryContents("include", includeType, includeFileBrowseDir, "");
-  }); 
+  });
 
 
   // Click of Include Add File
   $('#includeaddfile').click(function() {
-    
+
     // Remove the includefilescontainer
     $("#includefilescontainer").css("display","none");
     $("#includefilesbuttons").css("display","none");
@@ -350,7 +350,7 @@ $( document ).ready(function() {
     pdata.filepath = selFile;
     pdata.filetype = selType;
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
@@ -402,11 +402,11 @@ $( document ).ready(function() {
     $("#excludefilebrowsebody").empty();
     // Fade in the excludeaddfilebrowse
     $("#excludeaddfilebrowse").fadeIn();
-    
+
     excludeFileBrowseDir = "/shares";
     excludeType = "d";
     getDirectoryContents("exclude", excludeType, excludeFileBrowseDir, "");
-  }); 
+  });
 
   // Click of select in the exclude file browse
   $("#excludeaddselect").click(function(){
@@ -423,7 +423,7 @@ $( document ).ready(function() {
     pdata.filepath = selFile;
     pdata.filetype = selType;
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
@@ -458,7 +458,7 @@ $( document ).ready(function() {
     // Fade in the excludeaddmiscitembrowse
     $("#excludeaddmiscitembrowse").fadeIn();
   });
-  
+
   // Click of select in the exclude misc item browse
   $("#excludeaddmiscitemselect").click(function(){
     var selFile = $("#excludeaddmisciteminput").val();
@@ -475,7 +475,7 @@ $( document ).ready(function() {
     pdata.filepath = selFile;
     pdata.filetype = selType;
 
-    $.ajax('./vendor/app/php/app.php', 
+    $.ajax('./vendor/app/php/app.php',
     {
       dataType: 'json',
       type: 'POST',
@@ -495,7 +495,7 @@ $( document ).ready(function() {
 
 
 // ============================================================================================================================================
-  
+
   $('#settingshost').change(function(){
     SetSettingsFullSnapshotPath();
   });
@@ -505,7 +505,7 @@ $( document ).ready(function() {
   $('#settingsprofile').change(function(){
     SetSettingsFullSnapshotPath();
   });
-  
+
   Init();
 
 }); // Page Ready
@@ -530,24 +530,24 @@ function getIncExcTypeDesc(type) {
 }
 
 function getDirectoryContents(actiontype, type, dir, sel){
-  
+
   var pdata = new Object();
   pdata.fn = "getdirectorycontents";
   pdata.type = type;
   pdata.dir = dir;
   pdata.sel = sel;
-  
+
   // Get a description of what is being searched for
   var Bdesc = "Select "+getIncExcTypeDesc(type)+" to "+actiontype;
   $("#"+actiontype+"addfilebrowse").find("nav").text(Bdesc);
-  
+
   // Ensure the body of the file browse is clear
   $("#"+actiontype+"filebrowsebody").empty();
-  
+
   // Provide feedback to the user
   var spinelt = createSpinner(actiontype+'filebrowsebody','');
-  
-  $.ajax('./vendor/app/php/app.php', 
+
+  $.ajax('./vendor/app/php/app.php',
   {
     dataType: 'json',
     type: 'POST',
@@ -574,7 +574,7 @@ function getDirectoryContents(actiontype, type, dir, sel){
 
       spinelt.remove();
     }
-  });    
+  });
 }
 
 
@@ -599,7 +599,7 @@ function createFileLine(actiontype, type, item, celt) {
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(rowelt);
   var namelt = $("<span/>").addClass("").attr("id","name_"+item.id).text(item.filename).appendTo(rowelt);
   rowelt.appendTo(celt);
-  
+
   // Add trigger
   rowelt.click(function() {
     // Get the id of the currently selected item using the class name
@@ -608,7 +608,7 @@ function createFileLine(actiontype, type, item, celt) {
     var elts = celt.find(".inclexclsel").removeClass("inclexclsel");
     // Set the value of the hidden selector, if it is not the same setid
     $(this).addClass("inclexclsel");
-    
+
     if (type == $(this).attr("filetype")) {
       $("#"+actiontype+"addselect").removeAttr("disabled");
     }
@@ -616,7 +616,7 @@ function createFileLine(actiontype, type, item, celt) {
       $("#"+actiontype+"addselect").attr("disabled","disabled");
     }
   });
-  
+
   // Add trigger
   rowelt.dblclick(function() {
     // You can't drill down into a file
@@ -645,8 +645,8 @@ function getIncludeItems() {
   var pdata = new Object();
   pdata.fn = "getincludepatterns";
   pdata.profileid = $('#selectprofile').val();
-  
-  $.ajax('./vendor/app/php/app.php', 
+
+  $.ajax('./vendor/app/php/app.php',
   {
     dataType: 'json',
     type: 'POST',
@@ -657,13 +657,13 @@ function getIncludeItems() {
       if (data.items.length > 0) {
         // Remove current items here
         $('#includefilescontainer').find('.inclitem').remove();
-        
+
         // Populate new items
         $.each(data.items, function (i, item) {
 
           // include items in the frontend
           insertIncludeItem(item);
-          
+
           // Add trigger
           var eltid = 'inclrow_'+item.setid;
           $('#'+eltid).click(function() {
@@ -682,19 +682,19 @@ function getIncludeItems() {
               $('#includeremove').removeAttr('disabled');
             }
           });
-          
+
         });
       }
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
     }
-  });   
+  });
 }
 
 
 function insertIncludeItem(item) {
-  
+
   var cdiv = $('<div/>').attr('id','inclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow inclitem');
   var fidiv = $('<div/>').attr('id','inclcell1_'+item.setid).addClass('snapcolumn col-1').text('O').appendTo(cdiv);
   var fndiv = $('<div/>').attr('id','inclcell2_'+item.setid).addClass('snapcolumn col-11').text(item.setval).appendTo(cdiv);
@@ -707,8 +707,8 @@ function getExcludeItems() {
   var pdata = new Object();
   pdata.fn = "getexcludepatterns";
   pdata.profileid = $('#selectprofile').val();
-  
-  $.ajax('./vendor/app/php/app.php', 
+
+  $.ajax('./vendor/app/php/app.php',
   {
     dataType: 'json',
     type: 'POST',
@@ -719,7 +719,7 @@ function getExcludeItems() {
       if (data.items.length > 0) {
         // Remove current items here
         $('#excludefilescontainer').find('.exclitem').remove();
-        
+
         // Populate new items
         $.each(data.items, function (i, item) {
           // include items in the frontend
@@ -745,18 +745,18 @@ function getExcludeItems() {
             }
           });
         });
-        
+
       }
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
     }
-  });   
+  });
 }
 
 
 function insertExcludeItem(item) {
-  
+
   var cdiv = $('<div/>').attr('id','exclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow exclitem');
   var fidiv = $('<div/>').attr('id','exclcell1_'+item.setid).addClass('snapcolumn col-1').text('O').appendTo(cdiv);
   var fndiv = $('<div/>').attr('id','exclcell2_'+item.setid).addClass('snapcolumn col-11').text(item.setval).appendTo(cdiv);
@@ -765,7 +765,7 @@ function insertExcludeItem(item) {
 
 
 function Init() {
-  
+
   var pdata = new Object();
   pdata.fn = "init";
 
@@ -774,7 +774,7 @@ function Init() {
   spinelt.css('top','15px');
   spinelt.css('left','350px');
 
-  $.ajax('./vendor/app/php/app.php', 
+  $.ajax('./vendor/app/php/app.php',
   {
     dataType: 'json',
     type: 'POST',
@@ -784,7 +784,7 @@ function Init() {
 
       // Get the Profiles select built
       BuildProfilesSelect();
-      
+
       // SJT temporary convenience action for debugging
 	    $("#settingsmenu").trigger("click");
       spinelt.remove();
@@ -799,12 +799,12 @@ function Init() {
 
 
 function BuildProfilesSelect() {
-  
+
   // Get the Profiles List for the DDL
   var pdata = new Object();
   pdata.fn = "selectprofileslist";
 
-  $.ajax('./vendor/app/php/app.php', 
+  $.ajax('./vendor/app/php/app.php',
   {
     dataType: 'json',
     type: 'POST',
@@ -820,15 +820,15 @@ function BuildProfilesSelect() {
       if (data.items.length > 0) {
         $.each(data.items, function (i, item) {
           if (item.selected == 'selected') {
-            $('#selectprofile').append($('<option>', { 
+            $('#selectprofile').append($('<option>', {
               value: item.id,
               text : item.profilename,
               selected: item.selected
             }));
           } else {
-            $('#selectprofile').append($('<option>', { 
+            $('#selectprofile').append($('<option>', {
               value: item.id,
-              text : item.profilename 
+              text : item.profilename
             }));
           }
         });
@@ -841,7 +841,7 @@ function BuildProfilesSelect() {
       console.log('Error: ' + errorMessage);
     }
   }); 	
-  
+
 }
 
 

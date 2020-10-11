@@ -34,7 +34,7 @@ function getProfileId($ProfileName) {
 
   $Exists = 0;
   $rtn = "-1";
-  
+
   $db = new MyDB();
   if(!$db) {
     $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
@@ -108,7 +108,7 @@ function getFileSpecId($ProfileId, $InclExcl, $Pattern) {
 
   $Exists = 0;
   $rtn = "-1";
-  
+
   $db = new MyDB();
   if(!$db) {
     $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
@@ -138,7 +138,7 @@ function getFileSpecId($ProfileId, $InclExcl, $Pattern) {
     $db->close();
   }
 
-  return $rtn;  
+  return $rtn;
 }
 
 function getDirectoryContentsFromShell() {
@@ -152,16 +152,16 @@ function getDirectoryContentsFromShell() {
   $filetype = SQLite3::escapeString($_POST["type"]);  // Choose 'file' or 'folder'
   $dir = SQLite3::escapeString($_POST["dir"]);        // Where to start browsing
   $sel = SQLite3::escapeString($_POST["sel"]);        // What the user clicked on
-  
+
   echo "{ \"result\" : \"ok\" , \"items\" : ";
-  
+
   if (empty($sel)) { $sel = $dir; }
   else {
     $dir = rtrim($dir, "/");
     $sel = rtrim($sel, "/");
     $sel = $dir."/".$sel;
   }
-  
+
   // Verify that the item exists, and that it is a folder or a link
   $validChdir = 0;
   exec("ls -la \"".$sel."\"", $chk, $int);
@@ -181,40 +181,40 @@ function getDirectoryContentsFromShell() {
       // Column1 is the directory indicator
       $dirind = substr($dirline, 0, 1);
       $fname = substr($dirline, 57);
-      // Include only directories and regular files 
+      // Include only directories and regular files
       if ($dirind == 'd' || $dirind == '-' || $dirind == 'l') {
-        
+
         if (($filetype == "d" && ($dirind == 'd' || $dirind == 'l')) || $filetype != "d") {
-          
+
           if ($dirind == 'l') {
             // Remove the SymLink symbol & everything to the right: ' ->'
             $fname = substr($fname,0,strpos($fname, " ->"));
           }
-          
-          // ********* NEED TO CHECK IF SYMLINKED RESOURCE IS A DIRECTORY, OR A FILE, AND FLAG AS SUCH ********* 
+
+          // ********* NEED TO CHECK IF SYMLINKED RESOURCE IS A DIRECTORY, OR A FILE, AND FLAG AS SUCH *********
 
           if ($fname != '.') {
             $lsinfo["id"] = $id;
             $lsinfo["filetype"] = $dirind;
             $lsinfo["filename"] = $fname;
-            
+
             array_push($arr, $lsinfo);
             $id = $id + 1;
           }
         }
       }
     }
-    
+
     exec("cd \"".$sel."\" && pwd", $pwd, $int);
     foreach ($pwd as $pwdline) {
       $sel = $pwdline;
     }
-    
+
   }
   else {
     $sel = $dir;
   }
-  
+
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
   echo " , \"newdir\" : \"".$sel."\" }";
 
@@ -225,12 +225,12 @@ function getDirectoryContentsFromShell() {
 // Web Method Functions ===========================
 /*
 function getDirectoryContents() {
-  
+
   $DirPath = SQLite3::escapeString($_POST["dir"]);
 
   $DirContentsArray = getDirectoryContentsFromShell($DirPath);
 //  getDirectoryContentsBE($DirPath);
-  
+
   echo json_encode($DirContentsArray, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 */
@@ -238,7 +238,7 @@ function getDirectoryContents() {
 function db_create_schema() {
   $db = new MyDB();
   $rtn = "ok";
- 
+
   if(!$db) {
     $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
   } else {
@@ -248,7 +248,7 @@ function db_create_schema() {
         id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         profilename                   CHAR(250) NOT NULL
       );
-      
+
       CREATE TABLE IF NOT EXISTS profilesettings (
         id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         profileid                     INTEGER NOT NULL,
@@ -259,7 +259,7 @@ function db_create_schema() {
       CREATE TABLE IF NOT EXISTS snapshots (
         id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         profileid                     INTEGER NOT NULL,
-        basepath                      TEXT    NOT NULL,  
+        basepath                      TEXT    NOT NULL,
         description                   TEXT    NOT NULL
       );
 
@@ -279,7 +279,7 @@ EOF;
     }
     $db->close();
   }
-  
+
   return $rtn;
 } // db_create_schema
 
@@ -288,13 +288,13 @@ function createDefaultProfile() {
 
   $ProfileName = "Default";
   $ProfileId = getProfileId($ProfileName);
-  
+
   $rtn = "ok";
-  
+
   if ($ProfileId <= 0) {
-  
+
     $db = new MyDB();
-    
+
     if(!$db) {
       $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
     } else {
@@ -303,7 +303,7 @@ function createDefaultProfile() {
         $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
       }
       $db->close();
-      
+
       $ProfileId = getProfileId($ProfileName);
     }
   }
@@ -316,7 +316,7 @@ function createDefaultProfile() {
 function insertDefaultProfileValues($ProfileId) {
 
   $arr = array();
-  
+
   $rtnarr["settingssaveto"] = insertProfileValue($ProfileId, "settingssaveto", "/shares/backup");
   $rtnarr["selectmode"] = insertProfileValue($ProfileId, "selectmode", "modelocal");;
   $rtnarr["settingshost"] = insertProfileValue($ProfileId, "settingshost", "mycloud");
@@ -324,7 +324,7 @@ function insertDefaultProfileValues($ProfileId) {
   $rtnarr["settingsdeletebackupolderthanperiod"] = insertProfileValue($ProfileId, "settingsdeletebackupolderthanperiod", "years");
   $rtnarr["settingsdeletefreespacelessthanunit"] = insertProfileValue($ProfileId, "settingsdeletefreespacelessthanunit", "gib");
   $rtnarr["selectschedule"] = insertProfileValue($ProfileId, "selectschedule", "xminutes");
-  
+
   return $rtnarr;
 }
 
@@ -350,13 +350,13 @@ function insertProfileValue($ProfileId, $ProfileKey, $ProfileValue) {
     }
     $db->close();
   }
-  
+
   return $arr;
 }
 
 // Inserts default excludes: *.backup*, *~, .Private, .cache/*, .dropbox*, .gvfs, .thumbnails*, [Tt]rash*, lost+found/*
 function insertDefaultExcludes() {
-  
+
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $arr = array();
   $rtn = array();
@@ -379,7 +379,7 @@ function insertDefaultExcludes() {
   array_push($rtn, $arr);
   $arr = insertIncludeExcludeValue($ProfileId, "exclude", ".lost+found/*");
   array_push($rtn, $arr);
-  
+
   $haserr = 0;
   foreach ($arr as $en) {
     if ($en["result"] != "ok") {
@@ -388,19 +388,19 @@ function insertDefaultExcludes() {
       break;
     }
   }
-  
+
   echo "{ \"result\" : \"".$res."\" , \"message\" : ";
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
   echo " }";
 }
 
 function insertIncludeExcludeValue($ProfileId, $InclExcl, $Pattern) {
-  
+
   $arr = array();
-  
+
   $ProfileSettingsId = getFileSpecId($ProfileId, $InclExcl, $Pattern);
   if ($ProfileSettingsId <= 0) {
-    
+
     $db = new MyDB();
     if(!$db) {
       $arr["result"] = "ko";
@@ -419,21 +419,21 @@ function insertIncludeExcludeValue($ProfileId, $InclExcl, $Pattern) {
 
       $db->close();
 
-    } // ProfileSetting does not exist   
+    } // ProfileSetting does not exist
   }
-  
+
   return $arr;
 }
 
 // Select all Include or Exclude Settings for a Profile ID
 function selectIncludeExclude($InclExcl) {
-  
+
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
-  
+
   $db = new MyDB();
   // Sort in ascending order - this is default
   $rows = $db->query("SELECT id setid, profilekey setkey, profilevalue setval FROM profilesettings WHERE profileid = ".$ProfileId." AND profilekey = '".$InclExcl."';");
-  
+
   echo "{ \"result\" : \"ok\" , \"items\" : [ ";
   $rowcnt = 0;
   while($row = $rows->fetchArray(SQLITE3_ASSOC)){
@@ -451,7 +451,7 @@ function selectProfilesList() {
   $db = new MyDB();
   // Sort in ascending order - this is default
   $rows = $db->query("SELECT id, ProfileName profilename, case ProfileName WHEN 'Default' THEN 'selected' ELSE '' END selected FROM profiles ORDER BY ProfileName;");
-  
+
   echo "{ \"result\" : \"ok\" , \"items\" : [ ";
   $rowcnt = 0;
   while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
@@ -465,13 +465,13 @@ function selectProfilesList() {
 
 // Select all Settings for a Profile ID, except the file includes
 function selectProfileSettings() {
-  
+
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
-  
+
   $db = new MyDB();
   // Sort in ascending order - this is default
   $rows = $db->query("SELECT profilekey setkey, profilevalue setval FROM profilesettings WHERE profileid = ".$ProfileId." AND profilekey != 'include' AND profilekey != 'exclude';");
-  
+
   echo "{ \"result\" : \"ok\" , \"items\" : [ ";
   $rowcnt = 0;
   while($row = $rows->fetchArray(SQLITE3_ASSOC)){
@@ -531,7 +531,7 @@ function updateProfileSetting() {
 
 
 function deleteProfileSetting() {
-  
+
   $SettingId = SQLite3::escapeString($_POST["settingid"]);
   $Exists = "-1";
 
@@ -567,7 +567,7 @@ function deleteProfileSetting() {
       }
     }
   }
-  
+
   echo " }";
 }
 
@@ -577,16 +577,16 @@ function insertIncludeFileFolder() {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $FilePath  = SQLite3::escapeString($_POST["filepath"]);
   $FileType  = SQLite3::escapeString($_POST["filetype"]);
-  
+
   if ($FileType == "d" && substr($FilePath, strlen($FilePath) - 1, 1) != "/" ) {
     $FilePath = $FilePath."/";
   }
-  
+
   echo "{ \"result\" : ";
 
   // Is the entry already on file, if not add
   $arr = insertIncludeExcludeValue ($ProfileId, "include", $FilePath);
-  
+
   echo "\"".$arr["result"]."\" , \"message\" : ";
   echo json_encode($arr["message"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
   echo " } ";
@@ -598,16 +598,16 @@ function insertExcludeFileFolder() {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $FilePath  = SQLite3::escapeString($_POST["filepath"]);
   $FileType  = SQLite3::escapeString($_POST["filetype"]);
-  
+
   if ($FileType == "d" && substr($FilePath, strlen($FilePath) - 1, 1) != "/" ) {
     $FilePath = $FilePath."/";
   }
-  
+
   echo "{ \"result\" : ";
 
   // Is the entry already on file, if not add
   $arr = insertIncludeExcludeValue ($ProfileId, "exclude", $FilePath);
-  
+
   echo "\"".$arr["result"]."\" , \"message\" : ";
   echo json_encode($arr["message"], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
   echo " } ";
@@ -675,6 +675,6 @@ switch ($WhatToRun) {
 }
 
 
-// writeMsg(); // call the function  
+// writeMsg(); // call the function
 
 ?>
