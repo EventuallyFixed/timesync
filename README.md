@@ -24,7 +24,7 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 # Development status
 - Ongoing
 
-#ToDo
+# ToDo
 - Fill out the Settings Schedule, to be able to specify values
   - And also save & recall these values
 - Include & Exclude:
