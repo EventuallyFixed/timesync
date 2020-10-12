@@ -25,12 +25,14 @@
 
 /* Profiles section */
 .appselectlabel { margin: 5px 2px 0px 0px; font-style: italic; }
+.appinputlabel { font-style: italic; }
 .appselect { display: inline; width: auto; margin: 0px 2px 0px 2px; }
 .settingsrow { margin: 2px; }
 
 .appinputlabel { font-style: italic; }
 .encryptinput { margin: 15px; }
 .smartremoverow { margin: 15px; }
+.schedule { display: none; }
 
 #addprofilediv { display: none; }
 #addprofileinp { margin-bottom: 2px; }

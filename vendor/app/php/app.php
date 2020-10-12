@@ -349,6 +349,21 @@ function insertProfileValue($ProfileId, $ProfileKey, $ProfileValue) {
     }
     $db->close();
   }
+  else {
+    $db = new MyDB();
+
+    // Update an existing record
+    $ret = $db->exec("UPDATE profilesettings SET profilevalue = '".$ProfileValue."' WHERE profileid = ".$ProfileId." AND profilekey = '".$ProfileKey."';");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Profile Setting '".$ProfileKey."' updated to: '".$ProfileValue."'";
+    }
+    $db->close();
+  }
 
   return $arr;
 }
@@ -836,7 +851,24 @@ function insertExcludeFileFolder() {
 }
 
 
+function updateSchedule() {
 
+  // The separate JSON calls for this group lock the database, so resolve this here...
+  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
+  $ScheduleOpts = json_decode(SQLite3::escapeString($_POST["scheduleopt"]), true);
+
+  $arr = array();
+  $res = array();
+
+  $pos = 0;
+  foreach($ScheduleOpts as $so) {
+    $arr = insertProfileValue($ProfileId, $so["key"], $so["val"]);
+    $res[$so["key"]] = $arr;
+    $pos = $pos + 1;
+  }
+
+  echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
 
 
 function writeErrorMsg() {
@@ -895,6 +927,9 @@ switch ($WhatToRun) {
     break;
   case "deleteprofile":
     deleteProfile();
+    break;
+  case "updateschedule":
+    updateSchedule();
     break;
   default:
     writeErrorMsg();

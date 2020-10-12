@@ -25,26 +25,26 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 - Ongoing
 
 # ToDo
-- Fill out the Settings Schedule, to be able to specify values
-  - And also save & recall these values
+- Allow upload and save of SSH private keys.
+  - Save keys in file system: timesync/profiles/profileId/KeyFile.
+  - Check for existence of key before upload (one key per profile? Overwrite option?).
 - Include & Exclude:
   - Issue with selection of symlinks pointing to files/folders.
     - Perhaps these should be selectable as the linked-to type?
       - How will rsync deal with the symlinks?
-- Revamp the Snapshots screen layout, to be mobile friendly.
+- Revamp the Snapshots screen layout, to be more mobile friendly.
 - Translate settings into rsync commands:
   - Execute the rsync commands!
 - Logic to build script to do Smart Remove.
 - Translate schedules into cron job XMLs (See posts in WD Community: [Post 1](https://community.wd.com/t/crontab-on-mycloud-ex2/98653/21); [Post 2](https://community.wd.com/t/nas-to-usb-automatic-incremental-backup/193625)):
   - Be able to reliably add/delete the cron entries using php's XML tools.
 - Wrap the application in the WD application wrapper (See: [WD Developer SDK](https://developer.westerndigital.com/develop/wd/sdk.html#intro)).
-- Implement SSH options.
 
 # Completed
 - Screens - Initial design prototypes.
 - Database - Initialise, Load, & Save.
 - Settings - Initialise, Load, & Save.
-- Include & Exclude folders 
+- Include & Exclude folders.
   - Initialise, Load, Save, Add, & Remove.
   - Show Icons for files and folders.
 - Profiles Add, and Delete.

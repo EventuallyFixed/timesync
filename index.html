@@ -282,20 +282,140 @@
                 <div class="row settingsrow"><h5>Schedule</h5></div>
 
                 <div class="row settingsrow">
-                  <label class="appselectlabel" for="selectschedule"></label>
-                  <select id="selectschedule" class="form-control col-12 appselect autoupd">
-                    <option value="boot">At every boot/reboot</option>
-                    <option value="xminutes">Every X minutes</option>
-                    <option value="xhours">Every X hours</option>
-                    <option value="customhours">Custom Hours</option>
+                  <label class="appselectlabel" for="selectschedule">Select Schedule Type</label>
+                  <select id="selectschedule" class="form-control col-12 appselect scheduleupd">
+<!--                    <option value="boot"        crit="">At every boot/reboot</option> -->
+                    <option value="manual">Manual Snapshots</option>
+                    <option value="minute">Every X minutes</option>
+                    <option value="hour">Every X hours</option>
+<!--                    <option value="customhours">Custom Hours</option> -->
                     <option value="daily">Every Day</option>
-                    <option value="repeatedly">Repeatedly</option>
-                    <option value="connected">When drive get connected</option>
+<!--                    <option value="connected">When drive get connected</option> -->
+<!--                    <option value="repeatedly">Repeatedly</option> -->
                     <option value="weekly">Every Week</option>
                     <option value="monthly">Every Month</option>
                   </select>
                 </div>
-
+                <div id="settingsscheduleminutediv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsscheduleminuteselect">Minutes:</label>
+                  <select id="settingsscheduleminuteselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                  </select>
+                </div>
+                <div id="settingsschedulehourdiv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsschedulehourselect">Hours:</label>
+                  <select id="settingsschedulehourselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="12">12</option>
+                  </select>
+                </div>
+<!--
+                <div id="settingsschedulecustomcrondiv" class="row settingsrow schedule">
+                  <input id="settingsschedulecustomcroninp" type="text" class="form-check-input scheduleupd"></input>
+                </div>
+-->
+                <div id="settingsscheduledailydiv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsscheduledailyhourselect">Hour:</label>
+                  <select id="settingsscheduledailyhourselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                  </select>
+                  <label class="appselectlabel" for="settingsscheduledailyminuteselect">Minute:</label>
+                  <select id="settingsscheduledailyminuteselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="00">00</option>
+                    <option value="05">05</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="55">55</option>
+                  </select>
+                </div>
+              </div>
+              <div id="settingsscheduleweeklydiv" class="row settingsrow schedule">
+                <label class="appselectlabel" for="settingsscheduleweeklydayselect">Weekday:</label>
+                <select id="settingsscheduleweeklydayselect" class="form-control appselect scheduleupd">
+                  <option value="0">Sun</option>
+                  <option value="1">Mon</option>
+                  <option value="2">Tue</option>
+                  <option value="3">Wed</option>
+                  <option value="4">Thu</option>
+                  <option value="5">Fri</option>
+                  <option value="6">Sat</option>
+                </select>
+              </div>
+              <div id="settingsschedulemonthlydiv" class="row settingsrow schedule">
+                <label class="appselectlabel" for="settingsschedulemonthlydayselect">Day:</label>
+                <select id="settingsschedulemonthlydayselect" class="form-control appselect scheduleupd">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="13">13</option>
+                  <option value="14">14</option>
+                  <option value="15">15</option>
+                  <option value="16">16</option>
+                  <option value="17">17</option>
+                  <option value="18">18</option>
+                  <option value="19">19</option>
+                  <option value="20">20</option>
+                  <option value="21">21</option>
+                  <option value="22">22</option>
+                  <option value="23">23</option>
+                  <option value="24">24</option>
+                  <option value="25">25</option>
+                  <option value="26">26</option>
+                  <option value="27">27</option>
+                  <option value="28">28</option>
+                  <option value="29">29</option>
+                  <option value="30">30</option>
+                  <option value="31">31</option>
+                </select>
+                <label id="daywarninglabel" class="warninglabel"></label>
               </div>
               <div class="tab-pane fade" id="settings-include" role="tabpanel" aria-labelledby="settings-include-tab">
 

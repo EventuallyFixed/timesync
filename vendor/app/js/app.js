@@ -35,10 +35,11 @@ $(document).ready(function() {
     // Is it a checkbox, or a radio button
     var eltType = $(this).attr('type');
     var eltVal = "";
+    var eltId = $(this).attr('id');
 
     // At the init stage we remove autoupd, but later reinstate it
-    if ($(this).hasClass('autoupd')) {
-      switch ($(this).attr('type')) {
+    if ($(this).hasClass("autoupd")) {
+      switch ($(this).attr("type")) {
         case "checkbox":
           eltVal = 0;
           if ($(this).is(":checked")) eltVal = 1;
@@ -50,7 +51,7 @@ $(document).ready(function() {
       var pdata = new Object();
       pdata.fn = "updateprofilesetting";
       pdata.profileid = $('#selectprofile').val();
-      pdata.settingname = $(this).attr('id');
+      pdata.settingname = eltId;
       pdata.settingvalue = eltVal;
 
       $.ajax('./vendor/app/php/app.php',
@@ -89,9 +90,15 @@ $(document).ready(function() {
         console.log(data);
 
         // Temporarily remove the 'autoupd' class from the element
-        var elts = $('.autoupd');
-        elts.each(function(i, elt){
-          $(elt).removeClass('autoupd');
+        var autoupd_elts = $(".autoupd");
+        autoupd_elts.each(function(i, elt){
+          $(elt).removeClass("autoupd");
+        });
+
+        // Temporarily remove the 'scheduleupd' class from the element
+        var scheduleupd_elts = $(".scheduleupd");
+        scheduleupd_elts.each(function(i, elt){
+          $(elt).removeClass("scheduleupd");
         });
 
         if (data.items.length > 0) {
@@ -120,12 +127,19 @@ $(document).ready(function() {
         $('#settingssmartkeeponepermonthformonths').trigger('change');
         $('#settingssmartremove').trigger('change');
         $('#settingshost').trigger('change');
+        $("#selectschedule").trigger('change');
+        $("#settingsschedulemonthlydayselect").trigger('change');
 
         getIncludeItems();
         getExcludeItems();
 
+        // Reinstate the 'scheduleupd' class to the element
+        scheduleupd_elts.each(function(i, elt){
+          $(elt).addClass('scheduleupd');
+        });
+
         // Reinstate the 'autoupd' class to the element
-        elts.each(function(i, elt){
+        autoupd_elts.each(function(i, elt){
           $(elt).addClass('autoupd');
         });
       },
@@ -133,7 +147,6 @@ $(document).ready(function() {
         console.log('Error: ' + errorMessage);
       }
     });
-
   });
 
 
@@ -156,6 +169,7 @@ $(document).ready(function() {
     });
   });
 
+
   $('#settingsdeleteolderthan').change(function(){
     // Enable or diable the dependent elements
     if ($(this).is(":checked")) {
@@ -169,7 +183,8 @@ $(document).ready(function() {
     }
   });
 
-   $('#settingsdeletefreespacelessthan').change(function(){
+
+  $('#settingsdeletefreespacelessthan').change(function(){
     // Enable or diable the dependent elements
     if ($(this).is(":checked")) {
       $('#settingsdeletefreespacelessthanvalue').removeAttr('disabled');
@@ -181,6 +196,7 @@ $(document).ready(function() {
       $('#settingsdeletefreespacelessthanunit').attr('disabled','disabled');
     }
   });
+
 
   $('#settingsdeleteinodeslessthan').change(function(){
     // Enable or diable the dependent elements
@@ -341,6 +357,7 @@ $(document).ready(function() {
     $("#includefilesbuttons").fadeIn();
   });
 
+
   // Click of Select in Include Files Browse
   $("#includeaddselect").click(function(){
     var selFile = includeFileBrowseDir + "/" + $("#includeaddfilebrowse").find(".inclexclsel").attr("filename");
@@ -405,6 +422,7 @@ $(document).ready(function() {
     getDirectoryContents("exclude", excludeType, excludeFileBrowseDir, "");
   });
 
+
   // Click of Exclude Add Folder
   $("#excludeaddfolder").click(function(){
     // Remove the excludefilescontainer
@@ -419,6 +437,7 @@ $(document).ready(function() {
     excludeType = "d";
     getDirectoryContents("exclude", excludeType, excludeFileBrowseDir, "");
   });
+
 
   // Click of select in the exclude file browse
   $("#excludeaddselect").click(function(){
@@ -459,12 +478,14 @@ $(document).ready(function() {
     });
   });
 
+
   // Cancel out of the Exclude Misc Item browse
   $("#excludeaddmiscitemcancel").click(function(){
     $("#excludeaddmiscitembrowse").css("display","none");
     $("#excludefilescontainer").fadeIn();
     $("#excludefilesbuttons").fadeIn();
   });
+
 
   // Click of Exclude Add Misc Item
   $('#excludeadd').click(function() {
@@ -476,6 +497,7 @@ $(document).ready(function() {
     // Fade in the excludeaddmiscitembrowse
     $("#excludeaddmiscitembrowse").fadeIn();
   });
+
 
   // Click of select in the exclude misc item browse
   $("#excludeaddmiscitemselect").click(function(){
@@ -517,9 +539,6 @@ $(document).ready(function() {
     });
   });
 
-
-// ============================================================================================================================================
-
   $('#settingshost').change(function(){
     SetSettingsFullSnapshotPath();
   });
@@ -530,11 +549,13 @@ $(document).ready(function() {
     SetSettingsFullSnapshotPath();
   });
 
+
   // Click of New Profile
   $("#newprofilebtn").click(function(){
     $("#selectprofilediv").css("display", "none");
     $("#addprofilediv").fadeIn();
   });
+
 
   // Click of Add Profile
   $("#addprofilebtn").click(function(){
@@ -575,12 +596,14 @@ $(document).ready(function() {
     });
   });
 
+
   // Click of Delete Profile
   $("#canprofilebtn").click(function(){
     $("#addprofilediv").css("display", "none");
     $("addprofileinp").val();
     $("#selectprofilediv").fadeIn();
   });
+
 
   // Click of Delete Profile
   $("#delprofilebtn").click(function(){
@@ -618,9 +641,91 @@ $(document).ready(function() {
     });
   });
 
+
+  // On change of Select Schedule
+  $("#selectschedule").change(function() {
+    // Hide all of the options
+    $(".schedule").css("display", "none");
+    // Show the correct option
+    switch($(this).val()){
+      case "minute":
+      case "hour":
+      case "daily":
+      case "weekly":
+      case "monthly":
+        $("#settingsschedule"+$(this).val()+"div").fadeIn();
+        break;
+      default:
+        // nothing
+    }
+  });
+
+
+  // Update a settings value for the scheduling on leaving the field
+  $(".scheduleupd").change(function(){
+    // Separate JSON calls lock the database, so resolve this here...
+    var scheduleOpts = new Array();
+
+    // Save the Schedule Type
+    var scheduleTypeObj = new Object();
+    scheduleTypeObj.key = "selectschedule";
+    scheduleTypeObj.val = $('#selectschedule').val();
+    scheduleOpts.push(scheduleTypeObj);
+
+    // Save the Schedule Options
+    $("#settingsschedule"+$("#selectschedule").val()+"div").find(".scheduleupd").each(function(i, elt){
+      var scheduleOpt = new Object();
+      scheduleOpt.key = $(elt).attr("id");
+      scheduleOpt.val = $(elt).val();
+      scheduleOpts.push(scheduleOpt);
+    })
+    
+    var pdata = new Object();
+    pdata.fn = "updateschedule";
+    pdata.profileid = $('#selectprofile').val();
+    pdata.scheduleopt = JSON.stringify(scheduleOpts);
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+      }
+    });
+  });
+
+  $("#settingsschedulemonthlydayselect").change(function(){
+    var msg="";
+    var labelelt = $("#daywarninglabel");
+    switch($(this).val()) {
+      case "31":
+        msg="Warning: A snapshot will not be taken in February, April, June, September, and November!";
+        break;
+      case "30":
+        msg="Warning: A snapshot will not be taken in February!";
+        break;
+      case "29":
+        msg="Warning: A snapshot will not be taken in February, except in a Leap Year!";
+        break;
+      default:
+        msg = "";
+    }
+    $("#daywarninglabel").text(msg);
+    if (msg=="") labelelt.fadeOut();
+    else labelelt.fadeIn();
+  });
+
   Init();
 
 }); // Page Ready
+
+// ============================================================================================================================================
+
 
 // Get a description for the types
 function getIncExcTypeDesc(type) {
@@ -640,6 +745,7 @@ function getIncExcTypeDesc(type) {
   }
   return desc;
 }
+
 
 function getDirectoryContents(actiontype, type, dir, sel){
 
@@ -740,6 +846,7 @@ function createFileLine(actiontype, type, item, celt) {
   });
 
 }
+
 
 function SetSettingsFullSnapshotPath(){
   $('#settingsfullsnapshotpath').val( $('#settingssaveto').val()+'/timesync/'+$('#settingshost').val()+'/'+$('#settingsuser').val()+'/'+$('#settingsprofile').val() );
@@ -1057,7 +1164,6 @@ $("#snapshothelpbtn").click(function(){
 });
 
 
-
 // Files Toolbar
 // Up
 $("#fileupbtn").click(function(){
@@ -1092,7 +1198,4 @@ $("#filesnapshotsbtn").click(function(){
 $("#snapnow").click(function(){
 	alert('Now Snapshot Link');
 });
-
-
-
 
