@@ -251,6 +251,7 @@ $(document).ready(function() {
           $('#'+idtoremove).empty();
           $('#'+idtoremove).remove();
         }
+        $('#excluderemove').attr("disabled","disabled");
         spinelt.remove();
       },
       error: function (jqXhr, textStatus, errorMessage) {
@@ -289,6 +290,7 @@ $(document).ready(function() {
           $('#'+idtoremove).empty();
           $('#'+idtoremove).remove();
         }
+        $('#includeremove').attr("disabled","disabled");
         spinelt.remove();
       },
       error: function (jqXhr, textStatus, errorMessage) {
