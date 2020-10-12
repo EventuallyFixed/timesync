@@ -3,6 +3,7 @@ An incremental backup system for [Western Digital Personal Cloud](https://shop.w
 
 # Why
 Because the only backup options for these devices are either one-time copies, or online, paid-for services.
+I want to use my own disks: One on site receiving incremental backups, and (at least) one securely stored off-site, in rotation.
 
 # Aim
 - To create a user-friendly, and incremental, backup system.
@@ -25,14 +26,14 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 - Ongoing
 
 # ToDo
+- Revamp the main Snapshots screen layout, to be more mobile friendly.
 - Allow upload and save of SSH private keys.
-  - Save keys in file system: timesync/profiles/profileId/KeyFile.
+  - Save keys in file system: ./vendor/app/profile/profileId/KeyFile.
   - Check for existence of key before upload (one key per profile? Overwrite option?).
 - Include & Exclude:
   - Issue with selection of symlinks pointing to files/folders.
     - Perhaps these should be selectable as the linked-to type?
       - How will rsync deal with the symlinks?
-- Revamp the Snapshots screen layout, to be more mobile friendly.
 - Translate settings into rsync commands:
   - Execute the rsync commands!
 - Logic to build script to do Smart Remove.
