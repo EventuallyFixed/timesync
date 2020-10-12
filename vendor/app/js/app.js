@@ -78,7 +78,7 @@ $(document).ready(function() {
     else { $("#delprofilebtn").attr("disabled","disabled"); }
 
     var pdata = new Object();
-    pdata.fn = "selectprofilesettings";
+    pdata.fn = "selectfullprofile";
     pdata.profileid = $('#selectprofile').val();
 
     $.ajax('./vendor/app/php/app.php',
@@ -101,8 +101,9 @@ $(document).ready(function() {
           $(elt).removeClass("scheduleupd");
         });
 
-        if (data.items.length > 0) {
-          $.each(data.items, function (i, item) {
+        // Set main settings elements
+        if (data.profilesettings.length > 0) {
+          $.each(data.profilesettings, function (i, item) {
 
             var elt = $('#'+item.setkey);
 
@@ -117,6 +118,63 @@ $(document).ready(function() {
           });
         }
 
+        // Include Files/Folders
+        if (data.profileinclude.length > 0) {
+          $.each(data.profileinclude, function (i, item) {
+
+            // include items in the frontend
+            insertIncludeItem(item);
+
+            // Add trigger
+            var eltid = 'inclrow_'+item.setid;
+            $('#'+eltid).click(function() {
+              // Get the id of the currently selected item using the class name
+              var selid = $("#includefilescontainer").find(".inclexclsel").attr("id");
+              // Get all items in the area with the 'inclexclsel' class, and remove that class
+              var elts = $("#includefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
+              // Blank the hidden input
+              $("#thisincludesetid").val('');
+              // Disable the remove button
+              $('#includeremove').attr('disabled','disabled');
+              // Set the value of the hidden selector, if it is not the same setid
+              if (selid != $(this).attr("id")) {
+                $("#thisincludesetid").val($(this).attr("id"));
+                $(this).addClass("inclexclsel");
+                $('#includeremove').removeAttr('disabled');
+              }
+            });
+
+          });
+        }
+
+        // Exclude Files/Folders
+        if (data.profileexclude.length > 0) {
+          $.each(data.profileexclude, function (i, item) {
+
+            insertExcludeItem(item);
+
+            // Add trigger
+            var eltid = 'exclrow_'+item.setid;
+            $('#'+eltid).click(function() {
+              // Get the id of the currently selected item using the class name
+              var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
+              // Get all items in the area with the 'inclexclsel' class, and remove that class
+              var elts = $("#excludefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
+              // Blank the hidden input
+              $("#thisexcludesetid").val('');
+              // Disable the remove button
+              $('#excluderemove').attr('disabled','disabled');
+              // Set the value of the hidden selector, if it is not the same setid
+              if (selid != $(this).attr("id")) {
+                $("#thisexcludesetid").val($(this).attr("id"));
+                $(this).addClass("inclexclsel");
+                $('#excluderemove').removeAttr('disabled');
+              }
+            });
+
+          });
+        }
+
         // Trigger a change of those elements having dependent elements
         $('#settingsdeleteolderthan').trigger('change');
         $('#settingsdeletefreespacelessthan').trigger('change');
@@ -127,11 +185,7 @@ $(document).ready(function() {
         $('#settingssmartkeeponepermonthformonths').trigger('change');
         $('#settingssmartremove').trigger('change');
         $('#settingshost').trigger('change');
-        $("#selectschedule").trigger('change');
-        $("#settingsschedulemonthlydayselect").trigger('change');
-
-        getIncludeItems();
-        getExcludeItems();
+        showScheduleElements()
 
         // Reinstate the 'scheduleupd' class to the element
         scheduleupd_elts.each(function(i, elt){
@@ -142,12 +196,14 @@ $(document).ready(function() {
         autoupd_elts.each(function(i, elt){
           $(elt).addClass('autoupd');
         });
+
       },
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
       }
     });
   });
+
 
 
   $("#selectmode").change(function(){
@@ -584,7 +640,7 @@ $(document).ready(function() {
           $("#addprofilediv").css("display", "none");
           $("addprofileinp").val();
           $("#selectprofilediv").fadeIn();
-                   BuildProfilesSelect(data.id);
+          BuildProfilesSelect(data.id);
         }
         else {
         }
@@ -644,20 +700,7 @@ $(document).ready(function() {
 
   // On change of Select Schedule
   $("#selectschedule").change(function() {
-    // Hide all of the options
-    $(".schedule").css("display", "none");
-    // Show the correct option
-    switch($(this).val()){
-      case "minute":
-      case "hour":
-      case "daily":
-      case "weekly":
-      case "monthly":
-        $("#settingsschedule"+$(this).val()+"div").fadeIn();
-        break;
-      default:
-        // nothing
-    }
+    showScheduleElements();
   });
 
 
@@ -679,7 +722,7 @@ $(document).ready(function() {
       scheduleOpt.val = $(elt).val();
       scheduleOpts.push(scheduleOpt);
     })
-    
+
     var pdata = new Object();
     pdata.fn = "updateschedule";
     pdata.profileid = $('#selectprofile').val();
@@ -700,24 +743,7 @@ $(document).ready(function() {
   });
 
   $("#settingsschedulemonthlydayselect").change(function(){
-    var msg="";
-    var labelelt = $("#daywarninglabel");
-    switch($(this).val()) {
-      case "31":
-        msg="Warning: A snapshot will not be taken in February, April, June, September, and November!";
-        break;
-      case "30":
-        msg="Warning: A snapshot will not be taken in February!";
-        break;
-      case "29":
-        msg="Warning: A snapshot will not be taken in February, except in a Leap Year!";
-        break;
-      default:
-        msg = "";
-    }
-    $("#daywarninglabel").text(msg);
-    if (msg=="") labelelt.fadeOut();
-    else labelelt.fadeIn();
+    setScheduleMonthlyDaySelectLabel();
   });
 
   Init();
@@ -725,6 +751,48 @@ $(document).ready(function() {
 }); // Page Ready
 
 // ============================================================================================================================================
+
+function setScheduleMonthlyDaySelectLabel() {
+  selDate = $("#settingsschedulemonthlydayselect").val();
+  console.log(selDate);
+  var msg="";
+  var labelelt = $("#daywarninglabel");
+  switch(selDate) {
+    case "31":
+      msg="Warning: A snapshot will not be taken in February, April, June, September, and November!";
+      break;
+    case "30":
+      msg="Warning: A snapshot will not be taken in February!";
+      break;
+    case "29":
+      msg="Warning: A snapshot will not be taken in February, except in a Leap Year!";
+      break;
+    default:
+      msg = "";
+  }
+  $("#daywarninglabel").text(msg);
+  if (msg=="") labelelt.fadeOut();
+  else labelelt.fadeIn();
+}
+
+function showScheduleElements() {
+  // Hide all of the options
+  $(".schedule").css("display", "none");
+  // Show the correct option
+  switch($("#selectschedule").val()){
+    case "monthly":
+      setScheduleMonthlyDaySelectLabel();
+    case "minute":
+    case "hour":
+    case "daily":
+    case "weekly":
+      $("#settingsschedule"+$("#selectschedule").val()+"div").fadeIn();
+      break;
+    default:
+      break;
+      // nothing
+  }
+}
 
 
 // Get a description for the types
@@ -1039,8 +1107,6 @@ function Init() {
       // Get the Profiles select built
       BuildProfilesSelect("");
 
-      // SJT temporary convenience action for debugging
-	    $("#settingsmenu").trigger("click");
       spinelt.remove();
     },
     error: function (jqXhr, textStatus, errorMessage) {
