@@ -609,6 +609,7 @@ $(document).ready(function() {
   // Click of New Profile
   $("#newprofilebtn").click(function(){
     $("#selectprofilediv").css("display", "none");
+    $("#addprofileinp").val("");
     $("#addprofilediv").fadeIn();
   });
 
