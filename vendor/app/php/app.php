@@ -266,48 +266,6 @@ function dbSelectProfileSettings($ProfileId){
 
 
 // Inserts or Updates a Profile Setting key/value pair
-function dbUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue) {
-
-  $ProfileExists = 0;
-  $arr = array();
-
-  $SettingExists = dbSelectProfileSettingsId($ProfileId, $ProfileKey);
-
-  $db = new MyDB();
-  if(!$db) {
-    $arr["result"] = "ko";
-    $arr["message"] = $db->lastErrorMsg();
-  } else {
-    if ($SettingExists <= 0) {
-      $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$ProfileKey."','".$ProfileValue."');");
-      if(!$ret){
-        $arr["result"] = "ko";
-        $arr["message"] = $db->lastErrorMsg();
-      }
-      else {
-        $arr["result"] = "ok";
-        $arr["message"] = "Value Saved";
-      }
-    }
-    else {
-      $ret = $db->exec("UPDATE profilesettings SET profilevalue = '".$ProfileValue."' WHERE profileid = '".$ProfileId."' AND profilekey = '".$ProfileKey."';");
-      if(!$ret){
-        $arr["result"] = "ko";
-        $arr["message"] = $db->lastErrorMsg();
-      }
-      else {
-        $arr["result"] = "ok";
-        $arr["message"] = "Value Updated";
-      }
-    }
-    $db->close();
-  } // Profile exists
-
-  // Return
-  return $arr;
-}
-
-
 function dbDeleteProfileSetting($SettingId) {
 
   $Exists = "-1";
@@ -644,19 +602,19 @@ function dbInsertDefaultProfileValues($ProfileId) {
 
   $arr = array();
 
-  $arr["settingssaveto"] = dbInsertProfileValue($ProfileId, "settingssaveto", "/shares/backup");
-  $arr["selectmode"] = dbInsertProfileValue($ProfileId, "selectmode", "modelocal");
-  $arr["settingshost"] = dbInsertProfileValue($ProfileId, "settingshost", "mycloud");
-  $arr["settingsuser"] = dbInsertProfileValue($ProfileId, "settingsuser", "root");
-  $arr["settingsprofile"] = dbInsertProfileValue($ProfileId, "settingsprofile", "1");
-  $arr["settingsdeletebackupolderthanperiod"] = dbInsertProfileValue($ProfileId, "settingsdeletebackupolderthanperiod", "years");
-  $arr["settingsdeletefreespacelessthanunit"] = dbInsertProfileValue($ProfileId, "settingsdeletefreespacelessthanunit", "gib");
-  $arr["selectschedule"] = dbInsertProfileValue($ProfileId, "selectschedule", "manual");
+  $arr["settingssaveto"] = dbInsertUpdateProfileSetting($ProfileId, "settingssaveto", "/shares/backup");
+  $arr["selectmode"] = dbInsertUpdateProfileSetting($ProfileId, "selectmode", "modelocal");
+  $arr["settingshost"] = dbInsertUpdateProfileSetting($ProfileId, "settingshost", "mycloud");
+  $arr["settingsuser"] = dbInsertUpdateProfileSetting($ProfileId, "settingsuser", "root");
+  $arr["settingsprofile"] = dbInsertUpdateProfileSetting($ProfileId, "settingsprofile", "1");
+  $arr["settingsdeletebackupolderthanperiod"] = dbInsertUpdateProfileSetting($ProfileId, "settingsdeletebackupolderthanperiod", "years");
+  $arr["settingsdeletefreespacelessthanunit"] = dbInsertUpdateProfileSetting($ProfileId, "settingsdeletefreespacelessthanunit", "gib");
+  $arr["selectschedule"] = dbInsertUpdateProfileSetting($ProfileId, "selectschedule", "manual");
   $arr["defaultexcludes"] = dbInsertDefaultExcludes($ProfileId);
   return $arr;
 }
 
-function dbInsertProfileValue($ProfileId, $ProfileKey, $ProfileValue) {
+function dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue) {
 
   $SettingsArr = dbSelectProfileSettingsId($ProfileId, $ProfileKey);
   $SettingsId = $SettingsArr["id"];
@@ -954,7 +912,7 @@ function updateProfileSetting() {
   $ProfileKey   = SQLite3::escapeString($_POST["settingname"]);
   $ProfileValue = SQLite3::escapeString($_POST["settingvalue"]);
 
-  $arr = dbUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue);
+  $arr = dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
@@ -1030,7 +988,7 @@ function updateSchedule() {
 
   $pos = 0;
   foreach($ScheduleOpts as $so) {
-    $arr = dbInsertProfileValue($ProfileId, $so["key"], $so["val"]);
+    $arr = dbInsertUpdateProfileSetting($ProfileId, $so["key"], $so["val"]);
     $res[$so["key"]] = $arr;
     $pos = $pos + 1;
   }
