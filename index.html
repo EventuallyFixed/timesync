@@ -196,177 +196,177 @@
             </ul>
           </div>
 
-            <div class="tab-content" id="SettingsTabsContent">
-              <div class="tab-pane fade show active" id="settings-general" role="tabpanel" aria-labelledby="settings-general-tab">
+          <div class="tab-content" id="SettingsTabsContent">
+            <div class="tab-pane fade show active" id="settings-general" role="tabpanel" aria-labelledby="settings-general-tab">
 
-                <div class="row settingsrow">
-                  <label class="appselectlabel" for="selectmode">Mode:</label>
-                  <select id="selectmode" class="form-control col-2 appselect autoupd">
-                    <option value="modelocal">Local</option>
-                    <option value="modessh">SSH</option>
-                  </select>
-                </div>
+              <div class="row settingsrow">
+                <label class="appselectlabel" for="selectmode">Mode:</label>
+                <select id="selectmode" class="form-control col-2 appselect autoupd">
+                  <option value="modelocal">Local</option>
+                  <option value="modessh">SSH</option>
+                </select>
+              </div>
 
-                <div class="row settingsrow">
-                  <label class="appinputlabel" for="settingssaveto">Where to save snapshots:</label>
-                  <input id="settingssaveto" class="form-control form-control-sm autoupd" type="text" placeholder="Save snapshots to" />
-                </div>
+              <div class="row settingsrow">
+                <label class="appinputlabel" for="settingssaveto">Where to save snapshots:</label>
+                <input id="settingssaveto" class="form-control form-control-sm autoupd" type="text" placeholder="Save snapshots to" />
+              </div>
 
-                <div class="row settingsrow"><h5>Advanced</h5></div>
+              <div class="row settingsrow"><h5>Advanced</h5></div>
 
-                <div class="row settingsrow">
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingshost">Host:</label>
-                    <input id="settingshost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
-                  </div>
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingsuser">User:</label>
-                    <input id="settingsuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
-                  </div>
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingsprofile">Profile:</label>
-                    <input id="settingsprofile" class="form-control form-control-sm autoupd" type="text" placeholder="Profile" />
-                  </div>
-                  <div class="col-12">
-                    <label class="appinputlabel" for="settingsfullsnapshotpath">Full Snapshot Path:</label>
-                    <input id="settingsfullsnapshotpath" class="form-control form-control-sm autoupd" type="text" readonly="readonly" placeholder="Profile" />
-                  </div>
-                 </div>
+              <div class="row settingsrow">
+                <div class="col-4">
+                  <label class="appinputlabel" for="settingshost">Host:</label>
+                  <input id="settingshost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
+                </div>
+                <div class="col-4">
+                  <label class="appinputlabel" for="settingsuser">User:</label>
+                  <input id="settingsuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
+                </div>
+                <div class="col-4">
+                  <label class="appinputlabel" for="settingsprofile">Profile:</label>
+                  <input id="settingsprofile" class="form-control form-control-sm autoupd" type="text" placeholder="Profile" />
+                </div>
+                <div class="col-12">
+                  <label class="appinputlabel" for="settingsfullsnapshotpath">Full Snapshot Path:</label>
+                  <input id="settingsfullsnapshotpath" class="form-control form-control-sm autoupd" type="text" readonly="readonly" placeholder="Profile" />
+                </div>
+               </div>
 
-                <div class="row settingsrow modessh"><h5>SSH Settings</h5></div>
+              <div class="row settingsrow modessh"><h5>SSH Settings</h5></div>
 
-                <div class="row settingsrow modessh">
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingssshhost">Host:</label>
-                    <input id="settingssshhost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
-                  </div>
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingssshport">Port:</label>
-                    <input id="settingssshport" class="form-control form-control-sm autoupd" type="text" placeholder="Port" />
-                  </div>
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingssshuser">User:</label>
-                    <input id="settingssshuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
-                  </div>
-                  <div class="col-12">
-                    <label class="appinputlabel" for="settingssshpath">Path:</label>
-                    <input id="settingssshpath" class="form-control form-control-sm autoupd" type="text" placeholder="Path" />
-                  </div>
-                  <div class="col-12">
-                    <label class="appinputlabel" for="settingssshprivatekey">Private Key:</label>
-                    <input id="settingssshprivatekey" class="form-control form-control-sm autoupd" type="text" placeholder="Private Key" />
-                  </div>
+              <div class="row settingsrow modessh">
+                <div class="col-4">
+                  <label class="appinputlabel" for="settingssshhost">Host:</label>
+                  <input id="settingssshhost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
                 </div>
-
-                <div class="row settingsrow modessh"><h5>Password</h5></div>
-
-                <div class="row settingsrow modessh">
-                  <div class="col-12">
-                    <label class="appinputlabel" for="settingssshprivatekeypassword">SSH Private Key:</label>
-                    <input id="settingssshprivatekeypassword" class="form-control form-control-sm autoupd" type="password" placeholder="Type Private Key Password" />
-                  </div>
+                <div class="col-4">
+                  <label class="appinputlabel" for="settingssshport">Port:</label>
+                  <input id="settingssshport" class="form-control form-control-sm autoupd" type="text" placeholder="Port" />
                 </div>
-                <div class="row settingsrow modessh">
-                  <div class="form-check col-12">
-                    <input id="settingssavepasswordtokeyring" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingssavepasswordtokeyring">Save Password To Keyring</label>
-                  </div>
+                <div class="col-4">
+                  <label class="appinputlabel" for="settingssshuser">User:</label>
+                  <input id="settingssshuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
                 </div>
-                <div class="row settingsrow modessh">
-                  <div class="form-check col-12">
-                    <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingscachepasswordtocron">Cache Password To Cron</label>
-                  </div>
+                <div class="col-12">
+                  <label class="appinputlabel" for="settingssshpath">Path:</label>
+                  <input id="settingssshpath" class="form-control form-control-sm autoupd" type="text" placeholder="Path" />
                 </div>
-
-                <div class="row settingsrow"><h5>Schedule</h5></div>
-
-                <div class="row settingsrow">
-                  <label class="appselectlabel" for="selectschedule">Select Schedule Type</label>
-                  <select id="selectschedule" class="form-control col-12 appselect scheduleupd">
-<!--                    <option value="boot"        crit="">At every boot/reboot</option> -->
-                    <option value="manual">Manual Snapshots</option>
-                    <option value="minute">Every X minutes</option>
-                    <option value="hour">Every X hours</option>
-<!--                    <option value="customhours">Custom Hours</option> -->
-                    <option value="daily">Every Day</option>
-<!--                    <option value="connected">When drive get connected</option> -->
-<!--                    <option value="repeatedly">Repeatedly</option> -->
-                    <option value="weekly">Every Week</option>
-                    <option value="monthly">Every Month</option>
-                  </select>
-                </div>
-                <div id="settingsscheduleminutediv" class="row settingsrow schedule">
-                  <label class="appselectlabel" for="settingsscheduleminuteselect">Minutes:</label>
-                  <select id="settingsscheduleminuteselect" class="form-control col-2 appselect scheduleupd">
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="15">15</option>
-                    <option value="20">20</option>
-                    <option value="30">30</option>
-                  </select>
-                </div>
-                <div id="settingsschedulehourdiv" class="row settingsrow schedule">
-                  <label class="appselectlabel" for="settingsschedulehourselect">Hours:</label>
-                  <select id="settingsschedulehourselect" class="form-control col-2 appselect scheduleupd">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="4">4</option>
-                    <option value="6">6</option>
-                    <option value="8">8</option>
-                    <option value="12">12</option>
-                  </select>
-                </div>
-<!--
-                <div id="settingsschedulecustomcrondiv" class="row settingsrow schedule">
-                  <input id="settingsschedulecustomcroninp" type="text" class="form-check-input scheduleupd"></input>
-                </div>
--->
-                <div id="settingsscheduledailydiv" class="row settingsrow schedule">
-                  <label class="appselectlabel" for="settingsscheduledailyhourselect">Hour:</label>
-                  <select id="settingsscheduledailyhourselect" class="form-control col-2 appselect scheduleupd">
-                    <option value="0">0</option>
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                    <option value="4">4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="7">7</option>
-                    <option value="8">8</option>
-                    <option value="9">9</option>
-                    <option value="10">10</option>
-                    <option value="11">11</option>
-                    <option value="12">12</option>
-                    <option value="13">13</option>
-                    <option value="14">14</option>
-                    <option value="15">15</option>
-                    <option value="16">16</option>
-                    <option value="17">17</option>
-                    <option value="18">18</option>
-                    <option value="19">19</option>
-                    <option value="20">20</option>
-                    <option value="21">21</option>
-                    <option value="22">22</option>
-                    <option value="23">23</option>
-                  </select>
-                  <label class="appselectlabel" for="settingsscheduledailyminuteselect">Minute:</label>
-                  <select id="settingsscheduledailyminuteselect" class="form-control col-2 appselect scheduleupd">
-                    <option value="00">00</option>
-                    <option value="05">05</option>
-                    <option value="10">10</option>
-                    <option value="15">15</option>
-                    <option value="20">20</option>
-                    <option value="25">25</option>
-                    <option value="30">30</option>
-                    <option value="35">35</option>
-                    <option value="40">40</option>
-                    <option value="45">45</option>
-                    <option value="50">50</option>
-                    <option value="55">55</option>
-                  </select>
+                <div class="col-12">
+                  <label class="appinputlabel" for="settingssshprivatekey">Private Key:</label>
+                  <input id="settingssshprivatekey" class="form-control form-control-sm autoupd" type="text" placeholder="Private Key" />
                 </div>
               </div>
+
+              <div class="row settingsrow modessh"><h5>Password</h5></div>
+
+              <div class="row settingsrow modessh">
+                <div class="col-12">
+                  <label class="appinputlabel" for="settingssshprivatekeypassword">SSH Private Key:</label>
+                  <input id="settingssshprivatekeypassword" class="form-control form-control-sm autoupd" type="password" placeholder="Type Private Key Password" />
+                </div>
+              </div>
+              <div class="row settingsrow modessh">
+                <div class="form-check col-12">
+                  <input id="settingssavepasswordtokeyring" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingssavepasswordtokeyring">Save Password To Keyring</label>
+                </div>
+              </div>
+              <div class="row settingsrow modessh">
+                <div class="form-check col-12">
+                  <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingscachepasswordtocron">Cache Password To Cron</label>
+                </div>
+              </div>
+
+              <div class="row settingsrow"><h5>Schedule</h5></div>
+
+              <div class="row settingsrow">
+                <label class="appselectlabel" for="selectschedule">Select Schedule Type</label>
+                <select id="selectschedule" class="form-control col-12 appselect scheduleupd">
+<!--                    <option value="boot"        crit="">At every boot/reboot</option> -->
+                  <option value="manual">Manual Snapshots</option>
+                  <option value="minute">Every X minutes</option>
+                  <option value="hour">Every X hours</option>
+<!--                    <option value="customhours">Custom Hours</option> -->
+                  <option value="daily">Every Day</option>
+<!--                    <option value="connected">When drive get connected</option> -->
+<!--                    <option value="repeatedly">Repeatedly</option> -->
+                  <option value="weekly">Every Week</option>
+                  <option value="monthly">Every Month</option>
+                </select>
+              </div>
+              <div id="settingsscheduleminutediv" class="row settingsrow schedule">
+                <label class="appselectlabel" for="settingsscheduleminuteselect">Minutes:</label>
+                <select id="settingsscheduleminuteselect" class="form-control col-2 appselect scheduleupd">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
+                </select>
+              </div>
+              <div id="settingsschedulehourdiv" class="row settingsrow schedule">
+                <label class="appselectlabel" for="settingsschedulehourselect">Hours:</label>
+                <select id="settingsschedulehourselect" class="form-control col-2 appselect scheduleupd">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="4">4</option>
+                  <option value="6">6</option>
+                  <option value="8">8</option>
+                  <option value="12">12</option>
+                </select>
+              </div>
+<!--
+              <div id="settingsschedulecustomcrondiv" class="row settingsrow schedule">
+                <input id="settingsschedulecustomcroninp" type="text" class="form-check-input scheduleupd"></input>
+              </div>
+-->
+              <div id="settingsscheduledailydiv" class="row settingsrow schedule">
+                <label class="appselectlabel" for="settingsscheduledailyhourselect">Hour:</label>
+                <select id="settingsscheduledailyhourselect" class="form-control col-2 appselect scheduleupd">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5">5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                  <option value="9">9</option>
+                  <option value="10">10</option>
+                  <option value="11">11</option>
+                  <option value="12">12</option>
+                  <option value="13">13</option>
+                  <option value="14">14</option>
+                  <option value="15">15</option>
+                  <option value="16">16</option>
+                  <option value="17">17</option>
+                  <option value="18">18</option>
+                  <option value="19">19</option>
+                  <option value="20">20</option>
+                  <option value="21">21</option>
+                  <option value="22">22</option>
+                  <option value="23">23</option>
+                </select>
+                <label class="appselectlabel" for="settingsscheduledailyminuteselect">Minute:</label>
+                <select id="settingsscheduledailyminuteselect" class="form-control col-2 appselect scheduleupd">
+                  <option value="00">00</option>
+                  <option value="05">05</option>
+                  <option value="10">10</option>
+                  <option value="15">15</option>
+                  <option value="20">20</option>
+                  <option value="25">25</option>
+                  <option value="30">30</option>
+                  <option value="35">35</option>
+                  <option value="40">40</option>
+                  <option value="45">45</option>
+                  <option value="50">50</option>
+                  <option value="55">55</option>
+                </select>
+              </div>
+
               <div id="settingsscheduleweeklydiv" class="row settingsrow schedule">
                 <label class="appselectlabel" for="settingsscheduleweeklydayselect">Weekday:</label>
                 <select id="settingsscheduleweeklydayselect" class="form-control appselect scheduleupd">
@@ -417,221 +417,222 @@
                 </select>
                 <label id="daywarninglabel" class="warninglabel"></label>
               </div>
-              <div class="tab-pane fade" id="settings-include" role="tabpanel" aria-labelledby="settings-include-tab">
-
-                <div id="includefilescontainer" class="appcontainer col-12">
-                  <nav id="snapshotincludefiles" class="row navbar navbar-light bg-light apptoolbar">
-                    <div class="snapheading col-12">Include Files And Folders</div>
-                  </nav>
-                  <!-- Include Files go here -->
-                </div>
-                <div id="includefilesbuttons">
-                  <div class="btn-group btn-group-sm" role="group" aria-label="">
-                    <button type="button" class="btn btn-secondary" id="includeaddfile">Add File</button>
-                    <button type="button" class="btn btn-secondary" id="includeaddfolder">Add Folder</button>
-                    <button type="button" class="btn btn-secondary" id="includeremove" disabled="disabled">Remove</button>
-                  </div>
-                </div>
-
-                <div id="includeaddfilebrowse" class="filebrowse" class="row-8">
-                  <nav class="row navbar navbar-light bg-light apptoolbar">Select item to add</nav>
-                  Location: <span id="includeaddfilelocation"></span>
-                  <div id="includefilebrowsebody" class="filebrowsebody"></div>
-                  <div class="filebrowsebuttons" class="btn-group btn-group-sm" role="group" aria-label="">
-                    <button type="button" class="btn btn-secondary" id="includeaddselect">Select</button>
-                    <button type="button" class="btn btn-secondary" id="includeaddcancel">Cancel</button>
-                  </div>
-                </div>
-
-                <input id="thisincludesetid" type="hidden" />
-              </div>
-              <div class="tab-pane fade" id="settings-exclude" role="tabpanel" aria-labelledby="settings-exclude-tab">
-
-                <div id="excludefilescontainer" class="appcontainer col-12">
-                  <nav id="snapshotexcludefiles" class="row navbar navbar-light bg-light apptoolbar">
-                    <div class="snapheading col-12">Exclude patterns, files and folders</div>
-                  </nav>
-                  <!-- Exclude Files go here -->
-                </div>
-                <div id="excludefilesbuttons">
-                  <div class="btn-group btn-group-sm" role="group" aria-label="">
-                    <button type="button" class="btn btn-secondary" id="excludeadd">Add Pattern</button>
-                    <button type="button" class="btn btn-secondary" id="excludeaddfile">Add File</button>
-                    <button type="button" class="btn btn-secondary" id="excludeaddfolder">Add Folder</button>
-                    <button type="button" class="btn btn-secondary" id="excludeadddefault">Add Default</button>
-                    <button type="button" class="btn btn-secondary" id="excluderemove" disabled="disabled">Remove</button>
-                  </div>
-                  <input id="thisexcludesetid" type="hidden" />
-                </div>
-
-                <div id="excludeaddfilebrowse" class="filebrowse" class="row-8">
-                  <nav class="row navbar navbar-light bg-light apptoolbar">Select item to exclude</nav>
-                  Location: <span id="excludeaddfilelocation"></span>
-                  <div id="excludefilebrowsebody" class="filebrowsebody"></div>
-                  <div class="filebrowsebuttons" class="btn-group btn-group-sm" role="group" aria-label="">
-                    <button type="button" class="btn btn-secondary" id="excludeaddselect">Select</button>
-                    <button type="button" class="btn btn-secondary" id="excludeaddcancel">Cancel</button>
-                  </div>
-                </div>
-
-                <div id="excludeaddmiscitembrowse" class="filebrowse" class="row-8">
-                  <nav class="row navbar navbar-light bg-light apptoolbar">Key in pattern to exclude</nav>
-                  <label class="form-check-label" for="excludeaddmisciteminput">Pattern to exclude:</label>
-                  <input id="excludeaddmisciteminput" type="text" class="form-control form-control-sm col-3"></input>
-                  <div class="excludeaddmiscitembuttons" class="btn-group btn-group-sm" role="group" aria-label="">
-                    <button type="button" class="btn btn-secondary" id="excludeaddmiscitemselect">Add</button>
-                    <button type="button" class="btn btn-secondary" id="excludeaddmiscitemcancel">Cancel</button>
-                  </div>
-                </div>
-
-                <div class="row settingsrow"><h5>Highly Recommended</h5></div>
-                <div>*.backup*, *~, .Private, .cache/*, .dropbox*, .gvfs, .thumbnails*, [Tt]rash*, lost+found/*</div>
-              </div>
-              <div class="tab-pane fade" id="settings-autoremove" role="tabpanel" aria-labelledby="settings-autoremove-tab">
-
-                <div class="row settingsrow">
-                  <div class="col-3">
-                    <input id="settingsdeleteolderthan" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingsdeleteolderthan">Older than</label>
-                  </div>
-                  <input id="settingsdeleteolderthanage" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Age" />
-                  <div class="col-1"></div>
-                  <select id="settingsdeletebackupolderthanperiod" class="form-control appselect col-4 autoupd">
-                    <option value="days">Day(s)</option>
-                    <option value="weeks">Week(s)</option>
-                    <option value="months">Month(s)</option>
-                    <option value="years">Year(s)</option>
-                  </select>
-                </div>
-
-                <div class="row settingsrow">
-                  <div class="form-check col-3">
-                    <input id="settingsdeletefreespacelessthan" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingsdeletefreespacelessthan">If free space is less than</label>
-                  </div>
-                  <input id="settingsdeletefreespacelessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Space" />
-                  <div class="col-1"></div>
-                  <select id="settingsdeletefreespacelessthanunit" class="form-control appselect col-4 autoupd">
-                    <option value="mib">MiB</option>
-                    <option value="gib">GiB</option>
-                    <option value="tib">TiB</option>
-                  </select>
-                </div>
-                <div class="row settingsrow">
-                  <div class="form-check col-3">
-                    <input id="settingsdeleteinodeslessthan" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingsdeleteinodeslessthan">If free inodes is less than</label>
-                  </div>
-                  <input id="settingsdeleteinodeslessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Inodes" />
-                </div>
-
-                <div class="row settingsrow">
-                  <div class="form-check col-12">
-                    <input id="settingssmartremove" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingssmartremove">Smart Remove</label>
-                  </div>
-                </div>
-
-                <div id="smartremovediv">
-                  <div class="row settingsrow smartremoverow">
-                    <div class="form-check col-3">
-                      <input id="settingssmartkeepallfordays" class="form-check-input autoupd" type="checkbox" value="">
-                      <label class="form-check-label" for="settingssmartkeepallfordays">Keep all snapshots for the last</label>
-                    </div>
-                    <input id="settingssmartkeepallfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
-                    <div class="col-1"></div>
-                    <label class="form-check-label" for="settingssmartkeepallfordaysvalue">day(s)</label>
-                  </div>
-
-                  <div class="row settingsrow smartremoverow">
-                    <div class="form-check col-3">
-                      <input id="settingssmartkeeponeperdayfordays" class="form-check-input autoupd" type="checkbox" value="">
-                      <label class="form-check-label" for="settingssmartkeeponeperdayfordays">Keep one snapshot per day for the last</label>
-                    </div>
-                    <input id="settingssmartkeeponeperdayfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
-                    <div class="col-1"></div>
-                    <label class="form-check-label" for="settingssmartkeeponeperdayfordaysvalue">day(s)</label>
-                  </div>
-
-                  <div class="row settingsrow smartremoverow">
-                    <div class="form-check col-3">
-                      <input id="settingssmartkeeponeperdayforweeks" class="form-check-input autoupd" type="checkbox" value="">
-                      <label class="form-check-label" for="settingssmartkeeponeperdayforweeks">Keep one snapshot per week for the last</label>
-                    </div>
-                    <input id="settingssmartkeeponeperdayforweeksvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Weeks" />
-                    <div class="col-1"></div>
-                    <label class="form-check-label" for="settingssmartkeeponeperdayforweeksvalue">week(s)</label>
-                  </div>
-
-                  <div class="row settingsrow smartremoverow">
-                    <div class="form-check col-3">
-                      <input id="settingssmartkeeponepermonthformonths" class="form-check-input autoupd" type="checkbox" value="">
-                      <label class="form-check-label" for="settingssmartkeeponepermonthformonths">Keep one snapshot per month for the last</label>
-                    </div>
-                    <input id="settingssmartkeeponepermonthformonthsvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Months" />
-                    <div class="col-1"></div>
-                    <label class="form-check-label" for="settingssmartkeeponepermonthformonthsvalue">month(s)</label>
-                  </div>
-
-                  <div class="row settingsrow smartremoverow">
-                    <div class="form-check col-12">
-                      <label class="form-check-label" for="smartremovediv">Keep one snapshot per year for all years</label>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row settingsrow">
-                  <div class="form-check col-12">
-                    <input id="settingsdontremovenamed" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingsdontremovenamed">Don't Remove Named Snapshots</label>
-                  </div>
-                </div>
-
-              </div>
-              <div class="tab-pane fade" id="settings-options" role="tabpanel" aria-labelledby="settings-options-tab">
-
-                <div class="row settingsrow">
-                  <div class="form-check">
-                    <input id="settingsreplaceonrestore" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingsreplaceonrestore">Backup replaced files on restore</label>
-                  </div>
-                </div>
-
-                <div class="row settingsrow">
-                  <div class="form-check">
-                    <input id="settingscontinueonerror" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingscontinueonerror">Continue on errors (keep incomplete snapshots)</label>
-                  </div>
-                </div>
-
-                <div class="row settingsrow">
-                  <div class="form-check">
-                    <input id="settingssnapshotifnochanges" class="form-check-input autoupd" type="checkbox" value="">
-                    <label class="form-check-label" for="settingssnapshotifnochanges">Take a new snapshots, even if no changes are detected</label>
-                  </div>
-                </div>
-
-                <div class="row settingsrow">
-                  <div class="form-check col-2">
-                    <label class="form-check-label" for="settingsloglevel">Log Level</label>
-                  </div>
-                  <select id="settingsloglevel" class="form-control appselect col-4 autoupd">
-                    <option value="1">1</option>
-                    <option value="2">2</option>
-                    <option value="3">3</option>
-                  </select>
-                </div>
-
-                <div class="row settingsrow">
-                  <div class="form-check col-2">
-                    <label class="form-check-label" for="settingsadditionalrsync">Additional Options</label>
-                  </div>
-                  <input id="settingsadditionalrsync" class="form-control form-control-sm col-8 autoupd" type="text" placeholder="Paste in additional options for rsync" />
-                </div>
-              </div>
-
-              <!-- <div class="tab-pane fade" id="settings-expert" role="tabpanel" aria-labelledby="settings-expert-tab"></div>  -->
             </div>
+            <div class="tab-pane fade" id="settings-include" role="tabpanel" aria-labelledby="settings-include-tab">
+
+              <div id="includefilescontainer" class="appcontainer col-12">
+                <nav id="snapshotincludefiles" class="row navbar navbar-light bg-light apptoolbar">
+                  <div class="snapheading col-12">Include Files And Folders</div>
+                </nav>
+                <!-- Include Files go here -->
+              </div>
+              <div id="includefilesbuttons">
+                <div class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button type="button" class="btn btn-secondary" id="includeaddfile">Add File</button>
+                  <button type="button" class="btn btn-secondary" id="includeaddfolder">Add Folder</button>
+                  <button type="button" class="btn btn-secondary" id="includeremove" disabled="disabled">Remove</button>
+                </div>
+              </div>
+
+              <div id="includeaddfilebrowse" class="filebrowse" class="row-8">
+                <nav class="row navbar navbar-light bg-light apptoolbar">Select item to add</nav>
+                Location: <span id="includeaddfilelocation"></span>
+                <div id="includefilebrowsebody" class="filebrowsebody"></div>
+                <div class="filebrowsebuttons" class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button type="button" class="btn btn-secondary" id="includeaddselect">Select</button>
+                  <button type="button" class="btn btn-secondary" id="includeaddcancel">Cancel</button>
+                </div>
+              </div>
+
+              <input id="thisincludesetid" type="hidden" />
+            </div>
+            <div class="tab-pane fade" id="settings-exclude" role="tabpanel" aria-labelledby="settings-exclude-tab">
+
+              <div id="excludefilescontainer" class="appcontainer col-12">
+                <nav id="snapshotexcludefiles" class="row navbar navbar-light bg-light apptoolbar">
+                  <div class="snapheading col-12">Exclude patterns, files and folders</div>
+                </nav>
+                <!-- Exclude Files go here -->
+              </div>
+              <div id="excludefilesbuttons">
+                <div class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button type="button" class="btn btn-secondary" id="excludeadd">Add Pattern</button>
+                  <button type="button" class="btn btn-secondary" id="excludeaddfile">Add File</button>
+                  <button type="button" class="btn btn-secondary" id="excludeaddfolder">Add Folder</button>
+                  <button type="button" class="btn btn-secondary" id="excludeadddefault">Add Default</button>
+                  <button type="button" class="btn btn-secondary" id="excluderemove" disabled="disabled">Remove</button>
+                </div>
+                <input id="thisexcludesetid" type="hidden" />
+              </div>
+
+              <div id="excludeaddfilebrowse" class="filebrowse" class="row-8">
+                <nav class="row navbar navbar-light bg-light apptoolbar">Select item to exclude</nav>
+                Location: <span id="excludeaddfilelocation"></span>
+                <div id="excludefilebrowsebody" class="filebrowsebody"></div>
+                <div class="filebrowsebuttons" class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button type="button" class="btn btn-secondary" id="excludeaddselect">Select</button>
+                  <button type="button" class="btn btn-secondary" id="excludeaddcancel">Cancel</button>
+                </div>
+              </div>
+
+              <div id="excludeaddmiscitembrowse" class="filebrowse" class="row-8">
+                <nav class="row navbar navbar-light bg-light apptoolbar">Key in pattern to exclude</nav>
+                <label class="form-check-label" for="excludeaddmisciteminput">Pattern to exclude:</label>
+                <input id="excludeaddmisciteminput" type="text" class="form-control form-control-sm col-3"></input>
+                <div class="excludeaddmiscitembuttons" class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button type="button" class="btn btn-secondary" id="excludeaddmiscitemselect">Add</button>
+                  <button type="button" class="btn btn-secondary" id="excludeaddmiscitemcancel">Cancel</button>
+                </div>
+              </div>
+
+              <div class="row settingsrow"><h5>Highly Recommended</h5></div>
+              <div>*.backup*, *~, .Private, .cache/*, .dropbox*, .gvfs, .thumbnails*, [Tt]rash*, lost+found/*</div>
+            </div>
+            <div class="tab-pane fade" id="settings-autoremove" role="tabpanel" aria-labelledby="settings-autoremove-tab">
+
+              <div class="row settingsrow">
+                <div class="col-3">
+                  <input id="settingsdeleteolderthan" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingsdeleteolderthan">Older than</label>
+                </div>
+                <input id="settingsdeleteolderthanage" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Age" />
+                <div class="col-1"></div>
+                <select id="settingsdeletebackupolderthanperiod" class="form-control appselect col-4 autoupd">
+                  <option value="days">Day(s)</option>
+                  <option value="weeks">Week(s)</option>
+                  <option value="months">Month(s)</option>
+                  <option value="years">Year(s)</option>
+                </select>
+              </div>
+
+              <div class="row settingsrow">
+                <div class="form-check col-3">
+                  <input id="settingsdeletefreespacelessthan" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingsdeletefreespacelessthan">If free space is less than</label>
+                </div>
+                <input id="settingsdeletefreespacelessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Space" />
+                <div class="col-1"></div>
+                <select id="settingsdeletefreespacelessthanunit" class="form-control appselect col-4 autoupd">
+                  <option value="mib">MiB</option>
+                  <option value="gib">GiB</option>
+                  <option value="tib">TiB</option>
+                </select>
+              </div>
+              <div class="row settingsrow">
+                <div class="form-check col-3">
+                  <input id="settingsdeleteinodeslessthan" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingsdeleteinodeslessthan">If free inodes is less than</label>
+                </div>
+                <input id="settingsdeleteinodeslessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Inodes" />
+              </div>
+
+              <div class="row settingsrow">
+                <div class="form-check col-12">
+                  <input id="settingssmartremove" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingssmartremove">Smart Remove</label>
+                </div>
+              </div>
+
+              <div id="smartremovediv">
+                <div class="row settingsrow smartremoverow">
+                  <div class="form-check col-3">
+                    <input id="settingssmartkeepallfordays" class="form-check-input autoupd" type="checkbox" value="">
+                    <label class="form-check-label" for="settingssmartkeepallfordays">Keep all snapshots for the last</label>
+                  </div>
+                  <input id="settingssmartkeepallfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
+                  <div class="col-1"></div>
+                  <label class="form-check-label" for="settingssmartkeepallfordaysvalue">day(s)</label>
+                </div>
+
+                <div class="row settingsrow smartremoverow">
+                  <div class="form-check col-3">
+                    <input id="settingssmartkeeponeperdayfordays" class="form-check-input autoupd" type="checkbox" value="">
+                    <label class="form-check-label" for="settingssmartkeeponeperdayfordays">Keep one snapshot per day for the last</label>
+                  </div>
+                  <input id="settingssmartkeeponeperdayfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
+                  <div class="col-1"></div>
+                  <label class="form-check-label" for="settingssmartkeeponeperdayfordaysvalue">day(s)</label>
+                </div>
+
+                <div class="row settingsrow smartremoverow">
+                  <div class="form-check col-3">
+                    <input id="settingssmartkeeponeperdayforweeks" class="form-check-input autoupd" type="checkbox" value="">
+                    <label class="form-check-label" for="settingssmartkeeponeperdayforweeks">Keep one snapshot per week for the last</label>
+                  </div>
+                  <input id="settingssmartkeeponeperdayforweeksvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Weeks" />
+                  <div class="col-1"></div>
+                  <label class="form-check-label" for="settingssmartkeeponeperdayforweeksvalue">week(s)</label>
+                </div>
+
+                <div class="row settingsrow smartremoverow">
+                  <div class="form-check col-3">
+                    <input id="settingssmartkeeponepermonthformonths" class="form-check-input autoupd" type="checkbox" value="">
+                    <label class="form-check-label" for="settingssmartkeeponepermonthformonths">Keep one snapshot per month for the last</label>
+                  </div>
+                  <input id="settingssmartkeeponepermonthformonthsvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Months" />
+                  <div class="col-1"></div>
+                  <label class="form-check-label" for="settingssmartkeeponepermonthformonthsvalue">month(s)</label>
+                </div>
+
+                <div class="row settingsrow smartremoverow">
+                  <div class="form-check col-12">
+                    <label class="form-check-label" for="smartremovediv">Keep one snapshot per year for all years</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="row settingsrow">
+                <div class="form-check col-12">
+                  <input id="settingsdontremovenamed" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingsdontremovenamed">Don't Remove Named Snapshots</label>
+                </div>
+              </div>
+
+            </div>
+            <div class="tab-pane fade" id="settings-options" role="tabpanel" aria-labelledby="settings-options-tab">
+
+              <div class="row settingsrow">
+                <div class="form-check">
+                  <input id="settingsreplaceonrestore" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingsreplaceonrestore">Backup replaced files on restore</label>
+                </div>
+              </div>
+
+              <div class="row settingsrow">
+                <div class="form-check">
+                  <input id="settingscontinueonerror" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingscontinueonerror">Continue on errors (keep incomplete snapshots)</label>
+                </div>
+              </div>
+
+              <div class="row settingsrow">
+                <div class="form-check">
+                  <input id="settingssnapshotifnochanges" class="form-check-input autoupd" type="checkbox" value="">
+                  <label class="form-check-label" for="settingssnapshotifnochanges">Take a new snapshots, even if no changes are detected</label>
+                </div>
+              </div>
+
+              <div class="row settingsrow">
+                <div class="form-check col-2">
+                  <label class="form-check-label" for="settingsloglevel">Log Level</label>
+                </div>
+                <select id="settingsloglevel" class="form-control appselect col-4 autoupd">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </div>
+
+              <div class="row settingsrow">
+                <div class="form-check col-2">
+                  <label class="form-check-label" for="settingsadditionalrsync">Additional Options</label>
+                </div>
+                <input id="settingsadditionalrsync" class="form-control form-control-sm col-8 autoupd" type="text" placeholder="Paste in additional options for rsync" />
+              </div>
+            </div>
+
+            <!-- <div class="tab-pane fade" id="settings-expert" role="tabpanel" aria-labelledby="settings-expert-tab"></div>  -->
+          </div>
 
         </div>
         <div class="contentsection" id="logssection" style="display: none;">
