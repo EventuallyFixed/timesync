@@ -90,17 +90,9 @@ $(document).ready(function() {
         console.log(data);
 
         // Temporarily remove the 'autoupd' class from the element
-        var autoupd_elts = $(".autoupd");
-        autoupd_elts.each(function(i, elt){
-          $(elt).removeClass("autoupd");
-        });
+        var autoupd_elts = removeTriggerClass("autoupd");
+        var scheduleupd_elts = removeTriggerClass("scheduleupd");
 
-        // Temporarily remove the 'scheduleupd' class from the element
-        var scheduleupd_elts = $(".scheduleupd");
-        scheduleupd_elts.each(function(i, elt){
-          $(elt).removeClass("scheduleupd");
-        });
-        
         // Reset all fields of the Settings
         resetSettings();
 
@@ -113,7 +105,7 @@ $(document).ready(function() {
             switch (elt.attr('type')) {
               case "checkbox":
               case "radio":
-                if (item.setval == 1) elt.attr('checked','checked');
+                if (item.setval == 1) elt.prop("checked", true);
                 break;
               default:
                 elt.val(item.setval);
@@ -193,16 +185,9 @@ $(document).ready(function() {
         $('#settingshost').trigger('change');
         showScheduleElements()
 
-        // Reinstate the 'scheduleupd' class to the element
-        scheduleupd_elts.each(function(i, elt){
-          $(elt).addClass('scheduleupd');
-        });
-
-        // Reinstate the 'autoupd' class to the element
-        autoupd_elts.each(function(i, elt){
-          $(elt).addClass('autoupd');
-        });
-
+        // Re-add the trigger classes
+        addTriggerClass(scheduleupd_elts, "scheduleupd");
+        addTriggerClass(autoupd_elts, "autoupd");
       },
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
@@ -770,25 +755,27 @@ function clearIncludeItemsBrowse() {
 function resetSettings() {
   // Clears all fields back to default settings
   // Inputs to blank
-  // Checkboxes to unchecked
-  $("#settingssection").find('input[type="text"]').val("");
 
-  // Checkboxes to unchecked
-  $("#settingssection").find('input[type="checkbox"]').removeAttr("checked");
+  $("#settingssection").find("input").each(function(i, elt) {
+    elt = $(elt);
+    switch (elt.attr('type')) {
+      case "checkbox":
+      case "radio":
+        elt.prop("checked", false);
+        break;
+      default:
+        elt.val("");
+    }
+  });
 
-  // Selects to default
-//  $("#settingssection").find('select').removeAttr("checked");
-  
   clearExcludeItemsBrowse();
   clearIncludeItemsBrowse();
 }
 
 function setScheduleMonthlyDaySelectLabel() {
-  selDate = $("#settingsschedulemonthlydayselect").val();
-  console.log(selDate);
   var msg="";
   var labelelt = $("#daywarninglabel");
-  switch(selDate) {
+  switch($("#settingsschedulemonthlydayselect").val()) {
     case "31":
       msg="Warning: A snapshot will not be taken in February, April, June, September, and November!";
       break;
@@ -894,6 +881,21 @@ function getDirectoryContents(actiontype, type, dir, sel){
   });
 }
 
+function removeTriggerClass(tclass) {
+  // Temporarily remove the 'tclass' class from the element
+  var tclass_elts = $("."+tclass);
+  tclass_elts.each(function(i, elt){
+    $(elt).removeClass(tclass);
+  });
+  return tclass_elts;
+}
+
+function addTriggerClass(tclass_elts, tclass) {
+  // Reinstate the 'scheduleupd' class to the element
+  tclass_elts.each(function(i, elt){
+    $(elt).addClass(tclass);
+  });
+}
 
 // Draw the divs for the contents
 function createFileLine(actiontype, type, item, celt) {
@@ -1075,7 +1077,6 @@ function getExcludeItems() {
             // Set the value of the hidden selector, if it is not the same setid
             if (selid != $(this).attr("id")) {
               $("#thisexcludesetid").val($(this).attr("id"));
-              console.log("Set selected exclude value to "+$(this).attr("id"));
               $(this).addClass("inclexclsel");
               $('#excluderemove').removeAttr('disabled');
             }
