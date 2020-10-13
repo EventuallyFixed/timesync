@@ -118,7 +118,10 @@ $(document).ready(function() {
           });
         }
 
+
         // Include Files/Folders
+        // Remove current items
+        clearIncludeItemsBrowse();
         if (data.profileinclude.length > 0) {
           $.each(data.profileinclude, function (i, item) {
 
@@ -148,6 +151,8 @@ $(document).ready(function() {
         }
 
         // Exclude Files/Folders
+        // Remove current items
+        clearExcludeItemsBrowse();
         if (data.profileexclude.length > 0) {
           $.each(data.profileexclude, function (i, item) {
 
@@ -753,6 +758,14 @@ $(document).ready(function() {
 
 // ============================================================================================================================================
 
+function clearExcludeItemsBrowse() {
+  $('#excludefilescontainer').find('.exclitem').remove();
+}
+
+function clearIncludeItemsBrowse() {
+  $('#includefilescontainer').find('.inclitem').remove();
+}
+
 function setScheduleMonthlyDaySelectLabel() {
   selDate = $("#settingsschedulemonthlydayselect").val();
   console.log(selDate);
@@ -943,7 +956,7 @@ function getIncludeItems() {
       console.log(data);
 
       // Remove current items here
-      $('#includefilescontainer').find('.inclitem').remove();
+      clearIncludeItemsBrowse();
 
       if (data.items.length > 0) {
 
@@ -1022,7 +1035,7 @@ function getExcludeItems() {
     success: function (data,status,xhr) {
       console.log(data);
       // Remove current items here
-      $('#excludefilescontainer').find('.exclitem').remove();
+      clearExcludeItemsBrowse();
 
       if (data.items.length > 0) {
 
