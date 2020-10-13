@@ -100,6 +100,9 @@ $(document).ready(function() {
         scheduleupd_elts.each(function(i, elt){
           $(elt).removeClass("scheduleupd");
         });
+        
+        // Reset all fields of the Settings
+        resetSettings();
 
         // Set main settings elements
         if (data.profilesettings.length > 0) {
@@ -121,7 +124,6 @@ $(document).ready(function() {
 
         // Include Files/Folders
         // Remove current items
-        clearIncludeItemsBrowse();
         if (data.profileinclude.length > 0) {
           $.each(data.profileinclude, function (i, item) {
 
@@ -152,7 +154,6 @@ $(document).ready(function() {
 
         // Exclude Files/Folders
         // Remove current items
-        clearExcludeItemsBrowse();
         if (data.profileexclude.length > 0) {
           $.each(data.profileexclude, function (i, item) {
 
@@ -764,6 +765,22 @@ function clearExcludeItemsBrowse() {
 
 function clearIncludeItemsBrowse() {
   $('#includefilescontainer').find('.inclitem').remove();
+}
+
+function resetSettings() {
+  // Clears all fields back to default settings
+  // Inputs to blank
+  // Checkboxes to unchecked
+  $("#settingssection").find('input[type="text"]').val("");
+
+  // Checkboxes to unchecked
+  $("#settingssection").find('input[type="checkbox"]').removeAttr("checked");
+
+  // Selects to default
+//  $("#settingssection").find('select').removeAttr("checked");
+  
+  clearExcludeItemsBrowse();
+  clearIncludeItemsBrowse();
 }
 
 function setScheduleMonthlyDaySelectLabel() {
