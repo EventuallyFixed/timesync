@@ -31,7 +31,7 @@ class MyDB extends SQLite3 {
 }
 
 
-function dbSelectProfileId($ProfileName) {
+function dbSelectProfileIdForProfileName($ProfileName) {
 
   $rtn = array();
   $Exists = 0;
@@ -135,6 +135,50 @@ function dbSelectProfileForId($ProfileId) {
     $db->close();
   }
   return $rtn;
+}
+
+
+function dbDeleteProfileRecordSet($ProfileId) {
+
+  $arr = array();
+
+  // Never delete the 'default' profile (although it's settings can be changed)
+  $ProfileIdArr = dbSelectProfileIdForProfileName($ProfileName);
+  $defaultId = $ProfileIdArr["id"];
+
+  if ($ProfileId == $defaultId) {
+    $arr["result"] = "ko";
+    $arr["message"] = "You cannot delete the Default Profile";
+  }
+  else {
+    // First, delete the profile settings
+    $arr["deletesettings"] = dbDelProfileSettings($ProfileId);
+    if ($arr["deletesettings"]["result"] == "ok") {
+      $arr["deleteinclexcl"] = dbDelProfileInclExcl($ProfileId);
+      // Then, if a success, delete the profile
+      if ($arr["deleteinclexcl"]["result"] == "ok") {
+        $arr["deleteprofile"] = dbDelProfile($ProfileId);
+        $arr["result"] = $arr["deleteprofile"]["result"];
+        if ($arr["result"] == "ok") {
+          $arr["message"] = "Profile deleted";
+        }
+        else {
+          $arr["result"] == "ko";
+          $arr["message"] = "Error deleting profile";
+        }
+      }
+      else {
+        $arr["result"] = "ko";
+        $arr["message"] = "Error deleting inclexcl for profile id: ".$ProfileId;
+      }
+    }
+    else {
+      $arr["result"] = "ko";
+      $arr["message"] = "Error deleting settings for profile id: ".$ProfileId;
+    }
+  }
+
+  return $arr;
 }
 
 
@@ -264,6 +308,48 @@ function dbUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue) {
 }
 
 
+function dbDeleteProfileSetting($SettingId) {
+
+  $Exists = "-1";
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    // Is there a row with this Setting ID?
+    $rows = $db->query("SELECT COUNT(*) AS count FROM profilesettings WHERE id = ".$SettingId.";");
+    if(!$rows){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $row = $rows->fetchArray();
+      $Exists = $row['count'];
+
+      if ($Exists > 0) {
+        $ret = $db->exec("DELETE FROM profilesettings WHERE id = ".$SettingId.";");
+        if(!$ret){
+          $arr["result"] = "ko";
+          $arr["message"] = $db->lastErrorMsg();
+        }
+        else {
+          $arr["result"] = "ok";
+          $arr["message"] = "Record deleted";
+        }
+      }
+      else {
+        $arr["result"] = "ko";
+        $arr["message"] = "No such id: ".$SettingId;
+      }
+    }
+  }
+
+  return $arr;
+}
+
+
 // Select all Include or Exclude Settings for a Profile ID
 function dbSelectProfileIncludeExclude($ProfileId, $InclExcl) {
   $arr = array();
@@ -290,6 +376,47 @@ function dbSelectProfileIncludeExclude($ProfileId, $InclExcl) {
     }
     $db->close();
   }
+  return $arr;
+}
+
+
+function dbDeleteProfileInclExcl($SettingId) {
+
+  $Exists = "-1";
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    // Is there a row with this Setting ID?
+    $rows = $db->query("SELECT COUNT(*) AS count FROM profileinclexcl WHERE id = ".$SettingId.";");
+    if(!$rows){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $row = $rows->fetchArray();
+      $Exists = $row['count'];
+
+      if ($Exists > 0) {
+        $ret = $db->exec("DELETE FROM profileinclexcl WHERE id = ".$SettingId.";");
+        if(!$ret){
+          $arr["result"] = "ko";
+          $arr["message"] = $db->lastErrorMsg();
+        }
+        else {
+          $arr["result"] = "ok";
+          $arr["message"] = "Record deleted";
+        }
+      }
+      else {
+        $arr["result"] = "ko";
+        $arr["message"] = "No such id: ".$SettingId;
+      }
+    }
+  }
+
   return $arr;
 }
 
@@ -465,7 +592,7 @@ function dbInsertProfile($ProfileName) {
 
   $arr = array();
   // Does it exist?
-  $ProfileIdArr = dbSelectProfileId($ProfileName);
+  $ProfileIdArr = dbSelectProfileIdForProfileName($ProfileName);
   $ProfileId = $ProfileIdArr["id"];
   // No profile on file, so create
   if ($ProfileId <= 0) {
@@ -478,12 +605,14 @@ function dbInsertProfile($ProfileName) {
       if(!$ret){
         $arr["result"] = "ko";
         $arr["message"] = $db->lastErrorMsg();
+        $arr["id"] = "-1";
+        $arr["defaults"] = array();
       }
     }
     $db->close();
 
     // Does it exist
-    $ProfileIdArr = dbSelectProfileId($ProfileName);
+    $ProfileIdArr = dbSelectProfileIdForProfileName($ProfileName);
     $ProfileId = $ProfileIdArr["id"];
     if ($ProfileId > 0) {
       // Set some default values
@@ -491,11 +620,13 @@ function dbInsertProfile($ProfileName) {
       $arr["result"] = "ok";
       $arr["message"] = "Profile '".$ProfileName."' defaults created for ID: ".$ProfileId;
       $arr["id"] = $ProfileId;
+      $arr["defaults"] = $DefaultsArr;
     }
     else {
       $arr["result"] = "ko";
       $arr["message"] = "Profile '".$ProfileName."' defaults not created for ID: ".$ProfileId;
       $arr["id"] = $ProfileId;
+      $arr["defaults"] = array();
     }
   }
   else {
@@ -503,6 +634,7 @@ function dbInsertProfile($ProfileName) {
     $arr["result"] = "ok";
     $arr["message"] = "Profile '".$ProfileName."' already exists as ID: ".$ProfileId;
     $arr["id"] = $ProfileId;
+    $arr["defaults"] = array();
   }
   return $arr;
 }
@@ -526,8 +658,8 @@ function dbInsertDefaultProfileValues($ProfileId) {
 
 function dbInsertProfileValue($ProfileId, $ProfileKey, $ProfileValue) {
 
-  $SettingsId = 0;
-  $SettingsId = dbSelectProfileSettingsId($ProfileId, $ProfileKey);
+  $SettingsArr = dbSelectProfileSettingsId($ProfileId, $ProfileKey);
+  $SettingsId = $SettingsArr["id"];
 
   $arr = array();
 
@@ -705,45 +837,11 @@ function getDirectoryContentsFromShell() {
   return $arr;
 }
 
+
 function deleteProfile() {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
-  $arr = array();
 
-  // Never delete the 'default' profile (although it's settings can be changed)
-  $ProfileIdArr = dbSelectProfileId($ProfileName);
-  $defaultId = $ProfileIdArr["id"];
-
-  if ($ProfileId == $defaultId) {
-    $arr["result"] = "ko";
-    $arr["message"] = "You cannot delete the Default Profile";
-  }
-  else {
-    // First, delete the profile settings
-    $arr["deletesettings"] = dbDelProfileSettings($ProfileId);
-    if ($arr["deletesettings"]["result"] == "ok") {
-      $arr["deleteinclexcl"] = dbDelProfileInclExcl($ProfileId);
-      // Then, if a success, delete the profile
-      if ($arr["deleteinclexcl"]["result"] == "ok") {
-        $arr["deleteprofile"] = dbDelProfile($ProfileId);
-        $arr["result"] = $arr["deleteprofile"]["result"];
-        if ($arr["result"] == "ok") {
-          $arr["message"] = "Profile deleted";
-        }
-        else {
-          $arr["message"] = "Error deleting profile";
-        }
-      }
-      else {
-        $arr["result"] = "ko";
-        $arr["message"] = "Error deleting inclexcl for profile id: ".$ProfileId;
-      }
-    }
-    else {
-      $arr["result"] = "ko";
-      $arr["message"] = "Error deleting settings for profile id: ".$ProfileId;
-    }
-  }
-
+  $arr = dbDeleteProfileRecordSet($ProfileId);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
@@ -785,7 +883,7 @@ function selectProfilesList() {
 
   // If SelectedId not specified, resort to Default
   if (!$SelectedId) {
-    $ProfileIdArr = dbSelectProfileId("Default");
+    $ProfileIdArr = dbSelectProfileIdForProfileName("Default");
     $SelectedId = $ProfileIdArr["id"];
   }
 
@@ -820,14 +918,14 @@ function addProfile() {
   $arr = array();
 
   // Is the new Profile Name on file?
-  $ProfileIdArr = dbSelectProfileId($ProfileName);
+  $ProfileIdArr = dbSelectProfileIdForProfileName($ProfileName);
   $id = $ProfileIdArr["id"];
 
   if ($id > 0) {
     // Already exists
     $arr["result"] = "ok";
     $arr["message"] = "Profile already exists";
-    $arr["id"] = dbSelectProfileId($ProfileName);
+    $arr["id"] = $id;
     $arr["defaults"] = array();
   }
   else {
@@ -864,84 +962,18 @@ function updateProfileSetting() {
 function deleteProfileSetting() {
 
   $SettingId = SQLite3::escapeString($_POST["settingid"]);
-  $Exists = "-1";
 
-  echo "{ \"result\" : ";
-
-  $db = new MyDB();
-  if(!$db) {
-    echo "\"ko\" , \"message\" : ";
-    echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-  } else {
-    // Is there a row with this Setting ID?
-    $rows = $db->query("SELECT COUNT(*) AS count FROM profilesettings WHERE id = ".$SettingId.";");
-    if(!$rows){
-      echo "\"ko\" , \"message\" : ";
-      echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    }
-    else {
-      $row = $rows->fetchArray();
-      $Exists = $row['count'];
-
-      if ($Exists > 0) {
-        $ret = $db->exec("DELETE FROM profilesettings WHERE id = ".$SettingId.";");
-        if(!$ret){
-          echo "\"ko\" , \"message\" : ";
-          echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-        }
-        else {
-          echo "\"ok\" , \"message\" : \"Record deleted\"";
-        }
-      }
-      else {
-        echo "\"ko\" , \"message\" : \"No such id: ".$SettingId;
-      }
-    }
-  }
-
-  echo " }";
+  $arr = dbDeleteProfileSetting($SettingId);
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
 function deleteProfileInclExcl() {
 
   $SettingId = SQLite3::escapeString($_POST["settingid"]);
-  $Exists = "-1";
 
-  echo "{ \"result\" : ";
-
-  $db = new MyDB();
-  if(!$db) {
-    echo "\"ko\" , \"message\" : ";
-    echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-  } else {
-    // Is there a row with this Setting ID?
-    $rows = $db->query("SELECT COUNT(*) AS count FROM profileinclexcl WHERE id = ".$SettingId.";");
-    if(!$rows){
-      echo "\"ko\" , \"message\" : ";
-      echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-    }
-    else {
-      $row = $rows->fetchArray();
-      $Exists = $row['count'];
-
-      if ($Exists > 0) {
-        $ret = $db->exec("DELETE FROM profileinclexcl WHERE id = ".$SettingId.";");
-        if(!$ret){
-          echo "\"ko\" , \"message\" : ";
-          echo json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-        }
-        else {
-          echo "\"ok\" , \"message\" : \"Record deleted\"";
-        }
-      }
-      else {
-        echo "\"ko\" , \"message\" : \"No such id: ".$SettingId;
-      }
-    }
-  }
-
-  echo " }";
+  $arr = dbDeleteProfileInclExcl($SettingId);
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
@@ -1099,8 +1131,5 @@ switch ($WhatToRun) {
   default:
     writeErrorMsg();
 }
-
-
-// writeMsg(); // call the function
 
 ?>
