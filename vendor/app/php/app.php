@@ -650,33 +650,41 @@ function dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue) {
 
   if (!$SettingsId || $SettingsId <= 0) {
     $db = new MyDB();
-
-    // Insert a new record
-    $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$ProfileKey."','".$ProfileValue."');");
-    if(!$ret){
+    if(!$db) {
       $arr["result"] = "ko";
       $arr["message"] = $db->lastErrorMsg();
+    } else {
+      // Insert a new record
+      $ret = $db->exec("INSERT INTO profilesettings (profileid, profilekey, profilevalue) VALUES ('".$ProfileId."', '".$ProfileKey."','".$ProfileValue."');");
+      if(!$ret){
+        $arr["result"] = "ko";
+        $arr["message"] = $db->lastErrorMsg();
+      }
+      else {
+        $arr["result"] = "ok";
+        $arr["message"] = "Profile Setting '".$ProfileKey."' saved as: '".$ProfileValue."'";
+      }
+      $db->close();
     }
-    else {
-      $arr["result"] = "ok";
-      $arr["message"] = "Profile Setting '".$ProfileKey."' saved as: '".$ProfileValue."'";
-    }
-    $db->close();
   }
   else {
     $db = new MyDB();
-
-    // Update an existing record
-    $ret = $db->exec("UPDATE profilesettings SET profilevalue = '".$ProfileValue."' WHERE profileid = ".$ProfileId." AND profilekey = '".$ProfileKey."';");
-    if(!$ret){
+    if(!$db) {
       $arr["result"] = "ko";
       $arr["message"] = $db->lastErrorMsg();
+    } else {
+      // Update an existing record
+      $ret = $db->exec("UPDATE profilesettings SET profilevalue = '".$ProfileValue."' WHERE profileid = ".$ProfileId." AND profilekey = '".$ProfileKey."';");
+      if(!$ret){
+        $arr["result"] = "ko";
+        $arr["message"] = $db->lastErrorMsg();
+      }
+      else {
+        $arr["result"] = "ok";
+        $arr["message"] = "Profile Setting '".$ProfileKey."' updated to: '".$ProfileValue."'";
+      }
+      $db->close();
     }
-    else {
-      $arr["result"] = "ok";
-      $arr["message"] = "Profile Setting '".$ProfileKey."' updated to: '".$ProfileValue."'";
-    }
-    $db->close();
   }
 
   return $arr;
@@ -953,6 +961,31 @@ function dbDeleteSnapshot($SnapshotId) {
     }
     $db->close();
   }
+  return $arr;
+}
+
+
+function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    // Update an existing record
+    $ret = $db->exec("UPDATE snapshots SET snapdesc = '".$SnapshotName."' WHERE id = ".$SnapshotId.";");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Snapshot Name updated.";
+    }
+    $db->close();
+  }
+
   return $arr;
 }
 
@@ -1287,31 +1320,67 @@ function takeSnapshot() {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
 
   $arr = dbTakeSnapshot($ProfileId);
+  if ($arr["result"] == "ok") {
+    $arr["snaplist"] = dbSelectSnapshotsList($ProfileId);
+  }
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
 function deleteSnapshot() {
   $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
+  $ProfileId = "0";
 
   $rtn = array();
 
-  // Does the snapshot record have a description?  If so, refuse to delete
-  $arr = dbSelectSnapshotForId($SnapshotId);
-  if ($arr["result"] == "ok") {
-    if ( !empty($arr["items"][0]["snapdesc"]) ) {
-      $rtn["result"] = "ko";
-      $rtn["message"] = "Cannot delete a snapshot with a description.";
+  if ($SnapshotId == "0") {
+    $rtn["result"] = "ko";
+    $rtn["message"] = "You cannot delete the 'Now' snapshot";
+  }
+  else {
+    // Does the snapshot record have a description?  If so, refuse to delete
+    $arr = dbSelectSnapshotForId($SnapshotId);
+    if ($arr["result"] == "ok") {
+      $ProfileId = $arr["items"][0]["profileid"];
+      if ( !empty($arr["items"][0]["snapdesc"]) ) {
+        $rtn["result"] = "ko";
+        $rtn["message"] = "Cannot delete a snapshot with a description.";
+      }
+      else {
+        // Snapshot found and there is no description
+        $arr = dbDeleteSnapshot($SnapshotId);
+        $rtn = $arr;
+        if ($arr["result"] == "ok") {
+          $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
+        }
+      }
     }
     else {
-      // Snapshot found and there is no description
-      $arr = dbDeleteSnapshot($SnapshotId);
+      // No snapshot found
       $rtn = $arr;
     }
   }
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
+function updateSnapshotName(){
+  $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
+  $SnapshotName= SQLite3::escapeString($_POST["snapshotname"]);
+
+  $rtn = array();
+  $rtn["snaplist"] = array();
+
+  $SnapDet = dbSelectSnapshotForId($SnapshotId);
+  if ($SnapDet["result"] == "ok") {
+    $ProfileId = $SnapDet["items"][0]["profileid"];
+    $rtn = dbUpdateSnapshotName($SnapshotId, $SnapshotName);
+    if ($rtn["result"] == "ok") {
+      $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
+    }
+  }
   else {
-    // No snapshot found
-    $rtn = $arr;
+    $rtn = $SnapDet;
   }
 
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
@@ -1385,6 +1454,9 @@ switch ($WhatToRun) {
     break;
   case "deletesnapshot":
     deleteSnapshot();
+    break;
+  case "updatesnapshotname":
+    updateSnapshotName();
     break;
   default:
     writeErrorMsg();

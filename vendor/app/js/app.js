@@ -50,7 +50,7 @@ $(document).ready(function() {
 
       var pdata = new Object();
       pdata.fn = "updateprofilesetting";
-      pdata.profileid = $('#selectprofile').val();
+      pdata.profileid = $("#selectprofile").val();
       pdata.settingname = eltId;
       pdata.settingvalue = eltVal;
 
@@ -79,7 +79,7 @@ $(document).ready(function() {
 
     var pdata = new Object();
     pdata.fn = "selectfullprofile";
-    pdata.profileid = $('#selectprofile').val();
+    pdata.profileid = $("#selectprofile").val();
 
     $.ajax('./vendor/app/php/app.php',
     {
@@ -103,7 +103,7 @@ $(document).ready(function() {
         if (data.profilesettings.length > 0) {
           $.each(data.profilesettings, function (i, item) {
 
-            var elt = $('#'+item.setkey);
+            var elt = $("#"+item.setkey);
 
             switch (elt.attr('type')) {
               case "checkbox":
@@ -127,7 +127,7 @@ $(document).ready(function() {
 
             // Add trigger
             var eltid = 'inclrow_'+item.setid;
-            $('#'+eltid).click(function() {
+            $("#"+eltid).click(function() {
               // Get the id of the currently selected item using the class name
               var selid = $("#includefilescontainer").find(".inclexclsel").attr("id");
               // Get all items in the area with the 'inclexclsel' class, and remove that class
@@ -135,12 +135,12 @@ $(document).ready(function() {
               // Blank the hidden input
               $("#thisincludesetid").val('');
               // Disable the remove button
-              $('#includeremove').attr('disabled','disabled');
+              $("#includeremove").attr("disabled","disabled");
               // Set the value of the hidden selector, if it is not the same setid
               if (selid != $(this).attr("id")) {
                 $("#thisincludesetid").val($(this).attr("id"));
                 $(this).addClass("inclexclsel");
-                $('#includeremove').removeAttr('disabled');
+                $("#includeremove").removeAttr("disabled");
               }
             });
 
@@ -156,7 +156,7 @@ $(document).ready(function() {
 
             // Add trigger
             var eltid = 'exclrow_'+item.setid;
-            $('#'+eltid).click(function() {
+            $("#"+eltid).click(function() {
               // Get the id of the currently selected item using the class name
               var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
               // Get all items in the area with the 'inclexclsel' class, and remove that class
@@ -164,12 +164,12 @@ $(document).ready(function() {
               // Blank the hidden input
               $("#thisexcludesetid").val('');
               // Disable the remove button
-              $('#excluderemove').attr('disabled','disabled');
+              $("#excluderemove").attr("disabled","disabled");
               // Set the value of the hidden selector, if it is not the same setid
               if (selid != $(this).attr("id")) {
                 $("#thisexcludesetid").val($(this).attr("id"));
                 $(this).addClass("inclexclsel");
-                $('#excluderemove').removeAttr('disabled');
+                $("#excluderemove").removeAttr("disabled");
               }
             });
 
@@ -177,15 +177,15 @@ $(document).ready(function() {
         }
 
         // Trigger a change of those elements having dependent elements
-        $('#settingsdeleteolderthan').trigger('change');
-        $('#settingsdeletefreespacelessthan').trigger('change');
-        $('#settingsdeleteinodeslessthan').trigger('change');
-        $('#settingssmartkeepallfordays').trigger('change');
-        $('#settingssmartkeeponeperdayfordays').trigger('change');
-        $('#settingssmartkeeponeperdayforweeks').trigger('change');
-        $('#settingssmartkeeponepermonthformonths').trigger('change');
-        $('#settingssmartremove').trigger('change');
-        $('#settingshost').trigger('change');
+        $("#settingsdeleteolderthan").trigger("change");
+        $("#settingsdeletefreespacelessthan").trigger("change");
+        $("#settingsdeleteinodeslessthan").trigger("change");
+        $("#settingssmartkeepallfordays").trigger("change");
+        $("#settingssmartkeeponeperdayfordays").trigger("change");
+        $("#settingssmartkeeponeperdayforweeks").trigger("change");
+        $("#settingssmartkeeponepermonthformonths").trigger("change");
+        $("#settingssmartremove").trigger("change");
+        $("#settingshost").trigger("change");
         showScheduleElements()
 
         // Re-add the trigger classes
@@ -204,32 +204,32 @@ $(document).ready(function() {
     // Undisplay all of the items
     $('.modelocalencrypted, .modessh, .modesshencrypted').css('display', 'none');
     // Display the required items
-    $('.'+$('#selectmode').val()).fadeIn();
+    $("."+$("#selectmode").val()).fadeIn();
   });
 
 
-  $('#settingssmartremove').change(function(){
+  $("#settingssmartremove").change(function(){
     // Enable or diable the dependent elements
     var ischecked = 0;
     if ($(this).is(":checked")) ischecked = 1;
 
-    $('#smartremovediv').find('input').each(function(i, elt) {
-      if (ischecked == 0) $(elt).attr('disabled','disabled');
-      else $(elt).removeAttr('disabled');
+    $("#smartremovediv").find("input").each(function(i, elt) {
+      if (ischecked == 0) $(elt).attr("disabled","disabled");
+      else $(elt).removeAttr("disabled");
     });
   });
 
 
-  $('#settingsdeleteolderthan').change(function(){
+  $("#settingsdeleteolderthan").change(function(){
     // Enable or diable the dependent elements
     if ($(this).is(":checked")) {
-      $('#settingsdeleteolderthanage').removeAttr('disabled');
-      $('#settingsdeletebackupolderthanperiod').removeAttr('disabled');
-      $('#settingsdeletebackupolderthanperiod').trigger('change'); // store the value
+      $('#settingsdeleteolderthanage').removeAttr("disabled");
+      $('#settingsdeletebackupolderthanperiod').removeAttr("disabled");
+      $('#settingsdeletebackupolderthanperiod').trigger("change"); // store the value
     }
     else {
-      $('#settingsdeleteolderthanage').attr('disabled','disabled');
-      $('#settingsdeletebackupolderthanperiod').attr('disabled','disabled');
+      $('#settingsdeleteolderthanage').attr("disabled","disabled");
+      $('#settingsdeletebackupolderthanperiod').attr("disabled","disabled");
     }
   });
 
@@ -237,39 +237,39 @@ $(document).ready(function() {
   $('#settingsdeletefreespacelessthan').change(function(){
     // Enable or diable the dependent elements
     if ($(this).is(":checked")) {
-      $('#settingsdeletefreespacelessthanvalue').removeAttr('disabled');
-      $('#settingsdeletefreespacelessthanunit').removeAttr('disabled');
-      $('#settingsdeletefreespacelessthanunit').trigger('change'); // store the value
+      $("#settingsdeletefreespacelessthanvalue").removeAttr("disabled");
+      $("#settingsdeletefreespacelessthanunit").removeAttr("disabled");
+      $("#settingsdeletefreespacelessthanunit").trigger("change"); // store the value
     }
     else {
-      $('#settingsdeletefreespacelessthanvalue').attr('disabled','disabled');
-      $('#settingsdeletefreespacelessthanunit').attr('disabled','disabled');
+      $("#settingsdeletefreespacelessthanvalue").attr("disabled","disabled");
+      $("#settingsdeletefreespacelessthanunit").attr("disabled","disabled");
     }
   });
 
 
-  $('#settingsdeleteinodeslessthan').change(function(){
+  $("#settingsdeleteinodeslessthan").change(function(){
     // Enable or diable the dependent elements
     if ($(this).is(":checked")) {
-      $('#settingsdeleteinodeslessthanvalue').removeAttr('disabled');
+      $("#settingsdeleteinodeslessthanvalue").removeAttr("disabled");
     }
     else {
-      $('#settingsdeleteinodeslessthanvalue').attr('disabled','disabled');;
+      $("#settingsdeleteinodeslessthanvalue").attr("disabled","disabled");
     }
   });
 
 
-  $('#excludeadddefault').click(function() {
+  $("#excludeadddefault").click(function() {
     var pdata = new Object();
     pdata.fn = "adddefaultexcludes";
-    pdata.profileid = $('#selectprofile').val();
+    pdata.profileid = $("#selectprofile").val();
 
     // Provide feedback to the user
-    var spinelt = createSpinner('excludefilescontainer','');
-    spinelt.css('top','5px');
-    spinelt.css('left','250px');
+    var spinelt = createSpinner("excludefilescontainer","");
+    spinelt.css("top","5px");
+    spinelt.css("left","250px");
 
-    $.ajax('./vendor/app/php/app.php',
+    $.ajax("./vendor/app/php/app.php",
     {
       dataType: 'json',
       type: 'POST',
@@ -1251,7 +1251,9 @@ function BuildSideMenu(data) {
   $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu0").attr("snapid","0").text("Now").appendTo("#snapshotssidemenu");
   // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
   $("#snapshotsmenu0").click(function(){
-    $('#snapshotid').val("0");
+    $("#snapshotid").val("0");
+    $("#snapshotname").val("Now");
+    $("#snapshotname").attr("readonly","readonly");
   });
   if (data.length > 0) {
     $.each(data, function (i, item) {
@@ -1261,16 +1263,50 @@ function BuildSideMenu(data) {
       $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).html(snapText).appendTo("#snapshotssidemenu");
       // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
       $("#snapshotsmenu"+item.id).click(function(){
-        $('#snapshotid').val(item.id);
+        $("#snapshotid").val(item.id);
+        $("#snapshotname").val(item.snapdesc);
+        $("#snapshotname").removeAttr("readonly");
       });
     });
   }
+  // Default select the first one
+  $("#snapshotsmenu0").trigger("click");
 }
 
 
-$('#snapshotid').change(function(){
+$("#snapshotid").change(function(){
   // Callback to get the snapshot paths and contents
-  console.log('Sanpshot path for snapshot id: '+$('#snapshotid').val());
+  console.log('Snapshot path for snapshot id: '+$('#snapshotid').val());
+});
+
+
+$("#snapshotname").change(function(){
+  // Callback to register the change of name
+  var pdata = new Object();
+  pdata.fn = "updatesnapshotname";
+  pdata.snapshotid = $("#snapshotid").val();
+  pdata.snapshotname = $("#snapshotname").val();
+
+  // Provide feedback to the user
+  var spinelt = createSpinner('snapshotssidemenu','large');
+  spinelt.css('top','100px');
+  spinelt.css('left','50px');
+
+  $.ajax('./vendor/app/php/app.php',
+  {
+    dataType: 'json',
+    type: 'POST',
+    data: pdata,
+    success: function (data,status,xhr) {
+      console.log(data);
+      spinelt.remove();
+      if (data.result == "ok") BuildSideMenu(data.snaplist.items);
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+      console.log('Error: ' + errorMessage);
+      spinelt.remove();
+    }
+  });
 });
 
 
@@ -1316,7 +1352,7 @@ $("#snapshotnewbtn").click(function(){
       console.log(data);
       spinelt.remove();
 
-      GetSideMenu();
+      if (data.result == "ok") BuildSideMenu(data.snaplist.items);
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
@@ -1328,10 +1364,6 @@ $("#snapshotnewbtn").click(function(){
 // Refresh Snapshots List
 $("#snapshotrefreshbtn").click(function(){
   GetSideMenu();
-});
-// Snapshot Name
-$("#snapshotnamebtn").click(function(){
-  alert('Set Snapshot Name');
 });
 
 // Remove Snapshot
@@ -1355,7 +1387,7 @@ $("#snapshotremovebtn").click(function(){
       console.log(data);
       spinelt.remove();
 
-      GetSideMenu();
+      if (data.result == "ok") BuildSideMenu(data.snaplist.items);
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);

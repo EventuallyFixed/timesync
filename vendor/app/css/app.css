@@ -19,6 +19,8 @@
 .textcentered { width: 50%; margin: 0 auto; }
 .snapdarkheading { background-color: darkgray; }
 
+#snapshotname { width: 80%; margin: 2px 0px 2px 2px; }
+
 /* Shortcuts & Files container */
 .appcontainer { padding: 0px; margin: 1px; border: 1px solid gray; }
 /* Column Headings */

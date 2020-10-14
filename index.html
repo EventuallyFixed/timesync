@@ -77,13 +77,16 @@
             <nav class="bg-light col-12 apptoolbar" id="snapshottoolbar">
               <img id="snapshotnewbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/document-save_btn.svg" alt="New Snapshot" title="Take a new Snapshot" />
               <img id="snapshotrefreshbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/view-refresh_btn.svg" alt="Refresh Snapshots List" title="Refresh Snapshot List" />
-              <img id="snapshotnamebtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/gtk-edit_btn.svg" alt="Snapshot Name" title="Edit Snapshot Name"/>
               <img id="snapshotremovebtn" class="toolbarbtn snapdisabled" src="vendor/app/img/maintoolbar/edit-delete_btn.svg" alt="Remove Snapshot" title="Delete Snapshot" />
               <img id="snapshotlogbtn" class="toolbarbtn snapdisabled" src="vendor/app/img/maintoolbar/text-plain_btn.svg" alt="View Snapshot Log" title="View Snapshot Log" />
               <img id="snapshotlastlogbtnbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/document-new_btn.svg" alt="View Last Log" title="View Last Log" />
               <img id="snapshotsettingsbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/gtk-preferences_btn.svg" alt="Settings" title="Settings" />
               <img id="snapshothelpbtn" class="toolbarbtnv" src="vendor/app/img/maintoolbar/help-contents_btn.svg" alt="Help" title="Help" />
             </nav>
+          </div>
+          <div class="row">
+            <label class="appinputlabel" for="snapshotname">Snapshot Name:</label>
+            <input id="snapshotname" class="form-control appinput" type="text" placeholder="Key in snapshot name" />
           </div>
           <!-- Snapshots Toolbar -->
           <div class="row">
@@ -97,7 +100,8 @@
               <img id="filerestorepathtobtn" class="toolbarbtn" src="vendor/app/img/filestoolbar/document-revert_btn.svg" alt="Restore '/path' to..." title="Restore '/path' to..." />
               <img id="filesnapshotsbtn" class="toolbarbtn" src="vendor/app/img/filestoolbar/file-manager_btn.svg" alt="Snapshots" title="Snapshots" />
             </nav>
-
+          </div>
+          <div class="row">
             <div id="shortcutscontainer" class="appcontainer col-2">
               <nav id="snapshortcutsnav" class="navbar navbar-light bg-light apptoolbar">
                 <div class="snapheading">Shortcuts</div>
