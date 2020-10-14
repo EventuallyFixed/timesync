@@ -32,11 +32,11 @@
     <!-- Sidebar -->
     <div class="bg-light border-right" id="sidebar-wrapper">
       <div class="sidebar-heading">TimeSync</div>
-      <div class="list-group list-group-flush">
+      <div id="snapshotssidemenu" class="list-group list-group-flush">
+        <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading"><div id="snapshotsheading">Snapshots</div></nav>
+<!--
         <a id="snapshotsmenu" href="#" class="list-group-item list-group-item-action bg-light">Snapshots</a>
-        <a id="settingsmenu"href="#" class="list-group-item list-group-item-action bg-light">Settings</a>
-        <a id="logsmenu"href="#" class="list-group-item list-group-item-action bg-light">Logs</a>
-        <a id="aboutmenu" href="#" class="list-group-item list-group-item-action bg-light">About</a>
+-->
       </div>
     </div>
     <!-- /#sidebar-wrapper -->
@@ -45,30 +45,26 @@
     <div id="page-content-wrapper">
 
       <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
-        <button class="btn btn-primary" id="menu-toggle">Toggle Menu</button>
+        <button class="btn btn-primary" id="menu-toggle" title="Toggls Snapshots List"><span class="iconify" data-icon="mdi:menu" data-inline="false"></span></button>
 
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle Snapshots List">
           <span class="navbar-toggler-icon"></span>
         </button>
 
+        <!-- Top Menu -->       
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
             <li class="nav-item active">
-              <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+              <a id="snapshotsmenu" class="nav-link" href="#"><span class="iconify" data-icon="mdi:camera" data-inline="false" title="Snapshots"></span></a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#">Link</a>
+              <a id="settingsmenu" class="nav-link" href="#"><span class="iconify" data-icon="mdi:cog" data-inline="false" title="Settings"></span></a>
             </li>
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                Dropdown
-              </a>
-              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                <a class="dropdown-item" href="#">Action</a>
-                <a class="dropdown-item" href="#">Another action</a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item" href="#">Something else here</a>
-              </div>
+            <li class="nav-item">
+              <a id="logsmenu" class="nav-link" href="#"><span class="iconify" data-icon="mdi:file-find" data-inline="false" title="Logs"></span></a>
+            </li>
+            <li class="nav-item">
+              <a id="aboutmenu" class="nav-link" href="#"><span class="iconify" data-icon="mdi:help-box" data-inline="false" title="About"></span></a>
             </li>
           </ul>
         </div>
@@ -89,22 +85,7 @@
               <img id="snapshothelpbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/help-contents_btn.svg" alt="Help" title="Help" />
             </nav>
           </div>
-          <!-- a tall div for the snapshots -->
-          <div class="row">
-            <div id="snapshotlist" class="col-12">
-              <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading"><div>Snapshots</div></nav>
-<!--              <nav id="snapnow" class="navbar navbar-light bg-light apptoolbar"><div class="snapheading">Now</div></nav> -->
-              <div class="row snaprow">
-                <div class="snapcolumn">Now</div>
-              </div>
-              <div class="row snaprow">
-                <div class="snapcolumn">Snapshot 1</div>
-              </div>
-              <div class="row snaprow">
-                <div class="snapcolumn">Snapshot 2</div>
-              </div>
-            </div>
-          </div>
+          <!-- Snapshots Toolbar -->          
           <div class="row">
             <nav class="bg-light apptoolbar col-12">
               <img id="fileupbtn" class="toolbarbtn" src="vendor/app/img/filestoolbar/go-up_btn.svg" alt="Up" title="Up" />

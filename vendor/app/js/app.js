@@ -93,6 +93,9 @@ $(document).ready(function() {
         var autoupd_elts = removeTriggerClass("autoupd");
         var scheduleupd_elts = removeTriggerClass("scheduleupd");
 
+        // Refresh the side menu
+        BuildSideMenu(data.snaplist);
+
         // Reset all fields of the Settings
         resetSettings();
 
@@ -1155,7 +1158,7 @@ function BuildProfilesSelect(selId) {
   // Get the Profiles List for the DDL
   var pdata = new Object();
   pdata.fn = "selectprofileslist";
-  pdata.selid = selId;
+  pdata.profileid = $('#selectprofile').val();
 
   // Provide feedback to the user
   var spinelt = createSpinner('selectprofilediv','');
@@ -1203,12 +1206,56 @@ function BuildProfilesSelect(selId) {
       console.log('Error: ' + errorMessage);
       spinelt.remove();
     }
-  }); 	
+  });
 
 }
 
 
-// Side Menus
+// Side Menu - list of Snapshots
+function GetSideMenu(){
+  
+  // Get the Profiles List for the DDL
+  var pdata = new Object();
+  pdata.fn = "selectsnapshotslist";
+
+  // Provide feedback to the user
+  var spinelt = createSpinner('snapshotssidemenu','large');
+  spinelt.css('top','100px');
+  spinelt.css('left','50px');
+
+  $.ajax('./vendor/app/php/app.php',
+  {
+    dataType: 'json',
+    type: 'POST',
+    data: pdata,
+    success: function (data,status,xhr) {
+      console.log(data);
+      BuildSiteMenu(data);
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+      console.log('Error: ' + errorMessage);
+      spinelt.remove();
+    }
+  });
+}
+
+
+function BuildSideMenu(data) {
+
+  // Remove all options from the menu (#snapshotssidemenu)
+  $('#snapshotssidemenu').find("a").remove();
+  // Add the 'Now' menu
+  $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu0").text("Now").appendTo("#snapshotssidemenu");
+
+  if (data.length > 0) {
+    $.each(data, function (i, item) {
+      $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu"+item.id).text(item.snaptime).appendTo("#snapshotssidemenu");
+    });
+  }
+}
+
+
+// Top Menu
 $("#snapshotsmenu").click(function(){
 	$('.contentsection').css('display','none');
 	$('#snapshotsection').fadeIn();

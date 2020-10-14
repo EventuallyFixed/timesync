@@ -31,6 +31,90 @@ class MyDB extends SQLite3 {
 }
 
 
+function db_create_schema() {
+  $db = new MyDB();
+  $arr = array();
+
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+
+    $sql =<<<EOF
+      CREATE TABLE IF NOT EXISTS profiles (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profilename                   CHAR(250) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS profilesettings (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profileid                     INTEGER NOT NULL,
+        profilekey                    CHAR(50) NOT NULL,
+        profilevalue                  CHAR(250) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS profileinclexcl (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profileid                     INTEGER NOT NULL,
+        profilekey                    CHAR(10) NOT NULL,
+        profiletype                   CHAR(2) NOT NULL,
+        profilevalue                  CHAR(500) NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS snapshots (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        profileid                     INTEGER NOT NULL,
+        snaptime                      TEXT    NOT NULL,
+        snapdesc                      TEXT            ,
+        snapstatus                    INTEGER NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS snapshotpaths (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        snapshotid                    INTEGER NOT NULL,
+        snapshotpath                  TEXT    NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS codelist (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        codetype                      CHAR(20) NOT NULL,
+        codename                      CHAR(20) NOT NULL,
+        codedesc                      CHAR(50) NOT NULL
+      );
+
+      -- Insert statuses
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'proc', 'Processing snapshot' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'proc');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'comp', 'Snapshot completed' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'comp');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'comperr', 'Snapshot completed with errors' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'comperr');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'fail', 'Snapshot failed' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'fail');
+
+      CREATE TABLE IF NOT EXISTS appversion (
+        appversion                    CHAR(50)  NOT NULL
+      );
+
+      CREATE TEMP TABLE IF NOT EXISTS variables (
+        varname                       CHAR(50)  NOT NULL,
+        varvalue                      CHAR(250) NOT NULL
+      );
+
+EOF;
+
+    $ret = $db->exec($sql);
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "DB Init success";
+    }
+    $db->close();
+  }
+
+  return $arr;
+} // db_create_schema
+
+
 function dbSelectProfileIdForProfileName($ProfileName) {
 
   $rtn = array();
@@ -482,68 +566,6 @@ function dbDelProfileInclExcl($ProfileId) {
   return $arr;
 }
 
-function db_create_schema() {
-  $db = new MyDB();
-  $arr = array();
-
-  if(!$db) {
-    $arr["result"] = "ko";
-    $arr["message"] = $db->lastErrorMsg();
-  } else {
-
-    $sql =<<<EOF
-      CREATE TABLE IF NOT EXISTS profiles (
-        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        profilename                   CHAR(250) NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS profilesettings (
-        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        profileid                     INTEGER NOT NULL,
-        profilekey                    CHAR(50) NOT NULL,
-        profilevalue                  CHAR(250) NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS profileinclexcl (
-        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        profileid                     INTEGER NOT NULL,
-        profilekey                    CHAR(10) NOT NULL,
-        profiletype                   CHAR(2) NOT NULL,
-        profilevalue                  CHAR(500) NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS snapshots (
-        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        profileid                     INTEGER NOT NULL,
-        basepath                      TEXT    NOT NULL,
-        description                   TEXT    NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS appversion (
-        appversion                    CHAR(50)  NOT NULL
-      );
-
-      CREATE TEMP TABLE IF NOT EXISTS variables (
-        varname                       CHAR(50)  NOT NULL,
-        varvalue                      CHAR(250) NOT NULL
-      );
-EOF;
-
-    $ret = $db->exec($sql);
-    if(!$ret){
-      $arr["result"] = "ko";
-      $arr["message"] = $db->lastErrorMsg();
-    }
-    else {
-      $arr["result"] = "ok";
-      $arr["message"] = "DB Init success";
-    }
-    $db->close();
-  }
-
-  return $arr;
-} // db_create_schema
-
 
 function dbInsertProfile($ProfileName) {
   // Create a profile, and return the ID & description
@@ -711,6 +733,38 @@ function dbInsertIncludeExcludeValue($ProfileId, $InclExcl, $Type, $Pattern) {
 
   return $arr;
 }
+
+
+function dbSelectSnapshotsList($ProfileId) {
+
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Sort in ascending order - this is default
+    $rows = $db->query("SELECT id, profileid, snaptime, snapdesc FROM snapshots WHERE profileid = ".$ProfileId." ORDER BY id;");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
+}
+
 
 // Web Method Functions ===========================
 
@@ -1023,7 +1077,19 @@ function selectFullProfile($ProfileId) {
 
   $ProfileExcl = dbSelectProfileIncludeExclude($ProfileId, "exclude");
   $AllProfile["profileexclude"] = $ProfileExcl[items];
+
+  $SnapList = dbSelectSnapshotsList($ProfileId);
+  $AllProfile["snaplist"] = $SnapList[items];
+
   echo json_encode($AllProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
+function selectSnapshotsList(){
+  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
+  
+  $arr = dbSelectSnapshotsList($ProfileId);
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
@@ -1085,6 +1151,9 @@ switch ($WhatToRun) {
     break;
   case "updateschedule":
     updateSchedule();
+    break;
+  case "selectsnapshotslist":
+    selectSnapshotsList();
     break;
   default:
     writeErrorMsg();

@@ -2,6 +2,12 @@
 .toolbarbtn:hover { filter: brightness(1.1); }
 .toolbarbtn:hover { cursor: pointer; }
 
+/* Snapshots Heading */
+#snapshotsheading {
+  padding: .75rem 1.25rem;
+  font-weight: bold;
+}
+
 /* File toolbar directory input */
 #filedirinput { display: inline; }
 
@@ -12,7 +18,6 @@
 #snapshotlist { margin: 1px 0px 1px 0px; padding: 0px; border: 1px solid gray; }
 .textcentered { width: 50%; margin: 0 auto; }
 .snapdarkheading { background-color: darkgray; }
-#snapnow { cursor: pointer; }
 
 /* Shortcuts & Files container */
 .appcontainer { padding: 0px; margin: 1px; border: 1px solid gray; }
