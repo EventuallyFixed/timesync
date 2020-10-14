@@ -1265,6 +1265,7 @@ function BuildSideMenu(data) {
       $("#snapshotsmenu"+item.id).click(function(){
         $("#snapshotid").val(item.id);
         $("#snapshotname").val(item.snapdesc);
+        $("#snapshotname").attr("placeholder",sdate.toLocaleString());
         $("#snapshotname").removeAttr("readonly");
       });
     });
@@ -1301,6 +1302,7 @@ $("#snapshotname").change(function(){
       console.log(data);
       spinelt.remove();
       if (data.result == "ok") BuildSideMenu(data.snaplist.items);
+      else alert(data.message);
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
@@ -1353,6 +1355,7 @@ $("#snapshotnewbtn").click(function(){
       spinelt.remove();
 
       if (data.result == "ok") BuildSideMenu(data.snaplist.items);
+      else alert(data.message);
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
@@ -1388,6 +1391,7 @@ $("#snapshotremovebtn").click(function(){
       spinelt.remove();
 
       if (data.result == "ok") BuildSideMenu(data.snaplist.items);
+      else alert(data.message);
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
