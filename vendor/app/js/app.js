@@ -1213,10 +1213,11 @@ function BuildProfilesSelect(selId) {
 
 // Side Menu - list of Snapshots
 function GetSideMenu(){
-  
+
   // Get the Profiles List for the DDL
   var pdata = new Object();
   pdata.fn = "selectsnapshotslist";
+  pdata.profileid = $('#selectprofile').val();
 
   // Provide feedback to the user
   var spinelt = createSpinner('snapshotssidemenu','large');
@@ -1230,7 +1231,8 @@ function GetSideMenu(){
     data: pdata,
     success: function (data,status,xhr) {
       console.log(data);
-      BuildSiteMenu(data);
+      BuildSideMenu(data.items);
+      spinelt.remove();
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
@@ -1243,104 +1245,175 @@ function GetSideMenu(){
 function BuildSideMenu(data) {
 
   // Remove all options from the menu (#snapshotssidemenu)
-  $('#snapshotssidemenu').find("a").remove();
+  $("#snapshotssidemenu").find("a").remove();
+  $(".snapdisabled").attr("disabled","disabled");
   // Add the 'Now' menu
-  $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu0").text("Now").appendTo("#snapshotssidemenu");
-
+  $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu0").attr("snapid","0").text("Now").appendTo("#snapshotssidemenu");
+  // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
+  $("#snapshotsmenu0").click(function(){
+    $('#snapshotid').val("0");
+  });
   if (data.length > 0) {
     $.each(data, function (i, item) {
-      $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu"+item.id).text(item.snaptime).appendTo("#snapshotssidemenu");
+      var sdate = new Date(item.snaptime);  // UTC from server
+      var snapText = sdate.toLocaleString();
+      if (item.snapdesc) { snapText = snapText + "<br/>" + item.snapdesc; }
+      $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).html(snapText).appendTo("#snapshotssidemenu");
+      // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
+      $("#snapshotsmenu"+item.id).click(function(){
+        $('#snapshotid').val(item.id);
+      });
     });
   }
 }
 
 
+$('#snapshotid').change(function(){
+  // Callback to get the snapshot paths and contents
+  console.log('Sanpshot path for snapshot id: '+$('#snapshotid').val());
+});
+
+
 // Top Menu
 $("#snapshotsmenu").click(function(){
-	$('.contentsection').css('display','none');
-	$('#snapshotsection').fadeIn();
+  $('.contentsection').css('display','none');
+  $('#snapshotsection').fadeIn();
 });
 $("#settingsmenu").click(function(){
-	$('.contentsection').css('display','none');
-	$('#settingssection').fadeIn();
+  $('.contentsection').css('display','none');
+  $('#settingssection').fadeIn();
 });
 $("#logsmenu").click(function(){
-	$('.contentsection').css('display','none');
-	$('#logssection').fadeIn();
+  $('.contentsection').css('display','none');
+  $('#logssection').fadeIn();
 });
 $("#aboutmenu").click(function(){
-	$('.contentsection').css('display','none');
-	$('#aboutsection').fadeIn();
+  $('.contentsection').css('display','none');
+  $('#aboutsection').fadeIn();
 });
 
 
 // Snapshot Toolbar
 // Take Snapshot
 $("#snapshotnewbtn").click(function(){
-	alert('Take Snapshot');
+
+  // Request a new snapshot to be taken
+  var pdata = new Object();
+  pdata.fn = "takenewsnapshot";
+  pdata.profileid = $('#selectprofile').val();
+
+  // Provide feedback to the user
+  var spinelt = createSpinner('snapshotssidemenu','large');
+  spinelt.css('top','100px');
+  spinelt.css('left','50px');
+
+  $.ajax('./vendor/app/php/app.php',
+  {
+    dataType: 'json',
+    type: 'POST',
+    data: pdata,
+    success: function (data,status,xhr) {
+      console.log(data);
+      spinelt.remove();
+
+      GetSideMenu();
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+      console.log('Error: ' + errorMessage);
+      spinelt.remove();
+    }
+  });
 });
-// Refresh Snapshot
+
+// Refresh Snapshots List
 $("#snapshotrefreshbtn").click(function(){
-	alert('Refresh Snapshot');
+  GetSideMenu();
 });
 // Snapshot Name
 $("#snapshotnamebtn").click(function(){
-	alert('Snapshot Name');
+  alert('Set Snapshot Name');
 });
+
 // Remove Snapshot
 $("#snapshotremovebtn").click(function(){
-	alert('Remove Snapshot');
+  // Request a new snapshot to be taken
+  var pdata = new Object();
+  pdata.fn = "deletesnapshot";
+  pdata.snapshotid = $('#snapshotid').val();
+
+  // Provide feedback to the user
+  var spinelt = createSpinner('snapshotssidemenu','large');
+  spinelt.css('top','100px');
+  spinelt.css('left','50px');
+
+  $.ajax('./vendor/app/php/app.php',
+  {
+    dataType: 'json',
+    type: 'POST',
+    data: pdata,
+    success: function (data,status,xhr) {
+      console.log(data);
+      spinelt.remove();
+
+      GetSideMenu();
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+      console.log('Error: ' + errorMessage);
+      spinelt.remove();
+    }
+  });
 });
+
 // View Snapshot Log
 $("#snapshotlogbtn").click(function(){
-	alert('View Snapshot Log');
+  alert('View Snapshot Log');
 });
 // View Last Log
 $("#snapshotlastlogbtnbtn").click(function(){
-	alert('View Last Log');
+  alert('View Last Log');
 });
 // Settings
 $("#snapshotsettingsbtn").click(function(){
-	$("#settingsmenu").trigger("click");
+  $("#settingsmenu").trigger("click");
 });
 // Help
 $("#snapshothelpbtn").click(function(){
-	alert('Help');
+  alert('Help');
 });
 
 
 // Files Toolbar
 // Up
 $("#fileupbtn").click(function(){
-	alert('Directory Up');
+  alert('Directory Up');
 });
 // Toggle hidden files
 $("#filetogglehiddenbtn").click(function(){
-	alert('Toggle hidden files');
+  alert('Toggle hidden files');
 });
 // Restore
 $("#filerestorebtn").click(function(){
-	alert('Restore');
+  alert('Restore');
 });
 // Restore to...
 $("#filerestoretobtn").click(function(){
-	alert('Restore to...');
+  alert('Restore to...');
 });
 // Restore '/path'
 $("#filerestorepathbtn").click(function(){
-	alert('Restore /path');
+  alert('Restore /path');
 });
 // Restore '/path' to...
 $("#filerestorepathtobtn").click(function(){
-	alert('Restore /path to...');
+  alert('Restore /path to...');
 });
 // Snapshots
 $("#filesnapshotsbtn").click(function(){
-	alert('Snapshots');
+  alert('Snapshots');
 });
 
 // Snapshot Now permanent link
 $("#snapnow").click(function(){
-	alert('Now Snapshot Link');
+  alert('Now Snapshot Link');
 });
 

@@ -51,7 +51,7 @@
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <!-- Top Menu -->       
+        <!-- Top Menu -->
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
           <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
             <li class="nav-item active">
@@ -78,14 +78,14 @@
               <img id="snapshotnewbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/document-save_btn.svg" alt="New Snapshot" title="Take a new Snapshot" />
               <img id="snapshotrefreshbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/view-refresh_btn.svg" alt="Refresh Snapshots List" title="Refresh Snapshot List" />
               <img id="snapshotnamebtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/gtk-edit_btn.svg" alt="Snapshot Name" title="Edit Snapshot Name"/>
-              <img id="snapshotremovebtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/edit-delete_btn.svg" alt="Remove Snapshot" title="Delete Snapshot" />
-              <img id="snapshotlogbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/text-plain_btn.svg" alt="View Snapshot Log" title="View Snapshot Log" />
+              <img id="snapshotremovebtn" class="toolbarbtn snapdisabled" src="vendor/app/img/maintoolbar/edit-delete_btn.svg" alt="Remove Snapshot" title="Delete Snapshot" />
+              <img id="snapshotlogbtn" class="toolbarbtn snapdisabled" src="vendor/app/img/maintoolbar/text-plain_btn.svg" alt="View Snapshot Log" title="View Snapshot Log" />
               <img id="snapshotlastlogbtnbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/document-new_btn.svg" alt="View Last Log" title="View Last Log" />
               <img id="snapshotsettingsbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/gtk-preferences_btn.svg" alt="Settings" title="Settings" />
-              <img id="snapshothelpbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/help-contents_btn.svg" alt="Help" title="Help" />
+              <img id="snapshothelpbtn" class="toolbarbtnv" src="vendor/app/img/maintoolbar/help-contents_btn.svg" alt="Help" title="Help" />
             </nav>
           </div>
-          <!-- Snapshots Toolbar -->          
+          <!-- Snapshots Toolbar -->
           <div class="row">
             <nav class="bg-light apptoolbar col-12">
               <img id="fileupbtn" class="toolbarbtn" src="vendor/app/img/filestoolbar/go-up_btn.svg" alt="Up" title="Up" />
@@ -123,11 +123,11 @@
                 <div class="snapcolumn col-4">02/10/2020 09:03:47</div>
               </div>
             </div>
-
           </div>
           <div class="row">
             <div id="statusbar" class="col-12" style="border: 1px solid pink">Status Bar</div>
           </div>
+          <input id="snapshotid" type="hidden"></input>
         </div>
         <div class="contentsection" id="settingssection" style="display: none;">
           <h1 class="mt-4">Settings</h1>

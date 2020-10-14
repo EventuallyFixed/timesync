@@ -349,7 +349,7 @@ function dbSelectProfileSettings($ProfileId){
 }
 
 
-// Inserts or Updates a Profile Setting key/value pair
+// Deletes a Profile Setting key/value pair
 function dbDeleteProfileSetting($SettingId) {
 
   $Exists = "-1";
@@ -386,6 +386,7 @@ function dbDeleteProfileSetting($SettingId) {
         $arr["message"] = "No such id: ".$SettingId;
       }
     }
+    $db->close();
   }
 
   return $arr;
@@ -457,6 +458,7 @@ function dbDeleteProfileInclExcl($SettingId) {
         $arr["message"] = "No such id: ".$SettingId;
       }
     }
+    $db->close();
   }
 
   return $arr;
@@ -518,6 +520,7 @@ function dbDelProfile($ProfileId) {
       $arr["result"] = "ok";
       $arr["message"] = "Profile Deleted";
     }
+    $db->close();
   }
   return $arr;
 }
@@ -540,6 +543,7 @@ function dbDelProfileSettings($ProfileId) {
       $arr["result"] = "ok";
       $arr["message"] = "Profile Settings Deleted";
     }
+    $db->close();
   }
   return $arr;
 }
@@ -562,6 +566,7 @@ function dbDelProfileInclExcl($ProfileId) {
       $arr["result"] = "ok";
       $arr["message"] = "Profile Includes/Excludes Deleted";
     }
+    $db->close();
   }
   return $arr;
 }
@@ -588,8 +593,8 @@ function dbInsertProfile($ProfileName) {
         $arr["id"] = "-1";
         $arr["defaults"] = array();
       }
+      $db->close();
     }
-    $db->close();
 
     // Does it exist
     $ProfileIdArr = dbSelectProfileIdForProfileName($ProfileName);
@@ -765,6 +770,191 @@ function dbSelectSnapshotsList($ProfileId) {
   return $rtn;
 }
 
+
+function dbSelectSnapshotForId($SnapshotId) {
+
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Get the snapshot
+    $rows = $db->query("SELECT id, profileid, snaptime, snapdesc FROM snapshots WHERE id = ".$SnapshotId.";");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+      $rtn["paths"] = dbGetSnapshotPathsForSnapshotId($SnapshotId);
+    }
+    $db->close();
+  }
+  return $rtn;
+}
+
+
+function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Get the snapshot
+    $rows = $db->query("SELECT id, snapshotid snapid, snapshotpath snappath FROM snapshotpaths WHERE snapshotid = ".$SnapshotId.";");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
+}
+
+
+function dbTakeSnapshot($ProfileId) {
+  // FOR NOW, JSUT CREATE A NEW RECORD IN THE SNAPSHOTS TABLE
+  $arr = array();
+
+  if ($ProfileId > 0) {
+
+    $db = new MyDB();
+    if(!$db) {
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    } else {
+      // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
+      $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus) VALUES ('".$ProfileId."', strftime('%Y-%m-%dT%H:%M:%f'), '', 'proc');");
+      if(!$ret){
+        $arr["result"] = "ko";
+        $arr["message"] = $db->lastErrorMsg();
+      }
+      else {
+        $arr["result"] = "ok";
+        $arr["message"] = "Value stored";
+      }
+      $db->close();
+    } // Snapshot exists
+  }
+
+  return $arr;
+}
+
+
+// Deletes a Snapshot plus paths records
+function dbDeleteSnapshotPaths($SnapshotId) {
+
+  $Exists = "-1";
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    // Is there a row with this Setting ID?
+    $rows = $db->query("SELECT COUNT(*) AS count FROM snapshotpaths WHERE snapshotid = ".$SnapshotId.";");
+    if(!$rows){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $row = $rows->fetchArray();
+      $Exists = $row['count'];
+
+      if ($Exists > 0) {
+        $ret = $db->exec("DELETE FROM snapshotpaths WHERE snapshotid = ".$SnapshotId.";");
+        if(!$ret){
+          $arr["result"] = "ko";
+          $arr["message"] = $db->lastErrorMsg();
+        }
+        else {
+          $arr["result"] = "ok";
+          $arr["message"] = "Records deleted";
+        }
+      }
+      else {
+        $arr["result"] = "ok";
+        $arr["message"] = "No snapshot paths for id: ".$SnapshotId;
+      }
+    }
+    $db->close();
+  }
+  return $arr;
+}
+
+
+// Deletes a Snapshot plus paths records
+function dbDeleteSnapshot($SnapshotId) {
+
+  $Exists = "-1";
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+    $arr["paths"] = array();
+  } else {
+    // Is there a row with this Setting ID?
+    $rows = $db->query("SELECT COUNT(*) AS count FROM snapshots WHERE id = ".$SnapshotId.";");
+    if(!$rows){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+      $arr["paths"] = array();
+    }
+    else {
+      $row = $rows->fetchArray();
+      $Exists = $row['count'];
+
+      if ($Exists > 0) {
+        // Delete all snapshot paths too
+        $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
+        if ($delPathsArr["result"] == "ok") {
+          $ret = $db->exec("DELETE FROM snapshots WHERE id = ".$SnapshotId.";");
+          if(!$ret){
+            $arr["result"] = "ko";
+            $arr["message"] = $db->lastErrorMsg();
+            $arr["paths"] = $delPathsArr;
+          }
+          else {
+            $arr["result"] = "ok";
+            $arr["message"] = "Record deleted";
+            $arr["paths"] = $delPathsArr;
+          }
+        }
+      }
+      else {
+        $arr["result"] = "ko";
+        $arr["message"] = "No such id: ".$SnapshotId;
+        $arr["paths"] = array();
+      }
+    }
+    $db->close();
+  }
+  return $arr;
+}
 
 // Web Method Functions ===========================
 
@@ -1087,9 +1277,44 @@ function selectFullProfile($ProfileId) {
 
 function selectSnapshotsList(){
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
-  
+
   $arr = dbSelectSnapshotsList($ProfileId);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
+function takeSnapshot() {
+  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
+
+  $arr = dbTakeSnapshot($ProfileId);
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
+function deleteSnapshot() {
+  $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
+
+  $rtn = array();
+
+  // Does the snapshot record have a description?  If so, refuse to delete
+  $arr = dbSelectSnapshotForId($SnapshotId);
+  if ($arr["result"] == "ok") {
+    if ( !empty($arr["items"][0]["snapdesc"]) ) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = "Cannot delete a snapshot with a description.";
+    }
+    else {
+      // Snapshot found and there is no description
+      $arr = dbDeleteSnapshot($SnapshotId);
+      $rtn = $arr;
+    }
+  }
+  else {
+    // No snapshot found
+    $rtn = $arr;
+  }
+
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
@@ -1154,6 +1379,12 @@ switch ($WhatToRun) {
     break;
   case "selectsnapshotslist":
     selectSnapshotsList();
+    break;
+  case "takenewsnapshot":
+    takeSnapshot();
+    break;
+  case "deletesnapshot":
+    deleteSnapshot();
     break;
   default:
     writeErrorMsg();
