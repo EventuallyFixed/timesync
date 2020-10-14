@@ -18,7 +18,6 @@ $(document).ready(function() {
       dataType: 'json',
       type: 'POST',
       data: pdata,
-//      timeout: 500,
       success: function (data,status,xhr) {
         console.log(data);
       },
@@ -122,11 +121,11 @@ $(document).ready(function() {
         if (data.profileinclude.length > 0) {
           $.each(data.profileinclude, function (i, item) {
 
-            // include items in the frontend
-            insertIncludeItem(item);
+            // Show included items in the frontend
+            insertIncludeExcludeItem('include', item);
 
             // Add trigger
-            var eltid = 'inclrow_'+item.setid;
+            var eltid = 'includerow_'+item.setid;
             $("#"+eltid).click(function() {
               // Get the id of the currently selected item using the class name
               var selid = $("#includefilescontainer").find(".inclexclsel").attr("id");
@@ -152,10 +151,11 @@ $(document).ready(function() {
         if (data.profileexclude.length > 0) {
           $.each(data.profileexclude, function (i, item) {
 
-            insertExcludeItem(item);
+            // Show excluded items in the frontend
+            insertIncludeExcludeItem('exclude', item);
 
             // Add trigger
-            var eltid = 'exclrow_'+item.setid;
+            var eltid = 'excluderow_'+item.setid;
             $("#"+eltid).click(function() {
               // Get the id of the currently selected item using the class name
               var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
@@ -747,12 +747,8 @@ $(document).ready(function() {
 
 // ============================================================================================================================================
 
-function clearExcludeItemsBrowse() {
-  $('#excludefilescontainer').find('.exclitem').remove();
-}
-
-function clearIncludeItemsBrowse() {
-  $('#includefilescontainer').find('.inclitem').remove();
+function clearIncludeExcludeItemsBrowse(type) {
+  $('#excludefilescontainer').find('.'+type+'item').remove();
 }
 
 function resetSettings() {
@@ -771,8 +767,8 @@ function resetSettings() {
     }
   });
 
-  clearExcludeItemsBrowse();
-  clearIncludeItemsBrowse();
+  clearIncludeExcludeItemsBrowse("include");
+  clearIncludeExcludeItemsBrowse("exclude");
 }
 
 function setScheduleMonthlyDaySelectLabel() {
@@ -795,6 +791,7 @@ function setScheduleMonthlyDaySelectLabel() {
   if (msg=="") labelelt.fadeOut();
   else labelelt.fadeIn();
 }
+
 
 function showScheduleElements() {
   // Hide all of the options
@@ -838,6 +835,11 @@ function getIncExcTypeDesc(type) {
 
 function getDirectoryContents(actiontype, type, dir, sel){
 
+  // actiontype = 'include/exclude/show'
+  // type       = 'd/-' (directory/file)
+  // dir        = 'directory'
+  // sel        = change to dir (or blank for current)
+
   var pdata = new Object();
   pdata.fn = "getdirectorycontents";
   pdata.type = type;
@@ -871,10 +873,22 @@ function getDirectoryContents(actiontype, type, dir, sel){
           createFileLine(actiontype, type, item, $("#"+actiontype+"filebrowsebody"));
         });
       }
-      if (actiontype == "include") includeFileBrowseDir = data.newdir;
-      else excludeFileBrowseDir = data.newdir;
 
-      $("#"+actiontype+"addfilelocation").text(data.newdir);
+      switch (actiontype) {
+        case "include":
+          includeFileBrowseDir = data.newdir;
+          $("#includeaddfilelocation").text(data.newdir);
+          break;
+        case "exclude":
+          excludeFileBrowseDir = data.newdir;
+          $("#excludeaddfilelocation").text(data.newdir);
+          break;
+        case "show":
+          $("#filedirinput").val(data.newdir);
+          break;
+        default:
+          console.log("Unknown actiontype: "+actiontype);
+      }
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
@@ -944,8 +958,19 @@ function createFileLine(actiontype, type, item, celt) {
     // You can't drill down into a file
     if ($(this).attr("filetype") != "-") {
       // Callback to get the directory listing
-      if (actiontype == "include") getDirectoryContents(actiontype, type, includeFileBrowseDir, $(this).text());
-      else getDirectoryContents(actiontype, type, excludeFileBrowseDir, $(this).text());
+      switch (actiontype) {
+        case "include":
+          getDirectoryContents(actiontype, type, includeFileBrowseDir, $(this).text());
+          break;
+        case "include":
+          getDirectoryContents(actiontype, type, excludeFileBrowseDir, $(this).text());
+          break;
+        case "show":
+          getDirectoryContents(actiontype, type, $("#filedirinput").val(), $(this).text());
+          break;
+        default:
+          console.log("Unknown actiontype: "+actiontype);
+      }
     }
   });
 
@@ -978,18 +1003,18 @@ function getIncludeItems() {
       console.log(data);
 
       // Remove current items here
-      clearIncludeItemsBrowse();
+      clearIncludeExcludeItemsBrowse("include");
 
       if (data.items.length > 0) {
 
         // Populate new items
         $.each(data.items, function (i, item) {
 
-          // include items in the frontend
-          insertIncludeItem(item);
+          // Show included items in the frontend
+          insertIncludeExcludeItem('include', item);
 
           // Add trigger
-          var eltid = 'inclrow_'+item.setid;
+          var eltid = 'includerow_'+item.setid;
           $('#'+eltid).click(function() {
             // Get the id of the currently selected item using the class name
             var selid = $("#includefilescontainer").find(".inclexclsel").attr("id");
@@ -1017,32 +1042,6 @@ function getIncludeItems() {
 }
 
 
-function insertIncludeItem(item) {
-
-  var iconName = "";
-  switch (item.settype.toLowerCase()) {
-    case "d":
-      iconName = "mdi-folder-outline";
-      break;
-    case "f":
-    case "-":
-      iconName = "mdi-file-outline";
-      break;
-    case "l":
-      iconName = "mdi-file-link-outline";
-      break;
-    default:
-      iconName = "mdi-file-question-outline";
-      break;
-  }
-
-  var cdiv   = $('<div/>').attr('id','inclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow inclitem');
-  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.setid).attr("data-icon",iconName).appendTo(cdiv);
-  var namelt = $("<span/>").attr("id","name_"+item.setid).text(item.setval).appendTo(cdiv);
-  cdiv.appendTo($('#includefilescontainer'));
-}
-
-
 function getExcludeItems() {
 
   var pdata = new Object();
@@ -1057,17 +1056,17 @@ function getExcludeItems() {
     success: function (data,status,xhr) {
       console.log(data);
       // Remove current items here
-      clearExcludeItemsBrowse();
+      clearIncludeExcludeItemsBrowse("exclude");
 
       if (data.items.length > 0) {
 
         // Populate new items
         $.each(data.items, function (i, item) {
-          // include items in the frontend
-          insertExcludeItem(item);
+          // Show excluded items in the frontend
+          insertIncludeExcludeItem('exclude', item);
 
           // Add trigger
-          var eltid = 'exclrow_'+item.setid;
+          var eltid = 'excluderow_'+item.setid;
           $('#'+eltid).click(function() {
             // Get the id of the currently selected item using the class name
             var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
@@ -1095,7 +1094,7 @@ function getExcludeItems() {
 }
 
 
-function insertExcludeItem(item) {
+function insertIncludeExcludeItem(type, item) {
 
   var iconName = "";
   switch (item.settype.toLowerCase()) {
@@ -1114,10 +1113,10 @@ function insertExcludeItem(item) {
       break;
   }
 
-  var cdiv   = $('<div/>').attr('id','exclrow_'+item.setid).attr('setid',item.setid).addClass('row snaprow exclitem');
+  var cdiv   = $('<div/>').attr('id',type+'row_'+item.setid).attr('setid',item.setid).addClass('row snaprow '+type+'item');
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.setid).attr("data-icon",iconName).appendTo(cdiv);
   var namelt = $("<span/>").attr("id","name_"+item.setid).text(item.setval).appendTo(cdiv);
-  cdiv.appendTo($('#excludefilescontainer'));
+  cdiv.appendTo($('#'+type+'filescontainer'));
 }
 
 
@@ -1270,15 +1269,7 @@ function BuildSideMenu(data) {
       });
     });
   }
-  // Default select the first one
-  $("#snapshotsmenu0").trigger("click");
 }
-
-
-$("#snapshotid").change(function(){
-  // Callback to get the snapshot paths and contents
-  console.log('Snapshot path for snapshot id: '+$('#snapshotid').val());
-});
 
 
 $("#snapshotname").change(function(){
@@ -1364,10 +1355,12 @@ $("#snapshotnewbtn").click(function(){
   });
 });
 
+
 // Refresh Snapshots List
 $("#snapshotrefreshbtn").click(function(){
   GetSideMenu();
 });
+
 
 // Remove Snapshot
 $("#snapshotremovebtn").click(function(){
@@ -1399,6 +1392,7 @@ $("#snapshotremovebtn").click(function(){
     }
   });
 });
+
 
 // View Snapshot Log
 $("#snapshotlogbtn").click(function(){
@@ -1453,3 +1447,17 @@ $("#snapnow").click(function(){
   alert('Now Snapshot Link');
 });
 
+$("#globalroot").click(function(){
+  $("#filedirinput").val("/");
+  var items = getDirectoryContents("show", "-", $("#filedirinput").val(), "")
+});
+
+$("#globalshares").click(function(){
+  $("#filedirinput").val("/shares");
+  getDirectoryContents("show", "-", $("#filedirinput").val(), "")
+});
+
+$("#snapshotid").change(function(){
+  // Callback to get the snapshot paths and contents
+  console.log('Snapshot path for snapshot id: '+$("#snapshotid").val());
+});

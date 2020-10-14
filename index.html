@@ -106,14 +106,22 @@
               <nav id="snapshortcutsnav" class="navbar navbar-light bg-light apptoolbar">
                 <div class="snapheading">Shortcuts</div>
               </nav>
-              <div class="row snaprow">
-                <div class="col-12 snapcolumn">Shortcut 1</div>
+              <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading">
+                <div id="snapshotsheading">Global</div>
+              </nav>
+              <div id="globalroot" class="row snaprow">
+                <span class="iconify" data-icon="mdi-monitor"></span>
+                <span class="snapcolumn">Root</span>
               </div>
-              <div class="row snaprow">
-                <div class="col-12 snapcolumn">Shortcut 2</div>
+              <div id="globalshares" class="row snaprow">
+                <span class="iconify" data-icon="mdi-folder-multiple"></span>
+                <span class="snapcolumn">Shares</span>
               </div>
+              <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading">
+                <div id="snapshotsheading">Backup Folders</div>
+              </nav>
             </div>
-            <div id="filescontainer" class="appcontainer col-9">
+            <div id="showfilebrowsebody" class="appcontainer col-9">
               <nav id="snapshotfiles" class="row navbar navbar-light bg-light apptoolbar">
                 <div class="snapheading col-4">Name</div>
                 <div class="snapheading col-2">Size</div>

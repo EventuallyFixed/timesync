@@ -23,7 +23,7 @@
 
 
 // ==============================================================================
-// Data Access Layer Functions 
+// Data Access Layer Functions
 // ==============================================================================
 
 
@@ -1081,7 +1081,7 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel) {
 
 
 // ==============================================================================
-// Web Method Functions 
+// Web Method Functions
 // ==============================================================================
 
 function getDirectoryContentsFromShell() {
@@ -1091,7 +1091,7 @@ function getDirectoryContentsFromShell() {
   $sel = SQLite3::escapeString($_POST["sel"]);        // What the user clicked on
 
   $arr = dbGetDirectoryContentsFromShell($filetype, $dir, $sel);
-  
+
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
@@ -1416,7 +1416,7 @@ function writeErrorMsg() {
 
 
 // ==============================================================================
-// AJAX time 
+// AJAX time
 // ==============================================================================
 
 
