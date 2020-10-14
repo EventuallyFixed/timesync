@@ -22,6 +22,11 @@
 //
 
 
+// ==============================================================================
+// Data Access Layer Functions 
+// ==============================================================================
+
+
 // Database Creation
 
 class MyDB extends SQLite3 {
@@ -989,22 +994,19 @@ function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
   return $arr;
 }
 
-// Web Method Functions ===========================
 
+function dbGetDirectoryContentsFromShell($filetype, $dir, $sel) {
 
-function getDirectoryContentsFromShell() {
+  // $filetype - 'file' or 'folder'
+  // $dir      - Where to start browsing
+  // $sel      - What the user last clicked on
 
   $chk = array();
   $ls = array();
   $arr = array();
   $pwd = array();
   $int = 0;
-
-  $filetype = SQLite3::escapeString($_POST["type"]);  // Choose 'file' or 'folder'
-  $dir = SQLite3::escapeString($_POST["dir"]);        // Where to start browsing
-  $sel = SQLite3::escapeString($_POST["sel"]);        // What the user clicked on
-
-  echo "{ \"result\" : \"ok\" , \"items\" : ";
+  $rtn = array();
 
   if (empty($sel)) { $sel = $dir; }
   else {
@@ -1023,6 +1025,7 @@ function getDirectoryContentsFromShell() {
   }
 
   if ($validChdir == 1) {
+    // Get the contents of the clicked into directory
     // Execute a command, pass output to Array, success indicator
     exec("cd \"".$sel."\" && ls -la", $ls, $int);
 
@@ -1056,6 +1059,8 @@ function getDirectoryContentsFromShell() {
       }
     }
 
+    // Get the directory just changed into, using pwd
+    // Gets around the problem of it beng a symlink
     exec("cd \"".$sel."\" && pwd", $pwd, $int);
     foreach ($pwd as $pwdline) {
       $sel = $pwdline;
@@ -1066,10 +1071,28 @@ function getDirectoryContentsFromShell() {
     $sel = $dir;
   }
 
-  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-  echo " , \"newdir\" : \"".$sel."\" }";
+  // Build return array
+  $rtn["result"] = "ok";
+  $rtn["newdir"] = $sel;
+  $rtn["items"] = $arr;
 
-  return $arr;
+  return $rtn;
+}
+
+
+// ==============================================================================
+// Web Method Functions 
+// ==============================================================================
+
+function getDirectoryContentsFromShell() {
+
+  $filetype = SQLite3::escapeString($_POST["type"]);  // Choose 'file' or 'folder'
+  $dir = SQLite3::escapeString($_POST["dir"]);        // Where to start browsing
+  $sel = SQLite3::escapeString($_POST["sel"]);        // What the user clicked on
+
+  $arr = dbGetDirectoryContentsFromShell($filetype, $dir, $sel);
+  
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
@@ -1391,10 +1414,13 @@ function writeErrorMsg() {
   echo "{ \"result\" : \"De nada deniro!\" }";
 }
 
+
+// ==============================================================================
+// AJAX time 
 // ==============================================================================
 
 
-// What shall we run?
+// What do we want to run?
 $WhatToRun = $_POST["fn"];
 
 switch ($WhatToRun) {
