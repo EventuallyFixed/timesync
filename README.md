@@ -2,7 +2,7 @@
 An incremental backup system for [Western Digital Personal Cloud](https://shop.westerndigital.com/en-gb/c/nas-and-cloud-storage) devices.
 
 # Why
-Because the only backup options for these devices are either one-time copies, or online, paid-for services.
+Because the only bundled backup options for these devices are either one-time, whole-system copies, or online, paid-for services.
 I want to use my own disks: One on site receiving incremental backups, and (at least) one securely stored off-site, in rotation.
 
 # Aim
@@ -26,7 +26,8 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 - Ongoing
 
 # ToDo
-- Revamp the main Snapshots screen layout, to be more mobile friendly.
+- Revise the main Snapshots screen layout, to be more mobile friendly.
+  - Complete the implementation of functionality here.
 - Allow upload and save of SSH private keys.
   - Save keys in file system: ./vendor/app/profile/profileId/KeyFile.
   - Check for existence of key before upload (one key per profile? Overwrite option?).
