@@ -139,7 +139,7 @@ function dbSelectProfileIdForProfileName($ProfileName) {
       $rtn["id"] = $id;
       $rtn["message"] = $db->lastErrorMsg();
     } else {
-      $row = $rows->fetchArray();
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
       $Exists = $row['count'];
     }
 
@@ -272,7 +272,7 @@ function dbDeleteProfileRecordSet($ProfileId) {
 
 
 function dbSelectProfileSettingsId($ProfileId, $ProfileKey) {
-  // If there is no profile, create one to default to
+  // Returns a ProfileSettings ID ProfileId and ProfileKey
   $Exists = "0";
   $rtn = array();
   $id = -1;
@@ -292,7 +292,7 @@ function dbSelectProfileSettingsId($ProfileId, $ProfileKey) {
       $rtn["message"] = $db->lastErrorMsg();
     }
     else {
-      $row = $rows->fetchArray();
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
       $Exists = $row['count'];
     }
 
@@ -304,7 +304,7 @@ function dbSelectProfileSettingsId($ProfileId, $ProfileKey) {
         $rtn["message"] = $db->lastErrorMsg();
       }
       else {
-        $row = $rows->fetchArray();
+        $row = $rows->fetchArray(SQLITE3_ASSOC);
         $rtn["result"] = "ok";
         $rtn["id"] = $row["id"];
         $rtn["message"] = "Found";
@@ -324,6 +324,7 @@ function dbSelectProfileSettingsId($ProfileId, $ProfileKey) {
 
 
 function dbSelectProfileSettings($ProfileId){
+  // Selects all ProfileSettings for a ProfileId
   $arr = array();
 
   $db = new MyDB();
@@ -354,6 +355,57 @@ function dbSelectProfileSettings($ProfileId){
 }
 
 
+function dbSelectProfileSettingsRecord($ProfileId, $ProfileKey) {
+  // Returns a ProfileSettings record for a ProfileId and ProfileKey
+  $Exists = "0";
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["items"] = array();
+    $rtn["message"] = $db->lastErrorMsg();
+  } else {
+    // Is there a profile of this profile ID?
+    $rows = $db->query("SELECT COUNT(*) AS count FROM profilesettings WHERE profileid = ".$ProfileId." AND profilekey = '".$ProfileKey."';");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["items"] = array();
+      $rtn["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
+      $Exists = $row["count"];
+    }
+    if ($Exists > 0) {
+      $rows = $db->query("SELECT id, profileid, profilekey, profilevalue FROM profilesettings WHERE profileid = ".$ProfileId." AND profilekey = '".$ProfileKey."';");
+      if(!$rows){
+        $rtn["result"] = "ko";
+        $rtn["items"] = array();
+        $rtn["message"] = $db->lastErrorMsg();
+      }
+      else {
+        $row = $rows->fetchArray(SQLITE3_ASSOC);
+        $rtn["items"] = array();
+        $rtn["result"] = "ok";
+        // $rtn["items"] = $row;
+        array_push($rtn["items"], $row);
+        $rtn["message"] = "Found";
+      }
+    }
+    else {
+      $rtn["result"] = "ok";
+      $rtn["items"] = array();
+      $rtn["message"] = "Not found";
+    }
+
+    $db->close();
+  }
+
+  return $rtn;
+}
+
+
 // Deletes a Profile Setting key/value pair
 function dbDeleteProfileSetting($SettingId) {
 
@@ -372,7 +424,7 @@ function dbDeleteProfileSetting($SettingId) {
       $arr["message"] = $db->lastErrorMsg();
     }
     else {
-      $row = $rows->fetchArray();
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
       $Exists = $row['count'];
 
       if ($Exists > 0) {
@@ -444,7 +496,7 @@ function dbDeleteProfileInclExcl($SettingId) {
       $arr["message"] = $db->lastErrorMsg();
     }
     else {
-      $row = $rows->fetchArray();
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
       $Exists = $row['count'];
 
       if ($Exists > 0) {
@@ -485,7 +537,7 @@ function dbGetFileSpecId($ProfileId, $InclExcl, $Type, $Pattern) {
     if (!$rows) {
       $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
     } else {
-      $row = $rows->fetchArray();
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
       $Exists = $row['count'];
     }
 
@@ -496,7 +548,7 @@ function dbGetFileSpecId($ProfileId, $InclExcl, $Type, $Pattern) {
         $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
       }
       else {
-        $row = $rows->fetchArray();
+        $row = $rows->fetchArray(SQLITE3_ASSOC);
         $rtn = $row['id'];
       }
     }
@@ -893,7 +945,7 @@ function dbDeleteSnapshotPaths($SnapshotId) {
       $arr["message"] = $db->lastErrorMsg();
     }
     else {
-      $row = $rows->fetchArray();
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
       $Exists = $row['count'];
 
       if ($Exists > 0) {
@@ -938,8 +990,8 @@ function dbDeleteSnapshot($SnapshotId) {
       $arr["paths"] = array();
     }
     else {
-      $row = $rows->fetchArray();
-      $Exists = $row['count'];
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
+      $Exists = $row["count"];
 
       if ($Exists > 0) {
         // Delete all snapshot paths too
@@ -1365,16 +1417,36 @@ function deleteSnapshot() {
     $rtn["message"] = "You cannot delete the 'Now' snapshot";
   }
   else {
-    // Does the snapshot record have a description?  If so, refuse to delete
-    $arr = dbSelectSnapshotForId($SnapshotId);
-    if ($arr["result"] == "ok") {
+    // Does the snapshot record have a description?  
+    // Is the "Don't Remove Named Snapshots" checkbox set?
+    // If both are true, refuse to delete 
+    $arr = dbSelectSnapshotForId($SnapshotId);  
+    if ($arr["result"] == "ok") {  
       $ProfileId = $arr["items"][0]["profileid"];
-      if ( !empty($arr["items"][0]["snapdesc"]) ) {
+      // Check for the "Don't Remove Named Snapshots" option being set
+      $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdontremovenamed");
+
+      $CanDelSnap = 0;
+      // No record here = checkbox unset
+      if ( count($chk["items"]) == 0 ) {
+        $CanDelSnap = 1;
+      }
+      // Record exists and is unset
+      if ($chk["items"][0]["profilevalue"] == "0") {
+        $CanDelSnap = 1;
+      }
+      // If there's no description
+      if (empty($arr["items"][0]["snapdesc"]) ) {
+        $CanDelSnap = 1;
+      }
+
+      if ( $CanDelSnap == 0) {
         $rtn["result"] = "ko";
         $rtn["message"] = "Cannot delete a snapshot with a description.";
       }
       else {
-        // Snapshot found and there is no description
+        // Snapshot found and either there is no description
+        // or the "Don't Remove Named Snapshots" option is unchecked
         $arr = dbDeleteSnapshot($SnapshotId);
         $rtn = $arr;
         if ($arr["result"] == "ok") {

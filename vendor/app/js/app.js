@@ -1162,28 +1162,26 @@ function BuildSideMenu(data) {
   $("#snapshotssidemenu").find("a").remove();
   $(".snapdisabled").attr("disabled","disabled");
   // Add the 'Now' menu
-  $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu0").attr("snapid","0").text("Now").appendTo("#snapshotssidemenu");
-  // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
-  $("#snapshotsmenu0").click(function(){
-    $("#snapshotid").val("0");
-    $("#snapshotname").val("Now");
-    $("#snapshotname").attr("readonly","readonly");
-  });
+  $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu0").attr("snapid","0").attr("snapdate","Now").text("Now").appendTo("#snapshotssidemenu");
+  // Add the Snapshot entry menus
   if (data.length > 0) {
     $.each(data, function (i, item) {
       var sdate = new Date(item.snaptime);  // UTC from server
       var snapText = sdate.toLocaleString();
       if (item.snapdesc) { snapText = snapText + "<br/>" + item.snapdesc; }
-      $("<a/>").addClass("list-group-item list-group-item-action bg-light").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).html(snapText).appendTo("#snapshotssidemenu");
-      // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
-      $("#snapshotsmenu"+item.id).click(function(){
-        $("#snapshotid").val(item.id);
-        $("#snapshotname").val(item.snapdesc);
-        $("#snapshotname").attr("placeholder",sdate.toLocaleString());
-        $("#snapshotname").removeAttr("readonly");
-      });
+      $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).attr("snapdate",sdate.toLocaleString()).html(snapText).appendTo("#snapshotssidemenu");
     });
   }
+  $(".snapshotsmenu").click(function(){
+    item = $(this);
+    // Ensure we're flicked to the Snapshots page
+    $("#topmenusnapshots").trigger("click");
+    // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
+    $("#snapshotid").val(item.attr("snapid"));
+    $("#snapshotname").val(item.attr("snapdesc"));
+    $("#snapshotname").attr("placeholder",item.attr("snapdate"));
+    $("#snapshotname").removeAttr("readonly");
+  });
 }
 
 
@@ -1219,19 +1217,19 @@ $("#snapshotname").change(function(){
 
 
 // Top Menu
-$("#snapshotsmenu").click(function(){
+$("#topmenusnapshots").click(function(){
   $('.contentsection').css('display','none');
   $('#snapshotsection').fadeIn();
 });
-$("#settingsmenu").click(function(){
+$("#topmenusettings").click(function(){
   $('.contentsection').css('display','none');
   $('#settingssection').fadeIn();
 });
-$("#logsmenu").click(function(){
+$("#topmenulogs").click(function(){
   $('.contentsection').css('display','none');
   $('#logssection').fadeIn();
 });
-$("#aboutmenu").click(function(){
+$("#topmenuabout").click(function(){
   $('.contentsection').css('display','none');
   $('#aboutsection').fadeIn();
 });
@@ -1319,7 +1317,7 @@ $("#snapshotlastlogbtnbtn").click(function(){
 });
 // Settings
 $("#snapshotsettingsbtn").click(function(){
-  $("#settingsmenu").trigger("click");
+  $("#topmenusettings").trigger("click");
 });
 // Help
 $("#snapshothelpbtn").click(function(){
