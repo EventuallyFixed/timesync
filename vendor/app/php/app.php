@@ -1307,6 +1307,7 @@ function init() {
 
 function selectFullProfile($ProfileId) {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
+  $Dir       = SQLite3::escapeString($_POST["dir"]);
   // Profile
   // ProfileSettings
   // ProfileInclExcl
@@ -1326,6 +1327,9 @@ function selectFullProfile($ProfileId) {
 
   $SnapList = dbSelectSnapshotsList($ProfileId);
   $AllProfile["snaplist"] = $SnapList[items];
+  
+  $DirList = dbGetDirectoryContentsFromShell("-", $Dir, "");
+  $AllProfile["showfiles"] = $DirList[items];
 
   echo json_encode($AllProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }

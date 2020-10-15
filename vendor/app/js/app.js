@@ -79,6 +79,7 @@ $(document).ready(function() {
     var pdata = new Object();
     pdata.fn = "selectfullprofile";
     pdata.profileid = $("#selectprofile").val();
+    pdata.dir       = $("#filedirinput").val();
 
     $.ajax('./vendor/app/php/app.php',
     {
@@ -94,6 +95,14 @@ $(document).ready(function() {
 
         // Refresh the side menu
         BuildSideMenu(data.snaplist);
+        
+        // Refresh the files list, to show the files of the directory bar
+        var actiontype = "show";
+        if (data.showfiles.length > 0) {
+          $.each(data.showfiles, function (i, item) {
+            createFileLine(actiontype, "-", item, $("#"+actiontype+"filebrowsebody"));
+          });
+        }
 
         // Reset all fields of the Settings
         resetSettings();
@@ -117,63 +126,16 @@ $(document).ready(function() {
 
 
         // Include Files/Folders
+        // Backup Paths
         // Remove current items
         if (data.profileinclude.length > 0) {
-          $.each(data.profileinclude, function (i, item) {
-
-            // Show included items in the frontend
-            insertIncludeExcludeItem('include', item);
-
-            // Add trigger
-            var eltid = 'includerow_'+item.setid;
-            $("#"+eltid).click(function() {
-              // Get the id of the currently selected item using the class name
-              var selid = $("#includefilescontainer").find(".inclexclsel").attr("id");
-              // Get all items in the area with the 'inclexclsel' class, and remove that class
-              var elts = $("#includefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
-              // Blank the hidden input
-              $("#thisincludesetid").val('');
-              // Disable the remove button
-              $("#includeremove").attr("disabled","disabled");
-              // Set the value of the hidden selector, if it is not the same setid
-              if (selid != $(this).attr("id")) {
-                $("#thisincludesetid").val($(this).attr("id"));
-                $(this).addClass("inclexclsel");
-                $("#includeremove").removeAttr("disabled");
-              }
-            });
-
-          });
+          insertIncludeItems(data.profileinclude);
         }
 
         // Exclude Files/Folders
         // Remove current items
         if (data.profileexclude.length > 0) {
-          $.each(data.profileexclude, function (i, item) {
-
-            // Show excluded items in the frontend
-            insertIncludeExcludeItem('exclude', item);
-
-            // Add trigger
-            var eltid = 'excluderow_'+item.setid;
-            $("#"+eltid).click(function() {
-              // Get the id of the currently selected item using the class name
-              var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
-              // Get all items in the area with the 'inclexclsel' class, and remove that class
-              var elts = $("#excludefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
-              // Blank the hidden input
-              $("#thisexcludesetid").val('');
-              // Disable the remove button
-              $("#excluderemove").attr("disabled","disabled");
-              // Set the value of the hidden selector, if it is not the same setid
-              if (selid != $(this).attr("id")) {
-                $("#thisexcludesetid").val($(this).attr("id"));
-                $(this).addClass("inclexclsel");
-                $("#excluderemove").removeAttr("disabled");
-              }
-            });
-
-          });
+          insertExcludeItems(data.profileexclude);
         }
 
         // Trigger a change of those elements having dependent elements
@@ -748,7 +710,7 @@ $(document).ready(function() {
 // ============================================================================================================================================
 
 function clearIncludeExcludeItemsBrowse(type) {
-  $('#excludefilescontainer').find('.'+type+'item').remove();
+  $("#"+type+"filescontainer").find("."+type+"item").remove();
 }
 
 function resetSettings() {
@@ -945,11 +907,13 @@ function createFileLine(actiontype, type, item, celt) {
     // Set the value of the hidden selector, if it is not the same setid
     $(this).addClass("inclexclsel");
 
-    if (type == $(this).attr("filetype")) {
-      $("#"+actiontype+"addselect").removeAttr("disabled");
-    }
-    else {
-      $("#"+actiontype+"addselect").attr("disabled","disabled");
+    if (actiontype == "include" || actiontype == "exclude") {
+      if (type == $(this).attr("filetype")) {
+        $("#"+actiontype+"addselect").removeAttr("disabled");
+      }
+      else {
+        $("#"+actiontype+"addselect").attr("disabled","disabled");
+      }
     }
   });
 
@@ -962,7 +926,7 @@ function createFileLine(actiontype, type, item, celt) {
         case "include":
           getDirectoryContents(actiontype, type, includeFileBrowseDir, $(this).text());
           break;
-        case "include":
+        case "exclude":
           getDirectoryContents(actiontype, type, excludeFileBrowseDir, $(this).text());
           break;
         case "show":
@@ -1006,33 +970,7 @@ function getIncludeItems() {
       clearIncludeExcludeItemsBrowse("include");
 
       if (data.items.length > 0) {
-
-        // Populate new items
-        $.each(data.items, function (i, item) {
-
-          // Show included items in the frontend
-          insertIncludeExcludeItem('include', item);
-
-          // Add trigger
-          var eltid = 'includerow_'+item.setid;
-          $('#'+eltid).click(function() {
-            // Get the id of the currently selected item using the class name
-            var selid = $("#includefilescontainer").find(".inclexclsel").attr("id");
-            // Get all items in the area with the 'inclexclsel' class, and remove that class
-            var elts = $("#includefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
-            // Blank the hidden input
-            $("#thisincludesetid").val('');
-            // Disable the remove button
-            $('#includeremove').attr('disabled','disabled');
-            // Set the value of the hidden selector, if it is not the same setid
-            if (selid != $(this).attr("id")) {
-              $("#thisincludesetid").val($(this).attr("id"));
-              $(this).addClass("inclexclsel");
-              $('#includeremove').removeAttr('disabled');
-            }
-          });
-
-        });
+        insertIncludeItems(data.items);
       }
     },
     error: function (jqXhr, textStatus, errorMessage) {
@@ -1059,32 +997,7 @@ function getExcludeItems() {
       clearIncludeExcludeItemsBrowse("exclude");
 
       if (data.items.length > 0) {
-
-        // Populate new items
-        $.each(data.items, function (i, item) {
-          // Show excluded items in the frontend
-          insertIncludeExcludeItem('exclude', item);
-
-          // Add trigger
-          var eltid = 'excluderow_'+item.setid;
-          $('#'+eltid).click(function() {
-            // Get the id of the currently selected item using the class name
-            var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
-            // Get all items in the area with the 'inclexclsel' class, and remove that class
-            var elts = $("#excludefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
-            // Blank the hidden input
-            $("#thisexcludesetid").val('');
-            // Disable the remove button
-            $('#excluderemove').attr('disabled','disabled');
-            // Set the value of the hidden selector, if it is not the same setid
-            if (selid != $(this).attr("id")) {
-              $("#thisexcludesetid").val($(this).attr("id"));
-              $(this).addClass("inclexclsel");
-              $('#excluderemove').removeAttr('disabled');
-            }
-          });
-        });
-
+        insertExcludeItems(data.items);
       }
     },
     error: function (jqXhr, textStatus, errorMessage) {
@@ -1094,7 +1007,7 @@ function getExcludeItems() {
 }
 
 
-function insertIncludeExcludeItem(type, item) {
+function insertIncludeExcludeRow(actiontype, item) {
 
   var iconName = "";
   switch (item.settype.toLowerCase()) {
@@ -1113,10 +1026,12 @@ function insertIncludeExcludeItem(type, item) {
       break;
   }
 
-  var cdiv   = $('<div/>').attr('id',type+'row_'+item.setid).attr('setid',item.setid).addClass('row snaprow '+type+'item');
+  var cdiv   = $("<div/>").attr("id",actiontype+"row_"+item.setid).attr("setid",item.setid).addClass("row snaprow "+actiontype+"item");
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.setid).attr("data-icon",iconName).appendTo(cdiv);
   var namelt = $("<span/>").attr("id","name_"+item.setid).text(item.setval).appendTo(cdiv);
-  cdiv.appendTo($('#'+type+'filescontainer'));
+  cdiv.appendTo($("#"+actiontype+"filescontainer"));
+  
+  return cdiv;
 }
 
 
@@ -1448,16 +1363,116 @@ $("#snapnow").click(function(){
 });
 
 $("#globalroot").click(function(){
-  $("#filedirinput").val("/");
-  var items = getDirectoryContents("show", "-", $("#filedirinput").val(), "")
+  $("#filedirinput").val("/").trigger("change");
 });
 
 $("#globalshares").click(function(){
-  $("#filedirinput").val("/shares");
-  getDirectoryContents("show", "-", $("#filedirinput").val(), "")
+  $("#filedirinput").val("/shares").trigger("change");
 });
 
 $("#snapshotid").change(function(){
   // Callback to get the snapshot paths and contents
   console.log('Snapshot path for snapshot id: '+$("#snapshotid").val());
 });
+
+$("#filedirinput").change(function(){
+  var items = getDirectoryContents("show", "-", $("#filedirinput").val(), "");
+});
+
+
+function insertIncludeItems(data) {
+  
+  // Include Files/Folders
+  // Remove current items
+  
+  if (data.length > 0) {
+    // Remove current items here
+    clearIncludeExcludeItemsBrowse("exclude");
+
+    $.each(data, function (i, item) {
+      var actiontype = "include";
+      
+      // Show included items in the frontend
+      var cdiv = insertIncludeExcludeRow(actiontype, item);
+
+      // Add trigger
+      $(cdiv).click(function() {
+        // Get the id of the currently selected item using the class name
+        var selid = $("#"+actiontype+"filescontainer").find(".inclexclsel").attr("id");
+        // Get all items in the area with the 'inclexclsel' class, and remove that class
+        var elts = $("#"+actiontype+"filescontainer").find(".inclexclsel").removeClass("inclexclsel");
+        // Blank the hidden input
+        $("#this"+actiontype+"setid").val("");
+        // Disable the remove button
+        $("#"+actiontype+"remove").attr("disabled","disabled");
+        // Set the value of the hidden selector, if it is not the same setid
+        if (selid != $(this).attr("id")) {
+          $("#this"+actiontype+"setid").val($(this).attr("id"));
+          $(this).addClass("inclexclsel");
+          $("#"+actiontype+"remove").removeAttr("disabled");
+        }
+      });
+    });
+    
+    // Remove current items here
+    clearIncludeExcludeItemsBrowse("snapdirs");
+    
+    // Round the loop again, for the Include Directories in the Snapshots screen
+    $.each(data, function (i, item) {
+      var actiontype = "snapdirs";
+
+      // Also add the include folders to the Snapshots 'Backup Folders' list
+      if (item.settype == 'd') {
+        var cdiv = insertIncludeExcludeRow(actiontype, item)
+        // Add trigger
+        $(cdiv).click(function() {
+          // Get the id of the currently selected item using the class name
+          var selid = $("#"+actiontype+"filescontainer").find(".inclexclsel").attr("id");
+          // Get all items in the area with the 'inclexclsel' class, and remove that class
+          var elts = $("#"+actiontype+"filescontainer").find(".inclexclsel").removeClass("inclexclsel");
+
+          // Set the value of the file browse bar, if it is a folder, and trigger a refresh of the files area
+          if (item.settype == "d") {
+            $("#filedirinput").val(item.setval);
+            $(this).addClass("inclexclsel");
+            $("#filedirinput").trigger("change");
+          }
+        });
+      }
+    });
+  }
+}
+
+function insertExcludeItems(data) {
+  // Exclude Files/Folders
+  // Remove current items
+  if (data.length > 0) {
+    // Remove current items here
+    clearIncludeExcludeItemsBrowse("exclude");
+
+    $.each(data, function (i, item) {
+
+      // Show excluded items in the frontend
+      var cdiv = insertIncludeExcludeRow('exclude', item);
+
+      // Add trigger
+      $(cdiv).click(function() {
+        // Get the id of the currently selected item using the class name
+        var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
+        // Get all items in the area with the 'inclexclsel' class, and remove that class
+        var elts = $("#excludefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
+        // Blank the hidden input
+        $("#thisexcludesetid").val('');
+        // Disable the remove button
+        $("#excluderemove").attr("disabled","disabled");
+        // Set the value of the hidden selector, if it is not the same setid
+        if (selid != $(this).attr("id")) {
+          $("#thisexcludesetid").val($(this).attr("id"));
+          $(this).addClass("inclexclsel");
+          $("#excluderemove").removeAttr("disabled");
+        }
+      });
+
+    });
+  }  
+}
