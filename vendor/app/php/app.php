@@ -61,9 +61,9 @@ function db_create_schema() {
       CREATE TABLE IF NOT EXISTS profileinclexcl (
         id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         profileid                     INTEGER NOT NULL,
-        profilekey                    CHAR(10) NOT NULL,
-        profiletype                   CHAR(2) NOT NULL,
-        profilevalue                  CHAR(500) NOT NULL
+        inclexcl                      CHAR(10) NOT NULL,
+        filetype                      CHAR(2) NOT NULL,
+        filepath                      CHAR(500) NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS snapshots (
@@ -77,6 +77,8 @@ function db_create_schema() {
       CREATE TABLE IF NOT EXISTS snapshotpaths (
         id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         snapshotid                    INTEGER NOT NULL,
+        snapshotinclexcl              CHAR(10) NOT NULL,
+        snapshotpathtype              CHAR(2) NOT NULL,
         snapshotpath                  TEXT    NOT NULL
       );
 
@@ -460,7 +462,7 @@ function dbSelectProfileIncludeExclude($ProfileId, $InclExcl) {
     $arr["message"] = $db->lastErrorMsg();
     $arr["items"] = array();
   } else {
-    $rows = $db->query("SELECT id setid, profilekey setkey, profiletype settype, profilevalue setval FROM profileinclexcl WHERE profileid = ".$ProfileId." AND profilekey = '".$InclExcl."';");
+    $rows = $db->query("SELECT id setid, inclexcl setkey, filetype settype, filepath setval FROM profileinclexcl WHERE profileid = ".$ProfileId." AND inclexcl = '".$InclExcl."';");
     if (!$rows) {
       $arr["result"] = "ko";
       $arr["message"] = $db->lastErrorMsg();
@@ -533,7 +535,7 @@ function dbGetFileSpecId($ProfileId, $InclExcl, $Type, $Pattern) {
   } else {
 
     // Is there a profile of this profile ID?
-    $rows = $db->query("SELECT COUNT(*) AS count FROM profileinclexcl WHERE profileid = '".$ProfileId."' AND profilekey = '".$InclExcl."' AND profiletype = '".$Type."' AND profilevalue = '".$Pattern."';");
+    $rows = $db->query("SELECT COUNT(*) AS count FROM profileinclexcl WHERE profileid = '".$ProfileId."' AND inclexcl = '".$InclExcl."' AND filetype = '".$Type."' AND filepath = '".$Pattern."';");
     if (!$rows) {
       $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
     } else {
@@ -543,7 +545,7 @@ function dbGetFileSpecId($ProfileId, $InclExcl, $Type, $Pattern) {
 
 
     if ($Exists > 0) {
-      $rows = $db->query("SELECT id AS id FROM profileinclexcl WHERE profileid = '".$ProfileId."' AND profilekey = '".$InclExcl."' AND profiletype = '".$Type."' AND profilevalue = '".$Pattern."';");
+      $rows = $db->query("SELECT id AS id FROM profileinclexcl WHERE profileid = '".$ProfileId."' AND inclexcl = '".$InclExcl."' AND filetype = '".$Type."' AND filepath = '".$Pattern."';");
       if(!$rows){
         $rtn = json_encode($db->lastErrorMsg(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK)." }";
       }
@@ -786,7 +788,7 @@ function dbInsertIncludeExcludeValue($ProfileId, $InclExcl, $Type, $Pattern) {
       $arr["message"] = $db->lastErrorMsg();
     } else {
       // Insert
-      $ret = $db->exec("INSERT INTO profileinclexcl (profileid, profilekey, profiletype, profilevalue) VALUES ('".$ProfileId."', '".$InclExcl."', '".$Type."','".$Pattern."');");
+      $ret = $db->exec("INSERT INTO profileinclexcl (profileid, inclexcl, filetype, filepath) VALUES ('".$ProfileId."', '".$InclExcl."', '".$Type."','".$Pattern."');");
       if(!$ret){
         $arr["result"] = "ko";
         $arr["message"] = $db->lastErrorMsg();
@@ -917,7 +919,13 @@ function dbTakeSnapshot($ProfileId) {
       }
       else {
         $arr["result"] = "ok";
-        $arr["message"] = "Value stored";
+        $arr["message"] = "Snapshot record created";
+        
+        // Create the Snapshot Paths
+        // As well as being a record of the snapshot paths,
+        // it'll be used to take the snapshot
+        $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus) VALUES ('".$ProfileId."', strftime('%Y-%m-%dT%H:%M:%f'), '', 'proc');");
+        
       }
       $db->close();
     } // Snapshot exists
