@@ -903,6 +903,10 @@ function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
 function dbTakeSnapshot($ProfileId) {
   // FOR NOW, JSUT CREATE A NEW RECORD IN THE SNAPSHOTS TABLE
   $arr = array();
+  $arr["snapshotid"] = "";
+  $arr["result"] = "";
+  $arr["message"] = "";
+  $arr["paths"] = "";
 
   if ($ProfileId > 0) {
 
@@ -943,6 +947,7 @@ function dbTakeSnapshot($ProfileId) {
           else {
             while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
               $SnapshotId = $row["id"];
+              $arr["snapshotid"] = $SnapshotId;
               break;
             }
 
