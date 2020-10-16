@@ -911,21 +911,55 @@ function dbTakeSnapshot($ProfileId) {
       $arr["result"] = "ko";
       $arr["message"] = $db->lastErrorMsg();
     } else {
-      // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
-      $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus) VALUES ('".$ProfileId."', strftime('%Y-%m-%dT%H:%M:%f'), '', 'proc');");
-      if(!$ret){
+      // Get the timestamp to use
+      $rows = $db->query("SELECT strftime('%Y-%m-%dT%H:%M:%f') ts;");
+      if(!$rows){
         $arr["result"] = "ko";
         $arr["message"] = $db->lastErrorMsg();
       }
       else {
-        $arr["result"] = "ok";
-        $arr["message"] = "Snapshot record created";
-        
-        // Create the Snapshot Paths
-        // As well as being a record of the snapshot paths,
-        // it'll be used to take the snapshot
-        $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus) VALUES ('".$ProfileId."', strftime('%Y-%m-%dT%H:%M:%f'), '', 'proc');");
-        
+        $TimeStr = "";
+        while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+          $TimeStr = $row["ts"];
+          break;
+        }
+
+        // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
+        $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus) VALUES ('".$ProfileId."', '".$TimeStr."', '', 'proc');");
+        if(!$ret){
+          $arr["result"] = "ko";
+          $arr["message"] = $db->lastErrorMsg();
+        }
+        else {
+          $arr["result"] = "ok";
+          $arr["message"] = "Snapshot record created";
+          
+          // Find that snapshot id using the timestr
+          $rows = $db->query("SELECT id FROM snapshots WHERE snaptime = '".$TimeStr."';");
+          if(!$rows){
+            $arr["result"] = "ko";
+            $arr["message"] = $db->lastErrorMsg();
+          }
+          else {
+            while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+              $SnapshotId = $row["id"];
+              break;
+            }
+
+            // Create the Snapshot Paths
+            // As well as being a record of the snapshot paths,
+            // it'll be used to take the snapshot
+            $ret = $db->exec("INSERT INTO snapshotpaths (snapshotid, snapshotinclexcl, snapshotpathtype, snapshotpath) SELECT ".$SnapshotId.", inclexcl, filetype, filepath FROM profileinclexcl WHERE profileid = ".$ProfileId.";");
+            if(!$ret){
+              $arr["paths"]["result"] = "ko";
+              $arr["paths"]["message"] = $db->lastErrorMsg();
+            }
+            else {
+              $arr["paths"]["result"] = "ok";
+              $arr["paths"]["message"] = "Snapshot paths records created";
+            }
+          }
+        }
       }
       $db->close();
     } // Snapshot exists
