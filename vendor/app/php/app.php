@@ -1169,7 +1169,7 @@ function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
 }
 
 
-function dbGetDirectoryContentsFromShell($filetype, $dir, $sel) {
+function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
 
   // $filetype - 'file' or 'folder'
   // $dir      - Where to start browsing
@@ -1189,9 +1189,13 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel) {
     $sel = $dir."/".$sel;
   }
 
+  // If show hidden is checked, include the 'a' switch
+  $cmd = "ls -l";
+  if ($hid == 1) $cmd = $cmd."a";
+
   // Verify that the item exists, and that it is a folder or a link
   $validChdir = 0;
-  exec("ls -la \"".$sel."\"", $chk, $int);
+  exec($cmd." \"".$sel."\"", $chk, $int);
   foreach ($chk as $chkline) {
     if (substr($chkline, 0, 1) == "l" || substr($chkline, 0, 1) == "d" ) {
       $validChdir = 1;
@@ -1201,7 +1205,7 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel) {
   if ($validChdir == 1) {
     // Get the contents of the clicked into directory
     // Execute a command, pass output to Array, success indicator
-    exec("cd \"".$sel."\" && ls -la", $ls, $int);
+    exec("cd \"".$sel."\" && ".$cmd, $ls, $int);
 
     $id = 0;
     foreach ($ls as $dirline) {
@@ -1297,8 +1301,9 @@ function getDirectoryContentsFromShell() {
   $filetype = SQLite3::escapeString($_POST["type"]);  // Choose 'file' or 'folder'
   $dir = SQLite3::escapeString($_POST["dir"]);        // Where to start browsing
   $sel = SQLite3::escapeString($_POST["sel"]);        // What the user clicked on
+  $hid = SQLite3::escapeString($_POST["hid"]);        // Show Hidden
 
-  $arr = dbGetDirectoryContentsFromShell($filetype, $dir, $sel);
+  $arr = dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid);
 
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
