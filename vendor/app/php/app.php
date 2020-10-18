@@ -1189,20 +1189,21 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
     $sel = $dir."/".$sel;
   }
 
-  // If show hidden is checked, include the 'a' switch
-  $cmd = "ls -le";
-  if ($hid == 1) $cmd = $cmd."A";  // A = a, but doesn't show '.' or '..'
-
-  // Verify that the item exists, and that it is a folder or a link
+  // If not asking to change up a directory ("..")
+  // Verify that the directory exists
   $validChdir = 0;
-  exec($cmd." \"".$sel."\"", $chk, $int);
+  exec("cd \"".$sel."\" && pwd", $chk, $int);
   foreach ($chk as $chkline) {
-    if (substr($chkline, 0, 1) == "l" || substr($chkline, 0, 1) == "d" ) {
-      $validChdir = 1;
-    }
+    $validChdir = 1;
   }
 
+  // Valid to change into this directory
   if ($validChdir == 1) {
+
+    // If show hidden is checked, include the 'a' switch
+    $cmd = "ls -le";
+    if ($hid == 1) $cmd = $cmd."A";  // A = a, but doesn't show '.' or '..'
+
     // Get the contents of the clicked into directory
     // Execute a command, pass output to Array, success indicator
     exec("cd \"".$sel."\" && ".$cmd, $ls, $int);
