@@ -889,8 +889,30 @@ function createFileLine(actiontype, type, item, celt) {
   var iconName = getFileIcon(item.filetype);
 
   var rowelt = $("<div/>").addClass("row snaprow "+actiontype+"item").attr("id","file_"+item.id).attr("filetype",item.filetype.toLowerCase()).attr("filename",item.filename);
-  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(rowelt);
-  var namelt = $("<span/>").attr("id","name_"+item.id).text(item.filename).appendTo(rowelt);
+  var fncelt = $("<span/>").attr("id","fnamecont_"+item.id).addClass("col-6").appendTo(rowelt);
+  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(fncelt);
+  var namelt = $("<span/>").attr("id","name_"+item.id).text(item.filename).appendTo(fncelt);
+  
+  var fdt = new Date(item.filedate);
+  var datelt = $("<span/>").attr("id","date_"+item.id).text(fdt.toLocaleString()).addClass("col-3").appendTo(rowelt);
+  
+  var fty = "";
+  switch (item.filetype) {
+    case "d":
+      fty = "Folder";
+      break;
+    case "l":
+      fty = "Link";
+      break;
+    case "-":
+      fty = "File";
+      break;
+  }
+  var typelt = $("<span/>").attr("id","type_"+item.id).text(fty).addClass("col-1").appendTo(rowelt);
+
+  var fsz = "";
+  if (item.filetype == "-") fsz = item.filesize.toLocaleString();
+  var sizelt = $("<span/>").attr("id","size_"+item.id).text(fsz).addClass("col-2").css("text-align","right").appendTo(rowelt);
   rowelt.appendTo(celt);
 
   // Add trigger
@@ -925,7 +947,7 @@ function createFileLine(actiontype, type, item, celt) {
           getDirectoryContents(actiontype, type, excludeFileBrowseDir, $(this).text());
           break;
         case "show":
-          getDirectoryContents(actiontype, type, $("#filedirinput").val(), $(this).text());
+          getDirectoryContents(actiontype, type, $("#filedirinput").val(), $(this).attr("filename"));
           break;
         default:
           console.log("Unknown actiontype: "+actiontype);

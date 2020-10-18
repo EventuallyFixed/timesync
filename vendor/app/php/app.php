@@ -1239,7 +1239,7 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
             $lsinfo["filetype"] = $dirind;
             $lsinfo["filename"] = $fname;
             $lsinfo["filesize"] = $fsize;
-            $lsinfo["fdate"]    = $fdate;
+            $lsinfo["filedate"] = $fdate;
 
             array_push($arr, $lsinfo);
             $id = $id + 1;
