@@ -27,12 +27,12 @@
 .snapheading { border: 0px 1px 0px 1px; border-color: solid fuchsia; padding: 1px 2px 1px 2px; }
 .snapheadingsize { text-align: right; padding-right: 20px; }
 /* Column data */
-.snaprow { margin: 0px; padding: 1px 2px 1px 2px; }
+.snaprow { margin: 0px; padding: 1px 2px 1px 2px; cursor: pointer; }
 .snapcolumn { border: 0px 1px 0px 1px; border-color: solid lightgray; padding: 1px 2px 1px 2px; cursor: pointer; }
 .showitemfile { padding-left: 0px; }
 .stripeodd { background-color: lavender; }
 .inclexclsel { background-color: darkgray; }
-
+#includeaddfilelocation, #excludeaddfilelocation, #includebackicon, #excludebackicon { cursor: pointer; }
 /* Profiles section */
 .appselectlabel { margin: 5px 2px 0px 0px; font-style: italic; }
 .appinputlabel { font-style: italic; }

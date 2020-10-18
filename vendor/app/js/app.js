@@ -846,11 +846,23 @@ function getDirectoryContents(actiontype, type, dir, sel){
       switch (actiontype) {
         case "include":
           includeFileBrowseDir = data.newdir;
-          $("#includeaddfilelocation").text(data.newdir);
+          $("#"+actiontype+"addfilelocation").text(data.newdir);
+          $("#"+actiontype+"addfilelocation").dblclick(function(){
+            getDirectoryContents(actiontype, type, data.newdir, "..");
+          });
+          $("#"+actiontype+"backicon").dblclick(function(){
+            getDirectoryContents(actiontype, type, data.newdir, "..");
+          });
           break;
         case "exclude":
           excludeFileBrowseDir = data.newdir;
-          $("#excludeaddfilelocation").text(data.newdir);
+          $("#"+actiontype+"addfilelocation").text(data.newdir);
+          $("#"+actiontype+"addfilelocation").dblclick(function(){
+            getDirectoryContents(actiontype, type, data.newdir, "..");
+          });
+          $("#"+actiontype+"backicon").dblclick(function(){
+            getDirectoryContents(actiontype, type, data.newdir, "..");
+          });
           break;
         case "show":
           $("#filedirinput").val(data.newdir);
