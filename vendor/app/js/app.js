@@ -892,12 +892,12 @@ function createFileLine(i, actiontype, type, item, celt) {
   if (i % 2 == 0) stripeclass = "stripeeven";
 
   var rowelt = $("<div/>").addClass("row snaprow "+actiontype+"item "+stripeclass).attr("id","file_"+item.id).attr("filetype",item.filetype.toLowerCase()).attr("filename",item.filename);
-  var fncelt = $("<span/>").attr("id","fnamecont_"+item.id).addClass("col-6 showitemfilename").appendTo(rowelt);
+  var fncelt = $("<span/>").attr("id","fnamecont_"+item.id).addClass("col-6 showitemfile").appendTo(rowelt);
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(fncelt);
   var namelt = $("<span/>").attr("id","name_"+item.id).text(item.filename).appendTo(fncelt);
   
   var fdt = new Date(item.filedate);
-  var datelt = $("<span/>").attr("id","date_"+item.id).text(fdt.toLocaleString()).addClass("col-3").appendTo(rowelt);
+  var datelt = $("<span/>").attr("id","date_"+item.id).text(fdt.toLocaleString()).addClass("col-3 showitemfile").appendTo(rowelt);
   
   var fty = "";
   switch (item.filetype) {
@@ -911,11 +911,11 @@ function createFileLine(i, actiontype, type, item, celt) {
       fty = "File";
       break;
   }
-  var typelt = $("<span/>").attr("id","type_"+item.id).text(fty).addClass("col-1").appendTo(rowelt);
+  var typelt = $("<span/>").attr("id","type_"+item.id).text(fty).addClass("col-1 showitemfile").appendTo(rowelt);
 
   var fsz = "";
   if (item.filetype == "-") fsz = item.filesize.toLocaleString();
-  var sizelt = $("<span/>").attr("id","size_"+item.id).text(fsz).addClass("col-2").css("text-align","right").appendTo(rowelt);
+  var sizelt = $("<span/>").attr("id","size_"+item.id).text(fsz).addClass("col-2 showitemfile").css("text-align","right").appendTo(rowelt);
   rowelt.appendTo(celt);
 
   // Add trigger
