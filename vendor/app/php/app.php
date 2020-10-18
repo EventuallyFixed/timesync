@@ -1190,8 +1190,8 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
   }
 
   // If show hidden is checked, include the 'a' switch
-  $cmd = "ls -l";
-  if ($hid == 1) $cmd = $cmd."a";
+  $cmd = "ls -le";
+  if ($hid == 1) $cmd = $cmd."A";  // A = a, but doesn't show '.' or '..'
 
   // Verify that the item exists, and that it is a folder or a link
   $validChdir = 0;
@@ -1210,9 +1210,12 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
     $id = 0;
     foreach ($ls as $dirline) {
       $lsinfo = array();
-      // Column1 is the directory indicator
+      // Substring the columns to get the file info
       $dirind = substr($dirline, 0, 1);
-      $fname = substr($dirline, 57);
+      $fname = substr($dirline, 69);
+      $fsize = substr($dirline, 34, 9);
+      $fdate = strftime("%Y-%m-%d %H:%M:%S", strtotime(substr($dirline, 52, 2)."-".substr($dirline, 48, 3)."-".substr($dirline, 64, 4)." ".substr($dirline, 55, 8)));
+
       // Include only directories and regular files
       if ($dirind == 'd' || $dirind == '-' || $dirind == 'l') {
 
@@ -1221,6 +1224,12 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
           if ($dirind == 'l') {
             // Remove the SymLink symbol & everything to the right: ' ->'
             $fname = substr($fname,0,strpos($fname, " ->"));
+            $fsize = 0;
+          }
+
+          // Set file size to zero
+          if ($dirind == 'd') {
+            $fsize = 0;
           }
 
           // ********* NEED TO CHECK IF SYMLINKED RESOURCE IS A DIRECTORY, OR A FILE, AND FLAG AS SUCH *********
@@ -1229,6 +1238,8 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
             $lsinfo["id"] = $id;
             $lsinfo["filetype"] = $dirind;
             $lsinfo["filename"] = $fname;
+            $lsinfo["filesize"] = $fsize;
+            $lsinfo["fdate"]    = $fdate;
 
             array_push($arr, $lsinfo);
             $id = $id + 1;
