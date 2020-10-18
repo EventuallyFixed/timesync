@@ -885,7 +885,8 @@ function addTriggerClass(tclass_elts, tclass) {
 
 // Draw the divs for the contents - used only for Show Browse in front screen
 function createFileLine(actiontype, type, item, celt) {
-
+console.log("SJT CreateFIleLine");
+console.log("SJT CreateFIleLine - Item: " + JSON.stringify(item));
   var iconName = getFileIcon(item.filetype);
 
   var rowelt = $("<div/>").addClass("row snaprow "+actiontype+"item").attr("id","file_"+item.id).attr("filetype",item.filetype.toLowerCase()).attr("filename",item.filename);
@@ -941,10 +942,10 @@ function createFileLine(actiontype, type, item, celt) {
       // Callback to get the directory listing
       switch (actiontype) {
         case "include":
-          getDirectoryContents(actiontype, type, includeFileBrowseDir, $(this).text());
+          getDirectoryContents(actiontype, type, includeFileBrowseDir, $(this).attr("filename"));
           break;
         case "exclude":
-          getDirectoryContents(actiontype, type, excludeFileBrowseDir, $(this).text());
+          getDirectoryContents(actiontype, type, excludeFileBrowseDir, $(this).attr("filename"));
           break;
         case "show":
           getDirectoryContents(actiontype, type, $("#filedirinput").val(), $(this).attr("filename"));
