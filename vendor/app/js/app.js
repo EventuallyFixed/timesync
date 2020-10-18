@@ -101,7 +101,7 @@ $(document).ready(function() {
         var actiontype = "show";
         if (data.showfiles.length > 0) {
           $.each(data.showfiles, function (i, item) {
-            createFileLine(actiontype, "-", item, $("#"+actiontype+"filebrowsebody"));
+            createFileLine(i, actiontype, "-", item, $("#"+actiontype+"filebrowsebody"));
           });
         }
 
@@ -839,7 +839,7 @@ function getDirectoryContents(actiontype, type, dir, sel){
       // Draw the divs for the contents
       if (data.result == "ok") {
         $.each(data.items, function (i, item) {
-          createFileLine(actiontype, type, item, $("#"+actiontype+"filebrowsebody"));
+          createFileLine(i, actiontype, type, item, $("#"+actiontype+"filebrowsebody"));
         });
       }
 
@@ -884,13 +884,15 @@ function addTriggerClass(tclass_elts, tclass) {
 }
 
 // Draw the divs for the contents - used only for Show Browse in front screen
-function createFileLine(actiontype, type, item, celt) {
-console.log("SJT CreateFIleLine");
-console.log("SJT CreateFIleLine - Item: " + JSON.stringify(item));
-  var iconName = getFileIcon(item.filetype);
+function createFileLine(i, actiontype, type, item, celt) {
 
-  var rowelt = $("<div/>").addClass("row snaprow "+actiontype+"item").attr("id","file_"+item.id).attr("filetype",item.filetype.toLowerCase()).attr("filename",item.filename);
-  var fncelt = $("<span/>").attr("id","fnamecont_"+item.id).addClass("col-6").appendTo(rowelt);
+  var iconName = getFileIcon(item.filetype);
+  
+  var stripeclass = "stripeodd";
+  if (i % 2 == 0) stripeclass = "stripeeven";
+
+  var rowelt = $("<div/>").addClass("row snaprow "+actiontype+"item "+stripeclass).attr("id","file_"+item.id).attr("filetype",item.filetype.toLowerCase()).attr("filename",item.filename);
+  var fncelt = $("<span/>").attr("id","fnamecont_"+item.id).addClass("col-6 showitemfilename").appendTo(rowelt);
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(fncelt);
   var namelt = $("<span/>").attr("id","name_"+item.id).text(item.filename).appendTo(fncelt);
   
@@ -1025,11 +1027,14 @@ function getExcludeItems() {
 }
 
 
-function insertIncludeExcludeRow(actiontype, item) {
+function insertIncludeExcludeRow(i, actiontype, item) {
 
   var iconName = getFileIcon(item.settype);
-  
-  var cdiv   = $("<div/>").attr("id",actiontype+"row_"+item.setid).addClass("row snaprow "+actiontype+"item").attr("setid",item.setid);
+
+  var stripeclass = "stripeodd";
+  if (i % 2 == 0) stripeclass = "stripeeven";
+
+  var cdiv   = $("<div/>").attr("id",actiontype+"row_"+item.setid).addClass("row snaprow "+actiontype+"item "+stripeclass).attr("setid",item.setid);
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.setid).attr("data-icon",iconName).appendTo(cdiv);
   var namelt = $("<span/>").attr("id","name_"+item.setid).text(item.setval).appendTo(cdiv);
   cdiv.appendTo($("#"+actiontype+"filescontainer"));
@@ -1066,8 +1071,8 @@ function Init() {
   pdata.fn = "init";
 
   // Provide feedback to the user
-  var spinelt = createSpinner('snapshottoolbar','large');
-  spinelt.css('top','15px');
+  var spinelt = createSpinner('showfilebrowsebody','large');
+  spinelt.css('top','50px');
   spinelt.css('left','350px');
 
   $.ajax('./vendor/app/php/app.php',
@@ -1391,12 +1396,27 @@ $("#snapnow").click(function(){
 });
 
 $("#globalroot").click(function(){
+  // Remove inclexclsel class if set, and set to this
+  clearSnapShortcutsSel();
+  $(this).addClass("inclexclsel");
   $("#filedirinput").val("/").trigger("change");
 });
 
 $("#globalshares").click(function(){
+  // Remove inclexclsel class if set, and set to this
+  clearSnapShortcutsSel();
+  $(this).addClass("inclexclsel");
   $("#filedirinput").val("/shares").trigger("change");
 });
+
+function clearSnapShortcutsSel(){
+  $("#shortcutscontainer").find(".inclexclsel").each(function (i, elt){
+    $(elt).removeClass("inclexclsel");
+  });
+  $("#snapdirsfilescontainer").find(".inclexclsel").each(function(i, elt){
+    $(elt).removeClass("inclexclsel");
+  });  
+}
 
 $("#snapshotid").change(function(){
   // Callback to get the snapshot paths and contents
@@ -1421,7 +1441,7 @@ function insertIncludeItems(data) {
       var actiontype = "include";
       
       // Show included items in the frontend
-      var cdiv = insertIncludeExcludeRow(actiontype, item);
+      var cdiv = insertIncludeExcludeRow(i, actiontype, item);
 
       // Add trigger
       $(cdiv).click(function() {
@@ -1446,18 +1466,20 @@ function insertIncludeItems(data) {
     clearIncludeExcludeItemsBrowse("snapdirs");
     
     // Round the loop again, for the Include Directories in the Snapshots screen
+    var c = 0;
     $.each(data, function (i, item) {
       var actiontype = "snapdirs";
 
       // Also add the include folders to the Snapshots 'Backup Folders' list
       if (item.settype == 'd') {
-        var cdiv = insertIncludeExcludeRow(actiontype, item)
+        var cdiv = insertIncludeExcludeRow(c, actiontype, item)
+        c = c + 1;
         // Add trigger
         $(cdiv).click(function() {
           // Get the id of the currently selected item using the class name
           var selid = $("#"+actiontype+"filescontainer").find(".inclexclsel").attr("id");
           // Get all items in the area with the 'inclexclsel' class, and remove that class
-          var elts = $("#"+actiontype+"filescontainer").find(".inclexclsel").removeClass("inclexclsel");
+          clearSnapShortcutsSel();
 
           // Set the value of the file browse bar, if it is a folder, and trigger a refresh of the files area
           if (item.settype == "d") {
@@ -1481,7 +1503,7 @@ function insertExcludeItems(data) {
     $.each(data, function (i, item) {
 
       // Show excluded items in the frontend
-      var cdiv = insertIncludeExcludeRow('exclude', item);
+      var cdiv = insertIncludeExcludeRow(i, 'exclude', item);
 
       // Add trigger
       $(cdiv).click(function() {
