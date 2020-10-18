@@ -1185,7 +1185,7 @@ function BuildSideMenu(data) {
     $("#snapshotname").removeAttr("readonly");
     
     if (item.attr("id") == "snapshotsmenu0") $("#snapshotname").val("").attr("readonly", "readonly"); 
-    else $("#snapshotname").attr("readonly", "");
+    else $("#snapshotname").removeAttr("readonly");
   });
   $("#snapshotsmenu0").trigger("click");
 }
