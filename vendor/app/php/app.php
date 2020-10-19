@@ -1590,7 +1590,7 @@ function takeSnapshot() {
   $HasDir = 0;
 
   foreach ( $ProfileIncl["items"] as $Incl ) {
-    if ($Incl["filetype"] == "d") {
+    if ($Incl["settype"] == "d") {
       $HasDir = 1;
       break;
     }
@@ -1636,13 +1636,10 @@ function takeSnapshot() {
       
       // Build the command for each include directory
       $cmd = "";
-      $pos = 0;
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
-          $pos += 1;
           // Build it
           $cmd = "rsync -aP \"".$inex."\" --link-dest=\"".$BackupPath."/current\" \"".$item["snapshotpath"]."\" \"".$BackupPath."/backup/".$SnapshotTS."\"";
-$arr["cmd"][$pos] = "Snapshot underway!";
           // Call the OS command to take the snapshot
           //  $rsync = dbTakeSnapshot();
         }
