@@ -1639,7 +1639,7 @@ function takeSnapshot() {
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
           // Build it
-          $cmd = "rsync -aP".$inex." --link-dest=\"".$BackupPath."/current\" \"".$item["snapshotpath"]."\" \"".$BackupPath."/backup/".$SnapshotTS."\"";
+          $cmd = "rsync -aP \"".$inex."\" --link-dest=\"".$BackupPath."/current\" \"".$item["snapshotpath"]."\" \"".$BackupPath."/backup/".$SnapshotTS."\"";
 
           // Call the OS command to take the snapshot
           //  $rsync = dbTakeSnapshot();
