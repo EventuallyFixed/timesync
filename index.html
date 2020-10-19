@@ -186,225 +186,242 @@
 
           <div class="tab-content" id="SettingsTabsContent">
             <div class="tab-pane fade show active" id="settings-general" role="tabpanel" aria-labelledby="settings-general-tab">
+              <div id="settings-general-main">
+                <div class="row settingsrow">
+                  <label class="appselectlabel" for="selectmode">Mode:</label>
+                  <select id="selectmode" class="form-control col-2 appselect autoupd">
+                    <option value="modelocal">Local</option>
+                    <option value="modessh">SSH</option>
+                  </select>
+                </div>
 
-              <div class="row settingsrow">
-                <label class="appselectlabel" for="selectmode">Mode:</label>
-                <select id="selectmode" class="form-control col-2 appselect autoupd">
-                  <option value="modelocal">Local</option>
-                  <option value="modessh">SSH</option>
-                </select>
+                <div class="row settingsrow">
+                  <label class="appinputlabel" for="settingssaveto">Where to save snapshots:</label>
+                  <div class="input-group mb-3">
+                    <input id="settingssaveto" class="form-control autoupd" type="text" placeholder="Save snapshots to" />
+                    <div class="input-group-append">
+                      <span class="input-group-text" id="savetobutton">...</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row settingsrow"><h5>Advanced</h5></div>
+
+                <div class="row settingsrow">
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingshost">Host:</label>
+                    <input id="settingshost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
+                  </div>
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingsuser">User:</label>
+                    <input id="settingsuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
+                  </div>
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingsprofile">Profile:</label>
+                    <input id="settingsprofile" class="form-control form-control-sm autoupd" type="text" placeholder="Profile" />
+                  </div>
+                  <div class="col-12">
+                    <label class="appinputlabel" for="settingsfullsnapshotpath">Full Snapshot Path:</label>
+                    <input id="settingsfullsnapshotpath" class="form-control form-control-sm autoupd" type="text" readonly="readonly" placeholder="Profile" />
+                  </div>
+                </div>
+
+                <div class="row settingsrow modessh"><h5>SSH Settings</h5></div>
+
+                <div class="row settingsrow modessh">
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingssshhost">Host:</label>
+                    <input id="settingssshhost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
+                  </div>
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingssshport">Port:</label>
+                    <input id="settingssshport" class="form-control form-control-sm autoupd" type="text" placeholder="Port" />
+                  </div>
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingssshuser">User:</label>
+                    <input id="settingssshuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
+                  </div>
+                  <div class="col-12">
+                    <label class="appinputlabel" for="settingssshpath">Path:</label>
+                    <input id="settingssshpath" class="form-control form-control-sm autoupd" type="text" placeholder="Path" />
+                  </div>
+                  <div class="col-12">
+                    <label class="appinputlabel" for="settingssshprivatekey">Private Key:</label>
+                    <input id="settingssshprivatekey" class="form-control form-control-sm autoupd" type="text" placeholder="Private Key" />
+                  </div>
+                </div>
+
+                <div class="row settingsrow modessh"><h5>Password</h5></div>
+
+                <div class="row settingsrow modessh">
+                  <div class="col-12">
+                    <label class="appinputlabel" for="settingssshprivatekeypassword">SSH Private Key:</label>
+                    <input id="settingssshprivatekeypassword" class="form-control form-control-sm autoupd" type="password" placeholder="Type Private Key Password" />
+                  </div>
+                </div>
+                <div class="row settingsrow modessh">
+                  <div class="form-check col-12">
+                    <input id="settingssavepasswordtokeyring" class="form-check-input autoupd" type="checkbox" value="">
+                    <label class="form-check-label" for="settingssavepasswordtokeyring">Save Password To Keyring</label>
+                  </div>
+                </div>
+                <div class="row settingsrow modessh">
+                  <div class="form-check col-12">
+                    <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="">
+                    <label class="form-check-label" for="settingscachepasswordtocron">Cache Password To Cron</label>
+                  </div>
+                </div>
+
+                <div class="row settingsrow"><h5>Schedule</h5></div>
+
+                <div class="row settingsrow">
+                  <label class="appselectlabel" for="selectschedule">Select Schedule Type</label>
+                  <select id="selectschedule" class="form-control col-12 appselect scheduleupd">
+  <!--                    <option value="boot"        crit="">At every boot/reboot</option> -->
+                    <option value="manual">Manual Snapshots</option>
+                    <option value="minute">Every X minutes</option>
+                    <option value="hour">Every X hours</option>
+  <!--                    <option value="customhours">Custom Hours</option> -->
+                    <option value="daily">Every Day</option>
+  <!--                    <option value="connected">When drive get connected</option> -->
+  <!--                    <option value="repeatedly">Repeatedly</option> -->
+                    <option value="weekly">Every Week</option>
+                    <option value="monthly">Every Month</option>
+                  </select>
+                </div>
+                <div id="settingsscheduleminutediv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsscheduleminuteselect">Minutes:</label>
+                  <select id="settingsscheduleminuteselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="30">30</option>
+                  </select>
+                </div>
+                <div id="settingsschedulehourdiv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsschedulehourselect">Hours:</label>
+                  <select id="settingsschedulehourselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="12">12</option>
+                  </select>
+                </div>
+  <!--
+                <div id="settingsschedulecustomcrondiv" class="row settingsrow schedule">
+                  <input id="settingsschedulecustomcroninp" type="text" class="form-check-input scheduleupd"></input>
+                </div>
+  -->
+                <div id="settingsscheduledailydiv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsscheduledailyhourselect">Hour:</label>
+                  <select id="settingsscheduledailyhourselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                  </select>
+                  <label class="appselectlabel" for="settingsscheduledailyminuteselect">Minute:</label>
+                  <select id="settingsscheduledailyminuteselect" class="form-control col-2 appselect scheduleupd">
+                    <option value="00">00</option>
+                    <option value="05">05</option>
+                    <option value="10">10</option>
+                    <option value="15">15</option>
+                    <option value="20">20</option>
+                    <option value="25">25</option>
+                    <option value="30">30</option>
+                    <option value="35">35</option>
+                    <option value="40">40</option>
+                    <option value="45">45</option>
+                    <option value="50">50</option>
+                    <option value="55">55</option>
+                  </select>
+                </div>
+
+                <div id="settingsscheduleweeklydiv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsscheduleweeklydayselect">Weekday:</label>
+                  <select id="settingsscheduleweeklydayselect" class="form-control appselect scheduleupd">
+                    <option value="0">Sun</option>
+                    <option value="1">Mon</option>
+                    <option value="2">Tue</option>
+                    <option value="3">Wed</option>
+                    <option value="4">Thu</option>
+                    <option value="5">Fri</option>
+                    <option value="6">Sat</option>
+                  </select>
+                </div>
+                <div id="settingsschedulemonthlydiv" class="row settingsrow schedule">
+                  <label class="appselectlabel" for="settingsschedulemonthlydayselect">Day:</label>
+                  <select id="settingsschedulemonthlydayselect" class="form-control appselect scheduleupd">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25</option>
+                    <option value="26">26</option>
+                    <option value="27">27</option>
+                    <option value="28">28</option>
+                    <option value="29">29</option>
+                    <option value="30">30</option>
+                    <option value="31">31</option>
+                  </select>
+                  <label id="daywarninglabel" class="warninglabel"></label>
+                </div>
+              </div>
+              
+              <div id="savetofilebrowse" class="filebrowse" class="row-8">
+                <nav class="row navbar navbar-light bg-light apptoolbar">Select where to save to</nav>
+                Location: <span id="savetoaddfilelocation"></span>
+                <div id="savetofilebrowsebody" class="filebrowsebody"></div>
+                <div class="savetobrowsebuttons" class="btn-group btn-group-sm" role="group" aria-label="">
+                  <button type="button" class="btn btn-secondary" id="savetoselect">Select</button>
+                  <button type="button" class="btn btn-secondary" id="savetocancel">Cancel</button>
+                </div>
               </div>
 
-              <div class="row settingsrow">
-                <label class="appinputlabel" for="settingssaveto">Where to save snapshots:</label>
-                <input id="settingssaveto" class="form-control form-control-sm autoupd" type="text" placeholder="Save snapshots to" />
-              </div>
-
-              <div class="row settingsrow"><h5>Advanced</h5></div>
-
-              <div class="row settingsrow">
-                <div class="col-4">
-                  <label class="appinputlabel" for="settingshost">Host:</label>
-                  <input id="settingshost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
-                </div>
-                <div class="col-4">
-                  <label class="appinputlabel" for="settingsuser">User:</label>
-                  <input id="settingsuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
-                </div>
-                <div class="col-4">
-                  <label class="appinputlabel" for="settingsprofile">Profile:</label>
-                  <input id="settingsprofile" class="form-control form-control-sm autoupd" type="text" placeholder="Profile" />
-                </div>
-                <div class="col-12">
-                  <label class="appinputlabel" for="settingsfullsnapshotpath">Full Snapshot Path:</label>
-                  <input id="settingsfullsnapshotpath" class="form-control form-control-sm autoupd" type="text" readonly="readonly" placeholder="Profile" />
-                </div>
-               </div>
-
-              <div class="row settingsrow modessh"><h5>SSH Settings</h5></div>
-
-              <div class="row settingsrow modessh">
-                <div class="col-4">
-                  <label class="appinputlabel" for="settingssshhost">Host:</label>
-                  <input id="settingssshhost" class="form-control form-control-sm autoupd" type="text" placeholder="Host" />
-                </div>
-                <div class="col-4">
-                  <label class="appinputlabel" for="settingssshport">Port:</label>
-                  <input id="settingssshport" class="form-control form-control-sm autoupd" type="text" placeholder="Port" />
-                </div>
-                <div class="col-4">
-                  <label class="appinputlabel" for="settingssshuser">User:</label>
-                  <input id="settingssshuser" class="form-control form-control-sm autoupd" type="text" placeholder="User" />
-                </div>
-                <div class="col-12">
-                  <label class="appinputlabel" for="settingssshpath">Path:</label>
-                  <input id="settingssshpath" class="form-control form-control-sm autoupd" type="text" placeholder="Path" />
-                </div>
-                <div class="col-12">
-                  <label class="appinputlabel" for="settingssshprivatekey">Private Key:</label>
-                  <input id="settingssshprivatekey" class="form-control form-control-sm autoupd" type="text" placeholder="Private Key" />
-                </div>
-              </div>
-
-              <div class="row settingsrow modessh"><h5>Password</h5></div>
-
-              <div class="row settingsrow modessh">
-                <div class="col-12">
-                  <label class="appinputlabel" for="settingssshprivatekeypassword">SSH Private Key:</label>
-                  <input id="settingssshprivatekeypassword" class="form-control form-control-sm autoupd" type="password" placeholder="Type Private Key Password" />
-                </div>
-              </div>
-              <div class="row settingsrow modessh">
-                <div class="form-check col-12">
-                  <input id="settingssavepasswordtokeyring" class="form-check-input autoupd" type="checkbox" value="">
-                  <label class="form-check-label" for="settingssavepasswordtokeyring">Save Password To Keyring</label>
-                </div>
-              </div>
-              <div class="row settingsrow modessh">
-                <div class="form-check col-12">
-                  <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="">
-                  <label class="form-check-label" for="settingscachepasswordtocron">Cache Password To Cron</label>
-                </div>
-              </div>
-
-              <div class="row settingsrow"><h5>Schedule</h5></div>
-
-              <div class="row settingsrow">
-                <label class="appselectlabel" for="selectschedule">Select Schedule Type</label>
-                <select id="selectschedule" class="form-control col-12 appselect scheduleupd">
-<!--                    <option value="boot"        crit="">At every boot/reboot</option> -->
-                  <option value="manual">Manual Snapshots</option>
-                  <option value="minute">Every X minutes</option>
-                  <option value="hour">Every X hours</option>
-<!--                    <option value="customhours">Custom Hours</option> -->
-                  <option value="daily">Every Day</option>
-<!--                    <option value="connected">When drive get connected</option> -->
-<!--                    <option value="repeatedly">Repeatedly</option> -->
-                  <option value="weekly">Every Week</option>
-                  <option value="monthly">Every Month</option>
-                </select>
-              </div>
-              <div id="settingsscheduleminutediv" class="row settingsrow schedule">
-                <label class="appselectlabel" for="settingsscheduleminuteselect">Minutes:</label>
-                <select id="settingsscheduleminuteselect" class="form-control col-2 appselect scheduleupd">
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="20">20</option>
-                  <option value="30">30</option>
-                </select>
-              </div>
-              <div id="settingsschedulehourdiv" class="row settingsrow schedule">
-                <label class="appselectlabel" for="settingsschedulehourselect">Hours:</label>
-                <select id="settingsschedulehourselect" class="form-control col-2 appselect scheduleupd">
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="4">4</option>
-                  <option value="6">6</option>
-                  <option value="8">8</option>
-                  <option value="12">12</option>
-                </select>
-              </div>
-<!--
-              <div id="settingsschedulecustomcrondiv" class="row settingsrow schedule">
-                <input id="settingsschedulecustomcroninp" type="text" class="form-check-input scheduleupd"></input>
-              </div>
--->
-              <div id="settingsscheduledailydiv" class="row settingsrow schedule">
-                <label class="appselectlabel" for="settingsscheduledailyhourselect">Hour:</label>
-                <select id="settingsscheduledailyhourselect" class="form-control col-2 appselect scheduleupd">
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                  <option value="12">12</option>
-                  <option value="13">13</option>
-                  <option value="14">14</option>
-                  <option value="15">15</option>
-                  <option value="16">16</option>
-                  <option value="17">17</option>
-                  <option value="18">18</option>
-                  <option value="19">19</option>
-                  <option value="20">20</option>
-                  <option value="21">21</option>
-                  <option value="22">22</option>
-                  <option value="23">23</option>
-                </select>
-                <label class="appselectlabel" for="settingsscheduledailyminuteselect">Minute:</label>
-                <select id="settingsscheduledailyminuteselect" class="form-control col-2 appselect scheduleupd">
-                  <option value="00">00</option>
-                  <option value="05">05</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="20">20</option>
-                  <option value="25">25</option>
-                  <option value="30">30</option>
-                  <option value="35">35</option>
-                  <option value="40">40</option>
-                  <option value="45">45</option>
-                  <option value="50">50</option>
-                  <option value="55">55</option>
-                </select>
-              </div>
-
-              <div id="settingsscheduleweeklydiv" class="row settingsrow schedule">
-                <label class="appselectlabel" for="settingsscheduleweeklydayselect">Weekday:</label>
-                <select id="settingsscheduleweeklydayselect" class="form-control appselect scheduleupd">
-                  <option value="0">Sun</option>
-                  <option value="1">Mon</option>
-                  <option value="2">Tue</option>
-                  <option value="3">Wed</option>
-                  <option value="4">Thu</option>
-                  <option value="5">Fri</option>
-                  <option value="6">Sat</option>
-                </select>
-              </div>
-              <div id="settingsschedulemonthlydiv" class="row settingsrow schedule">
-                <label class="appselectlabel" for="settingsschedulemonthlydayselect">Day:</label>
-                <select id="settingsschedulemonthlydayselect" class="form-control appselect scheduleupd">
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5">5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                  <option value="12">12</option>
-                  <option value="13">13</option>
-                  <option value="14">14</option>
-                  <option value="15">15</option>
-                  <option value="16">16</option>
-                  <option value="17">17</option>
-                  <option value="18">18</option>
-                  <option value="19">19</option>
-                  <option value="20">20</option>
-                  <option value="21">21</option>
-                  <option value="22">22</option>
-                  <option value="23">23</option>
-                  <option value="24">24</option>
-                  <option value="25">25</option>
-                  <option value="26">26</option>
-                  <option value="27">27</option>
-                  <option value="28">28</option>
-                  <option value="29">29</option>
-                  <option value="30">30</option>
-                  <option value="31">31</option>
-                </select>
-                <label id="daywarninglabel" class="warninglabel"></label>
-              </div>
             </div>
             <div class="tab-pane fade" id="settings-include" role="tabpanel" aria-labelledby="settings-include-tab">
 
@@ -656,6 +673,7 @@
           <li><a href="https://community.wd.com/" title="WD Community" target="_blank">WD Community</a></li>
           <li><a href="https://stackexchange.com/" title="Stack Exchange" target="_blank">Stack Exchange</a></li>
           <li><a href="https://stackoverflow.com/" title="Stack Overflow" target="_blank">Stack Overflow</a></li>
+          <li><a href="https://serverfault.com/" title="Server Fault" target="_blank">Server Fault</a></li>
           <li><a href="https://www.geeksforgeeks.org" title="GeeksForGeeks.org" target="_blank">GeeksForGeeks.org</a></li>
           <li><a href="https://www.w3.org/People/Berners-Lee/" title="Tim Berners-Lee" target="_blank">Tim Berners-Lee</a></li>
 <!--
