@@ -1582,60 +1582,79 @@ function takeSnapshot() {
   $arr["snapshotrecords"] = array();
   $arr["cmd"] = "";
   $arr["result"] = "";
-  
-  // Get the Profile Path parts, from the settings screen
-  $path[0] = dbSelectProfileSettingsRecord($ProfileId, "settingssaveto");
-  $path[1] = dbSelectProfileSettingsRecord($ProfileId, "settingshost");
-  $path[2] = dbSelectProfileSettingsRecord($ProfileId, "settingsuser");
-  $path[3] = dbSelectProfileSettingsRecord($ProfileId, "settingsprofile");
-  $AppName = dbSelectCodelistRecord("system", "appname");
-  
-  // Build a base backup path, as shown on the Settings screen
-  $BackupPath = $path[0]["items"][0]["profilevalue"]."/".$AppName[items][0]["codedesc"]."/".$path[1]["items"][0]["profilevalue"]."/".$path[2]["items"][0]["profilevalue"]."/".$path[3]["items"][0]["profilevalue"];
+  $arr["message"] = "";
+  $arr["snaplist"] = array();
 
-  // Create a record set for this snapshot, returns the record set (header and includes/excludes)
-  $arr["snapshotrecords"] = dbCreateSnapshotRecords($ProfileId);
+  // Check for at least one included directory
+  $ProfileIncl = dbSelectProfileIncludeExclude($ProfileId, "include");
+  $HasDir = 0;
 
-  $SnapshotId = "-1";
-  if ($arr["snapshotrecords"]["result"] == "ok") {
-    // Get the Snapshot ID from the returned arrays
-    $SnapshotId = $arr["snapshotrecords"]["snapshot"][0]["id"];
-    // Get the includes and excludes of this snapshot
-    $InexArr = dbSelectRsyncExcludesIncludes($SnapshotId);
-
-    // Remove all of the punctuation from the timestamp
-    $SnapshotTS = RemoveTimestampPunct($arr["snapshotrecords"]["snapshot"][0]["snaptime"]);
-   
-    // Go through each snapshot path to include, and call rsync for it
-    // To debug, feed back the command
-    $inex = "";
-    foreach($InexArr["items"] as $item) {
-      // Excludes
-      if ($item["snapshotinclexcl"] == "exclude") {
-        $inex = $inex." --exclude \"".$item["snapshotpath"]."\"";
-      }
-      // Includes
-      if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] != "d") {
-        $inex = $inex." --include \"".$item["snapshotpath"]."\"";
-      }
+  foreach ( $ProfileIncl["items"] as $Incl ) {
+    if ($Incl["filetype"] == "d") {
+      $HasDir = 1;
+      break;
     }
-    
-    // Build the command for each include directory
-    $cmd = "";
-    foreach($InexArr["items"] as $item) {
-      if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
-        // Build it
-        $cmd = "rsync -aP".$inex." --link-dest=\"".$BackupPath."/current\" \"".$item["snapshotpath"]."\" \"".$BackupPath."/backup/".$SnapshotTS."\"";
+  }
 
-        // Call the OS command to take the snapshot
-        //  $rsync = dbTakeSnapshot();
+  if ($HasDir == 1) {
+    // Get the Profile Path parts, from the settings screen
+    $path[0] = dbSelectProfileSettingsRecord($ProfileId, "settingssaveto");
+    $path[1] = dbSelectProfileSettingsRecord($ProfileId, "settingshost");
+    $path[2] = dbSelectProfileSettingsRecord($ProfileId, "settingsuser");
+    $path[3] = dbSelectProfileSettingsRecord($ProfileId, "settingsprofile");
+    $AppName = dbSelectCodelistRecord("system", "appname");
+
+    // Build a base backup path, as shown on the Settings screen
+    $BackupPath = $path[0]["items"][0]["profilevalue"]."/".$AppName[items][0]["codedesc"]."/".$path[1]["items"][0]["profilevalue"]."/".$path[2]["items"][0]["profilevalue"]."/".$path[3]["items"][0]["profilevalue"];
+
+    // Create a record set for this snapshot, returns the record set (header and includes/excludes)
+    $arr["snapshotrecords"] = dbCreateSnapshotRecords($ProfileId);
+
+    $SnapshotId = "-1";
+    if ($arr["snapshotrecords"]["result"] == "ok") {
+      // Get the Snapshot ID from the returned arrays
+      $SnapshotId = $arr["snapshotrecords"]["snapshot"][0]["id"];
+      // Get the includes and excludes of this snapshot
+      $InexArr = dbSelectRsyncExcludesIncludes($SnapshotId);
+
+      // Remove all of the punctuation from the timestamp
+      $SnapshotTS = RemoveTimestampPunct($arr["snapshotrecords"]["snapshot"][0]["snaptime"]);
+     
+      // Go through each snapshot path to include, and call rsync for it
+      // To debug, feed back the command
+      $inex = "";
+      foreach($InexArr["items"] as $item) {
+        // Excludes
+        if ($item["snapshotinclexcl"] == "exclude") {
+          $inex = $inex." --exclude \"".$item["snapshotpath"]."\"";
+        }
+        // Includes
+        if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] != "d") {
+          $inex = $inex." --include \"".$item["snapshotpath"]."\"";
+        }
       }
+      
+      // Build the command for each include directory
+      $cmd = "";
+      foreach($InexArr["items"] as $item) {
+        if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
+          // Build it
+          $cmd = "rsync -aP".$inex." --link-dest=\"".$BackupPath."/current\" \"".$item["snapshotpath"]."\" \"".$BackupPath."/backup/".$SnapshotTS."\"";
+
+          // Call the OS command to take the snapshot
+          //  $rsync = dbTakeSnapshot();
+        }
+      }
+
+      // TODO CALL THE OS COMMAND TO TAKE THE SNAPSHOT
+
+      $arr["result"] = "ok";
+      $arr["message"] = "Snapshot underway!";
     }
-
-    // TODO CALL THE OS COMMAND TO TAKE THE SNAPSHOT
-
-    $arr["result"] = "ok";
-    $arr["message"] = "Snapshot underway!";
+  }
+  else {
+    $arr["result"] = "ko";
+    $arr["message"] = "No Backup Folders (Include Directories) were found.";
   }
 
   // Return a new snapshot list to save making an extra ajax callback
