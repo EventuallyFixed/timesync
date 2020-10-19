@@ -30,8 +30,8 @@
 .snaprow { margin: 0px; padding: 1px 2px 1px 2px; cursor: pointer; }
 .snapcolumn { border: 0px 1px 0px 1px; border-color: solid lightgray; padding: 1px 2px 1px 2px; cursor: pointer; }
 .showitemfile { padding-left: 0px; }
-.stripeodd { background-color: lavender; }
-.inclexclsel { background-color: darkgray; }
+.stripeodd { background-color: #f8f8f8; }
+.inclexclsel { background-color: gainsboro; }
 #includeaddfilelocation, #excludeaddfilelocation, #includebackicon, #excludebackicon { cursor: pointer; }
 /* Profiles section */
 .appselectlabel { margin: 5px 2px 0px 0px; font-style: italic; }
