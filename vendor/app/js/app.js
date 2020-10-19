@@ -1454,6 +1454,10 @@ $("#filedirinput").change(function(){
   var items = getDirectoryContents("show", "-", $("#filedirinput").val(), "");
 });
 
+$("#snapshotsheadingnav").click(function(){
+  $("#topmenusnapshots").trigger("click");
+});
+
 
 function insertIncludeItems(data) {
   
