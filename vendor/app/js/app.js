@@ -835,41 +835,51 @@ function getDirectoryContents(actiontype, type, dir, sel){
       console.log(data);
 
       spinelt.remove();
-
-      // Draw the divs for the contents
+      
       if (data.result == "ok") {
+        switch (actiontype) {
+          case "include":
+            includeFileBrowseDir = data.newdir;
+          case "exclude":
+            excludeFileBrowseDir = data.newdir;
+          case "show":
+            $("#filedirinput").val(data.newdir);
+            break;
+          default:
+            console.log("Unknown actiontype: "+actiontype);
+        }
+              
+        // Insert the item for 'Back'
+        switch (actiontype) {
+          case "include":
+          case "exclude":
+            // Fill in the new location
+            $("#"+actiontype+"addfilelocation").text(data.newdir);
+
+            // Create an item for the back/up button
+            var BackItem = new Object();
+            BackItem.id = "-1";
+            BackItem.filedate = "";
+            BackItem.filename = "..";
+            BackItem.filesize = "";
+            BackItem.filetype = "back";
+
+            // Insert the folder up / back icon, and location
+            createFileLine("back", actiontype, "-", BackItem, $("#"+actiontype+"filebrowsebody"));
+            break;
+          default:
+            console.log("Unknown actiontype: "+actiontype);
+        }
+
+        // Draw the returned contents
         $.each(data.items, function (i, item) {
           createFileLine(i, actiontype, type, item, $("#"+actiontype+"filebrowsebody"));
         });
       }
-
-      switch (actiontype) {
-        case "include":
-          includeFileBrowseDir = data.newdir;
-          $("#"+actiontype+"addfilelocation").text(data.newdir);
-          $("#"+actiontype+"addfilelocation").dblclick(function(){
-            getDirectoryContents(actiontype, type, data.newdir, "..");
-          });
-          $("#"+actiontype+"backicon").dblclick(function(){
-            getDirectoryContents(actiontype, type, data.newdir, "..");
-          });
-          break;
-        case "exclude":
-          excludeFileBrowseDir = data.newdir;
-          $("#"+actiontype+"addfilelocation").text(data.newdir);
-          $("#"+actiontype+"addfilelocation").dblclick(function(){
-            getDirectoryContents(actiontype, type, data.newdir, "..");
-          });
-          $("#"+actiontype+"backicon").dblclick(function(){
-            getDirectoryContents(actiontype, type, data.newdir, "..");
-          });
-          break;
-        case "show":
-          $("#filedirinput").val(data.newdir);
-          break;
-        default:
-          console.log("Unknown actiontype: "+actiontype);
+      else {
+        alert(data.message);
       }
+
     },
     error: function (jqXhr, textStatus, errorMessage) {
       console.log('Error: ' + errorMessage);
@@ -914,6 +924,7 @@ function createFileLine(i, actiontype, type, item, celt) {
   var fty = "";
   switch (item.filetype) {
     case "d":
+    case "back":
       fty = "Folder";
       break;
     case "l":
@@ -1067,6 +1078,10 @@ function getFileIcon(ftype) {
       break;
     case "l":
       iconName = "mdi-file-link-outline";
+      break;
+    // Special icon for folder up
+    case "back":
+      iconName = "mdi-folder-upload";
       break;
     default:
       iconName = "mdi-file-question-outline";

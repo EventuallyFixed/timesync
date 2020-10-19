@@ -32,7 +32,7 @@
 .showitemfile { padding-left: 0px; }
 .stripeodd { background-color: #f8f8f8; }
 .inclexclsel { background-color: gainsboro; }
-#includeaddfilelocation, #excludeaddfilelocation, #includebackicon, #excludebackicon { cursor: pointer; }
+
 /* Profiles section */
 .appselectlabel { margin: 5px 2px 0px 0px; font-style: italic; }
 .appinputlabel { font-style: italic; }
