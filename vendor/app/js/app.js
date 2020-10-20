@@ -150,7 +150,7 @@ $(document).ready(function() {
         $("#settingssmartkeeponeperdayforweeks").trigger("change");
         $("#settingssmartkeeponepermonthformonths").trigger("change");
         $("#settingssmartremove").trigger("change");
-        $("#settingshost").trigger("change");
+        SetSettingsFullSnapshotPath();
         showScheduleElements()
 
         // Re-add the trigger classes
@@ -1000,8 +1000,45 @@ function createFileLine(i, actiontype, type, item, celt) {
 }
 
 
+function ArrAddSettingsObject(arr, key, val) {
+  
+  var setting = new Object();
+  setting.key = key;
+  setting.val = val;
+  arr.push(setting);
+  return arr;
+}
+
 function SetSettingsFullSnapshotPath(){
   $('#settingsfullsnapshotpath').val( $('#settingssaveto').val()+'/timesync/'+$('#settingshost').val()+'/'+$('#settingsuser').val()+'/'+$('#settingsprofile').val() );
+
+  var pDataArr = new Array();
+  ArrAddSettingsObject(pDataArr, "settingshost", $("#settingshost").val());
+  ArrAddSettingsObject(pDataArr, "settingsuser", $("#settingsuser").val());
+  ArrAddSettingsObject(pDataArr, "settingsprofile", $("#settingsprofile").val());
+  ArrAddSettingsObject(pDataArr, "settingssaveto", $("#settingssaveto").val());
+  ArrAddSettingsObject(pDataArr, "settingsfullsnapshotpath", $("#settingsfullsnapshotpath").val());
+
+  // Now add the path to the criteria
+  var pdata = new Object();
+  pdata.fn = "updatesettingspaths";
+  pdata.profileid = $("#selectprofile").val();
+  pdata.settings = JSON.stringify(pDataArr);
+
+  $.ajax("./vendor/app/php/app.php",
+  {
+    dataType: "json",
+    type: "POST",
+    data: pdata,
+    success: function (data,status,xhr) {
+      console.log(data);
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+      console.log('Error: ' + errorMessage);
+      spinelt.remove();
+    }
+  });  
+
 }
 
 
@@ -1500,10 +1537,17 @@ $("#savetocancel").click(function(){
 
 $("#savetoselect").click(function(){
   // Remove the includefilescontainer
-  var selFile = saveToFileBrowseDir + "/" + $("#savetofilebrowsebody").find(".inclexclsel").attr("filename");
+  var selFolder = saveToFileBrowseDir;
+  if ($("#savetofilebrowsebody").find(".inclexclsel").length == 1) { 
+    selFolder = saveToFileBrowseDir + "/" + $("#savetofilebrowsebody").find(".inclexclsel").attr("filename");
+    saveToFileBrowseDir = selFolder;
+  }
   // Set the input to the chosen one
-  $("#settingssaveto").val(selFile);
-  $("#settingssaveto").trigger("change");
+  $("#settingssaveto").val(selFolder);
+
+  // Set the Full Snapshot Path
+  SetSettingsFullSnapshotPath()
+
   // Remove the includefilescontainer
   $("#savetofilebrowse").css("display","none");
   // Ensure the body of the file browse is clear

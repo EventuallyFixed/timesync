@@ -1304,6 +1304,13 @@ function dbSelectRsyncExcludesIncludes($SnapshotId) {
 }
 
 
+function dbTakeSnapshot($cmd) {
+
+  // Execute a command, pass output to Array, success indicator
+  exec("sh -c 'echo $$; exec ".$cmd."'", $ls, $int);  
+}
+
+
 // ==============================================================================
 // Web Method Functions
 // ==============================================================================
@@ -1439,6 +1446,24 @@ function updateProfileSetting() {
 
   $arr = dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
+function updateSettingsPaths() {
+
+  $arr = array();
+  $ProfileId    = SQLite3::escapeString($_POST["profileid"]);
+  $SettingsArr  = json_decode(SQLite3::escapeString($_POST["settings"]), true);
+
+
+  $pos = 0;
+  foreach($SettingsArr as $so) {
+    $arr = dbInsertUpdateProfileSetting($ProfileId, $so["key"], $so["val"]);
+    $res[$so["key"]] = $arr;
+    $pos = $pos + 1;
+  }
+
+  echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
@@ -1636,12 +1661,15 @@ function takeSnapshot() {
       
       // Build the command for each include directory
       $cmd = "";
+
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
+
           // Build it
           $cmd = "rsync -aP \"".$inex."\" --link-dest=\"".$BackupPath."/current\" \"".$item["snapshotpath"]."\" \"".$BackupPath."/backup/".$SnapshotTS."\"";
+
           // Call the OS command to take the snapshot
-          //  $rsync = dbTakeSnapshot();
+
         }
       }
 
@@ -1776,6 +1804,9 @@ switch ($WhatToRun) {
     break;
   case "updateprofilesetting":
     updateProfileSetting();
+    break;
+  case "updatesettingspaths":
+    updateSettingsPaths();
     break;
   case "deleteprofilesetting":
     deleteProfileSetting();
