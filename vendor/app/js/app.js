@@ -466,7 +466,7 @@ $(document).ready(function() {
     $("#excludefilescontainer").fadeIn();
     $("#excludefilesbuttons").fadeIn();
 
-     // Provide feedback to the user
+    // Provide feedback to the user
     var spinelt = createSpinner('excludefilescontainer','');
     spinelt.css('top','5px');
     spinelt.css('left','250px');
@@ -852,14 +852,14 @@ function getDirectoryContents(actiontype, type, dir, sel){
 
             // Create an item for the back/up button
             var BackItem = new Object();
-            BackItem.id = "-1";
+            BackItem.id = "back";
             BackItem.filedate = "";
             BackItem.filename = "..";
             BackItem.filesize = "";
             BackItem.filetype = "back";
 
             // Insert the folder up / back icon, and location
-            createFileLine("back", actiontype, "-", BackItem, $("#"+actiontype+"filebrowsebody"));
+            createFileLine("back", actiontype, "d", BackItem, $("#"+actiontype+"filebrowsebody"));
 
             // Store where we now are
             BrowseSettings[actiontype+"FileBrowseDir"] = data.newdir;
@@ -919,8 +919,12 @@ function createFileLine(i, actiontype, type, item, celt) {
   var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(fncelt);
   var namelt = $("<span/>").attr("id","name_"+item.id).text(item.filename).appendTo(fncelt);
   
+  var strDate = "";
   var fdt = new Date(item.filedate);
-  var datelt = $("<span/>").attr("id","date_"+item.id).text(fdt.toLocaleString()).addClass("col-3 showitemfile").appendTo(rowelt);
+  if (item.filedate != "") {
+    strDate = fdt.toLocaleString();
+  }
+  var datelt = $("<span/>").attr("id","date_"+item.id).text(strDate).addClass("col-3 showitemfile").appendTo(rowelt);
   
   var fty = "";
   switch (item.filetype) {
