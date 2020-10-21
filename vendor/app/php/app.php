@@ -1304,10 +1304,11 @@ function dbSelectRsyncExcludesIncludes($SnapshotId) {
 }
 
 
-function dbTakeSnapshot($cmd) {
+function dbExecOSCommand($cmd) {
 
   // Execute a command, pass output to Array, success indicator
-  exec("sh -c 'echo $$; exec ".$cmd."'", $ls, $int);  
+  exec($cmd." & echo $!", $ls, $int);
+  return $ls;
 }
 
 
@@ -1594,7 +1595,7 @@ function selectSnapshotsList(){
 
 
 function RemoveTimestampPunct($TimeStamp) {
-  return str_replace(".", "", str_replace(":", "", str_replace("T", "", str_replace("-", "", $TimeStamp))));
+  return str_replace(".", "_", str_replace(":", "", str_replace("T", "_", str_replace("-", "", $TimeStamp))));
 }
 
 
@@ -1630,8 +1631,9 @@ function takeSnapshot() {
     $AppName = dbSelectCodelistRecord("system", "appname");
 
     // Build a base backup path, as shown on the Settings screen
-    $BackupPath = $path[0]["items"][0]["profilevalue"]."/".$AppName[items][0]["codedesc"]."/".$path[1]["items"][0]["profilevalue"]."/".$path[2]["items"][0]["profilevalue"]."/".$path[3]["items"][0]["profilevalue"];
-
+    $BackupBasePath = $path[0]["items"][0]["profilevalue"]."/".$AppName[items][0]["codedesc"]."/".$path[1]["items"][0]["profilevalue"]."/".$path[2]["items"][0]["profilevalue"]."/".$path[3]["items"][0]["profilevalue"];
+    $BackupCurrentPath = $BackupBasePath."/current";
+    
     // Create a record set for this snapshot, returns the record set (header and includes/excludes)
     $arr["snapshotrecords"] = dbCreateSnapshotRecords($ProfileId);
 
@@ -1643,7 +1645,14 @@ function takeSnapshot() {
       $InexArr = dbSelectRsyncExcludesIncludes($SnapshotId);
 
       // Remove all of the punctuation from the timestamp
-      $SnapshotTS = RemoveTimestampPunct($arr["snapshotrecords"]["snapshot"][0]["snaptime"]);
+      $TSdir = RemoveTimestampPunct($arr["snapshotrecords"]["snapshot"][0]["snaptime"]);
+      $BackupTSPath = $BackupBasePath."/".$TSdir;
+
+      // Append the backup path with the TimeStamp, and ensure that path exists
+      $mdcmd = "mkdir -p \"".$BackupTSPath."\"";    
+      $mdres = dbExecOSCommand($mdcmd);
+      $arr["md"]["cmd"] = $mdcmd;
+      $arr["md"]["res"] = $mdres;
      
       // Go through each snapshot path to include, and call rsync for it
       // To debug, feed back the command
@@ -1666,14 +1675,20 @@ function takeSnapshot() {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
 
           // Build it
-          $cmd = "rsync -aP \"".$inex."\" --link-dest=\"".$BackupPath."/current\" \"".$item["snapshotpath"]."\" \"".$BackupPath."/backup/".$SnapshotTS."\"";
+          $cmd = "rsync -aPq ".$inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$BackupTSPath."\"";
 
           // Call the OS command to take the snapshot
+          // sh -c 'echo $$; exec myCommand'
+          // ((yourcommand) & echo $! >/var/run/pidfile)
+          $rsync = dbExecOSCommand($cmd);  // Line 1307
 
         }
       }
-
-      // TODO CALL THE OS COMMAND TO TAKE THE SNAPSHOT
+      
+      // Remove the old symbolic link, and point a new one
+      $rmres = dbExecOSCommand("rm \"".$BackupCurrentPath."\"");
+      // Point a new Symbolic Link
+      $lnres = dbExecOSCommand("ln -s \"".$BackupTSPath."\" \"".$BackupCurrentPath."\"");
 
       $arr["result"] = "ok";
       $arr["message"] = "Snapshot underway!";
