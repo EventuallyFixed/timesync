@@ -1,15 +1,16 @@
 // app.js
 // Javascript for the application
 
-var includeFileBrowseDir;
-var includeType;
-var excludeFileBrowseDir;
-var excludeType;
-var saveToFileBrowseDir;
-var saveToType;
-var showHidden = 0;
+var BrowseSettings = new Object()
+BrowseSettings["includeFileBrowseDir"];
+BrowseSettings["includeType"];
+BrowseSettings["excludeFileBrowseDir"];
+BrowseSettings["excludeType"];
+BrowseSettings["savetoFileBrowseDir"];
+BrowseSettings["savetoType"] = "d";
+BrowseSettings["ShowHidden"] = 0;
 
-// OnLoad
+// OnLoadsaveto
 $(document).ready(function() {
 
   $("#homelink").click(function(){
@@ -345,9 +346,9 @@ $(document).ready(function() {
     // Fade in the includeaddfilebrowse
     $("#includeaddfilebrowse").fadeIn();
 
-    includeFileBrowseDir = "/shares";
-    includeType = "d";
-    getDirectoryContents("include", includeType, includeFileBrowseDir, "");
+    BrowseSettings["includeFileBrowseDir"] = "/shares";
+    BrowseSettings["includeType"] = "d";
+    getDirectoryContents("include", BrowseSettings["includeType"], BrowseSettings["includeFileBrowseDir"], "");
   });
 
 
@@ -362,9 +363,9 @@ $(document).ready(function() {
     // Fade in the includeaddfilebrowse
     $("#includeaddfilebrowse").fadeIn();
 
-    includeFileBrowseDir = "/shares";
-    includeType = "-";
-    getDirectoryContents("include", includeType, includeFileBrowseDir, "");
+    BrowseSettings["includeFileBrowseDir"] = "/shares";
+    BrowseSettings["includeType"] = "-";
+    getDirectoryContents("include", BrowseSettings["includeType"], BrowseSettings["includeFileBrowseDir"], "");
   });
 
 
@@ -378,7 +379,7 @@ $(document).ready(function() {
 
   // Click of Select in Include Files Browse
   $("#includeaddselect").click(function(){
-    var selFile = includeFileBrowseDir + "/" + $("#includeaddfilebrowse").find(".inclexclsel").attr("filename");
+    var selFile = BrowseSettings["includeFileBrowseDir"] + "/" + $("#includeaddfilebrowse").find(".inclexclsel").attr("filename");
     var selType = $("#includeaddfilebrowse").find(".inclexclsel").attr("filetype");
     $("#includeaddfilebrowse").css("display","none");
     $("#includefilescontainer").fadeIn();
@@ -435,9 +436,9 @@ $(document).ready(function() {
     // Fade in the excludeaddfilebrowse
     $("#excludeaddfilebrowse").fadeIn();
 
-    excludeFileBrowseDir = "/shares";
-    excludeType = "-";
-    getDirectoryContents("exclude", excludeType, excludeFileBrowseDir, "");
+    BrowseSettings["excludeFileBrowseDir"] = "/shares";
+    BrowseSettings["excludeType"] = "-";
+    getDirectoryContents("exclude", BrowseSettings["excludeType"], BrowseSettings["excludeFileBrowseDir"], "");
   });
 
 
@@ -451,15 +452,15 @@ $(document).ready(function() {
     // Fade in the excludeaddfilebrowse
     $("#excludeaddfilebrowse").fadeIn();
 
-    excludeFileBrowseDir = "/shares";
-    excludeType = "d";
-    getDirectoryContents("exclude", excludeType, excludeFileBrowseDir, "");
+    BrowseSettings["excludeFileBrowseDir"] = "/shares";
+    BrowseSettings["excludeType"] = "d";
+    getDirectoryContents("exclude", BrowseSettings["excludeType"], BrowseSettings["excludeFileBrowseDir"], "");
   });
 
 
   // Click of select in the exclude file browse
   $("#excludeaddselect").click(function(){
-    var selFile = excludeFileBrowseDir + "/" + $("#excludeaddfilebrowse").find(".inclexclsel").attr("filename");
+    var selFile = BrowseSettings["excludeFileBrowseDir"] + "/" + $("#excludeaddfilebrowse").find(".inclexclsel").attr("filename");
     var selType = $("#excludeaddfilebrowse").find(".inclexclsel").attr("filetype");
     $("#excludeaddfilebrowse").css("display","none");
     $("#excludefilescontainer").fadeIn();
@@ -816,7 +817,7 @@ function getDirectoryContents(actiontype, type, dir, sel){
   pdata.hid = 1;
   
   // Correct showHidden for the front browse
-  if (actiontype == "show") pdata.hid = showHidden
+  if (actiontype == "show") pdata.hid = BrowseSettings["ShowHidden"];
 
   // Get a description of what is being searched for
   var Bdesc = "Select "+getIncExcTypeDesc(type)+" to "+actiontype;
@@ -824,6 +825,8 @@ function getDirectoryContents(actiontype, type, dir, sel){
 
   // Ensure the body of the file browse is clear
   $("#"+actiontype+"filebrowsebody").find("div."+actiontype+"item").remove();
+  // Disable the Select button
+  $("#"+actiontype+"addselect").attr("disabled","disabled");
 
   // Provide feedback to the user
   var spinelt = createSpinner(actiontype+'filebrowsebody','');
@@ -839,23 +842,6 @@ function getDirectoryContents(actiontype, type, dir, sel){
       spinelt.remove();
       
       if (data.result == "ok") {
-        switch (actiontype) {
-          case "include":
-            includeFileBrowseDir = data.newdir;
-            break;
-          case "exclude":
-            excludeFileBrowseDir = data.newdir;
-            break;
-          case "saveto":
-            saveToFileBrowseDir = data.newdir;
-            break;
-          case "show":
-            $("#filedirinput").val(data.newdir);
-            break;
-          default:
-            console.log("Unknown actiontype: "+actiontype);
-        }
-              
         // Insert the item for 'Back'
         switch (actiontype) {
           case "include":
@@ -874,6 +860,13 @@ function getDirectoryContents(actiontype, type, dir, sel){
 
             // Insert the folder up / back icon, and location
             createFileLine("back", actiontype, "-", BackItem, $("#"+actiontype+"filebrowsebody"));
+
+            // Store where we now are
+            BrowseSettings[actiontype+"FileBrowseDir"] = data.newdir;
+            break;
+          case "show":
+            // Store where we now are
+            $("#filedirinput").val(data.newdir);
             break;
           default:
             console.log("Unknown actiontype: "+actiontype);
@@ -981,13 +974,9 @@ function createFileLine(i, actiontype, type, item, celt) {
       // Callback to get the directory listing
       switch (actiontype) {
         case "include":
-          getDirectoryContents(actiontype, type, includeFileBrowseDir, $(this).attr("filename"));
-          break;
         case "exclude":
-          getDirectoryContents(actiontype, type, excludeFileBrowseDir, $(this).attr("filename"));
-          break;
         case "saveto":
-          getDirectoryContents(actiontype, type, saveToFileBrowseDir, $(this).attr("filename"));
+          getDirectoryContents(actiontype, type, BrowseSettings[actiontype+"FileBrowseDir"], $(this).attr("filename"));
           break;
         case "show":
           getDirectoryContents(actiontype, type, $("#filedirinput").val(), $(this).attr("filename"));
@@ -1446,7 +1435,7 @@ $("#fileupbtn").click(function(){
 });
 // Toggle hidden files
 $("#filetogglehiddenbtn").click(function(){
-  if (showHidden == 0) showHidden = 1; else showHidden = 0;
+  if (BrowseSettings["ShowHidden"] == 0) BrowseSettings["ShowHidden"] = 1; else BrowseSettings["ShowHidden"] = 0;
   getDirectoryContents("show", "-", $("#filedirinput").val(), "");
 });
 // Restore
@@ -1520,13 +1509,13 @@ $("#savetobutton").click(function(){
   // Fade in the includeaddfilebrowse
   $("#savetofilebrowse").fadeIn();
 
-  saveToFileBrowseDir = $("#settingssaveto").val();
-  getDirectoryContents("saveto", saveToType, saveToFileBrowseDir, "");
+  BrowseSettings["savetoFileBrowseDir"] = $("#settingssaveto").val();
+  getDirectoryContents("saveto", BrowseSettings["savetoType"], BrowseSettings["savetoFileBrowseDir"], "");
 });
 
 $("#savetocancel").click(function(){
   // Remove the includefilescontainer
-  $("#settingssaveto").val(saveToFileBrowseDir);
+  $("#settingssaveto").val(BrowseSettings["savetoFileBrowseDir"]);
   // Hide the browse
   $("#savetofilebrowse").css("display","none");
   // Ensure the body of the file browse is clear
@@ -1537,10 +1526,10 @@ $("#savetocancel").click(function(){
 
 $("#savetoselect").click(function(){
   // Remove the includefilescontainer
-  var selFolder = saveToFileBrowseDir;
+  var selFolder = BrowseSettings["savetoFileBrowseDir"];
   if ($("#savetofilebrowsebody").find(".inclexclsel").length == 1) { 
-    selFolder = saveToFileBrowseDir + "/" + $("#savetofilebrowsebody").find(".inclexclsel").attr("filename");
-    saveToFileBrowseDir = selFolder;
+    selFolder = BrowseSettings["savetoFileBrowseDir"] + "/" + $("#savetofilebrowsebody").find(".inclexclsel").attr("filename");
+    BrowseSettings["savetoFileBrowseDir"] = selFolder;
   }
   // Set the input to the chosen one
   $("#settingssaveto").val(selFolder);
@@ -1559,7 +1548,7 @@ $("#savetoselect").click(function(){
 
 // Click of Select in Include Files Browse
 $("#includeaddselect").click(function(){
-  var selFile = includeFileBrowseDir + "/" + $("#includeaddfilebrowse").find(".inclexclsel").attr("filename");
+  var selFile = BrowseSettings["includeFileBrowseDir"] + "/" + $("#includeaddfilebrowse").find(".inclexclsel").attr("filename");
   var selType = $("#includeaddfilebrowse").find(".inclexclsel").attr("filetype");
   $("#includeaddfilebrowse").css("display","none");
   $("#includefilescontainer").fadeIn();
