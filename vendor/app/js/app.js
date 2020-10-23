@@ -710,6 +710,11 @@ $(document).ready(function() {
     setScheduleMonthlyDaySelectLabel();
   });
 
+  $("#snapshotsmenurefresh").click(function(){
+    // Run GetSideMenu
+    GetSideMenu();
+  });
+
   Init();
 
 }); // Page Ready
@@ -1418,7 +1423,7 @@ function BuildSideMenu(data) {
     else $("#snapshotname").removeAttr("readonly");
   });
   $("#snapshotsmenu0").trigger("click");
-}
+}  // BuildSideMenu
 
 
 $("#snapshotname").change(function(){
@@ -1468,30 +1473,6 @@ $("#topmenulogs").click(function(){
 $("#topmenuabout").click(function(){
   $('.contentsection').css('display','none');
   $('#aboutsection').fadeIn();
-});
-
-
-// Snapshot Toolbar
-
-
-
-// Refresh Snapshots List
-$("#snapshotrefreshbtn").click(function(){
-  GetSideMenu();
-});
-
-
-// View Snapshot Log
-$("#snapshotlogbtn").click(function(){
-  alert('View Snapshot Log');
-});
-// View Last Log
-$("#snapshotlastlogbtnbtn").click(function(){
-  alert('View Last Log');
-});
-// Help
-$("#snapshothelpbtn").click(function(){
-  alert('Help');
 });
 
 
@@ -1562,11 +1543,6 @@ $("#snapshotid").change(function(){
 $("#filedirinput").change(function(){
   var items = getDirectoryContents("show", "-", $("#filedirinput").val(), "");
 });
-
-$("#snapshotsheadingnav").click(function(){
-  $("#topmenusnapshots").trigger("click");
-});
-
 
 $("#savetobutton").click(function(){
   // Remove the includefilescontainer

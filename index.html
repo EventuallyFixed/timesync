@@ -33,11 +33,13 @@
     <div class="bg-light border-right" id="sidebar-wrapper">
       <div class="sidebar-heading">TimeSync</div>
       <div id="snapshotssidemenu" class="list-group list-group-flush">
-        <nav id="snapshotsheadingnav" class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading"><div id="snapshotsheading">Snapshots</div>  
+        <nav id="snapshotsheadingnav">
+          <div id="snapshotsheading" class="list-group-item list-group-item-action bg-light">Snapshots
+            <div id="snapshotsmenurefresh" class="snapshotsmenurefresh" title="Refresh Snapshots List">
+              <span class="iconify" data-icon="mdi-refresh" data-inline="false"></span>
+            </div>
+          </div>
         </nav>
-<!--
-        <a id="snapshotsmenu" href="#" class="list-group-item list-group-item-action bg-light">Snapshots</a>
--->
       </div>
     </div>
     <!-- /#sidebar-wrapper -->
@@ -74,14 +76,6 @@
       <div class="container-fluid">
         <div class="contentsection" id="snapshotsection" style="display: block;">
           <h1 class="mt-4">Snapshots</h1>
-          <div class="row">
-            <nav class="bg-light col-12 apptoolbar" id="snapshottoolbar">
-<!--              <img id="snapshotnewbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/document-save_btn.svg" alt="New Snapshot" title="Take a new Snapshot" /> -->
-              <img id="snapshotrefreshbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/view-refresh_btn.svg" alt="Refresh Snapshots List" title="Refresh Snapshot List" />
-              <img id="snapshotlogbtn" class="toolbarbtn snapdisabled" src="vendor/app/img/maintoolbar/text-plain_btn.svg" alt="View Snapshot Log" title="View Snapshot Log" />
-              <img id="snapshotlastlogbtnbtn" class="toolbarbtn" src="vendor/app/img/maintoolbar/document-new_btn.svg" alt="View Last Log" title="View Last Log" />
-            </nav>
-          </div>
           <div class="row">
             <label class="appinputlabel" for="snapshotname">Snapshot Name:</label>
             <input id="snapshotname" class="form-control appinput" type="text" placeholder="Key in snapshot name" />
