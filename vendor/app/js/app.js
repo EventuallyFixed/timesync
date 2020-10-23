@@ -1264,30 +1264,84 @@ function BuildSideMenu(data) {
   // Remove all options from the menu (#snapshotssidemenu)
   $("#snapshotssidemenu").find("a").remove();
   $(".snapdisabled").attr("disabled","disabled");
+
   // Add the 'Now' menu
-  $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu0").attr("snapid","0").attr("snapdate","Now").text("Now").appendTo("#snapshotssidemenu");
+  var ndiv = $("<div/>").appendTo("#snapshotssidemenu");
+  var nlnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenunow").appendTo(ndiv);
+  // New Snapshot icon
+  var nelt = $("<div/>").addClass("snapshotsmenudel").attr("id","snapshotnewbtn").attr("title","Take a new Snapshot");
+  var newelt = $("<span/>").addClass("iconify").attr("id","snapshotsnew_0").attr("data-icon","mdi-arrow-down-bold-box-outline").appendTo(nelt);
+
+  // Set the bin
+  nlnk.html(nelt).html("Now"+nlnk.html());
+
   // Add the Snapshot entry menus
   if (data.length > 0) {
     $.each(data, function (i, item) {
       var sdate = new Date(item.snaptime);  // UTC from server
-      var iconName = "mdi-delete-outline";
       var snapText = sdate.toLocaleString();
 
-      var elt0 = $("<div/>").appendTo("#snapshotssidemenu");
-      var nlnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).attr("snapdate",sdate.toLocaleString()).appendTo(elt0);
-      // Del Elements
-      var elt1 = $("<div/>").addClass("snapshotsmenudel").attr("snapid",item.id);
-      var delelt = $("<span/>").addClass("iconify").attr("id","snapshotsdel_"+item.id).attr("data-icon",iconName).appendTo(elt1);
+      var sdiv = $("<div/>").appendTo("#snapshotssidemenu");
+      var slnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).appendTo(sdiv);
 
-      // Set the bin
-      nlnk.html(elt1);
+      var delt = $("<div/>").addClass("snapshotsmenudel");
+      if (item.candel==1) {
+        // Del Element
+        delt.attr("snapid",item.id).attr("title","Delete this Snapshot");
+        var delelt = $("<span/>").addClass("iconify").attr("id","snapshotsdel_"+item.id).attr("data-icon","mdi-delete-outline").appendTo(delt);
+        // Set the bin
+        slnk.html(delt);
+      }
+
+      // Log Element
+      var lelt = $("<div/>").addClass("snapshotsmenulog").attr("snapid",item.id).attr("title","View Snapshot Log");
+      var logelt = $("<span/>").addClass("iconify").attr("id","snapshotslog_"+item.id).attr("data-icon","mdi-book-search").appendTo(lelt);
+
       // Add the text before the bin
-      nlnk.html(snapText+nlnk.html());
+      slnk.html(snapText+lelt.prop("outerHTML")+delt.prop("outerHTML"));
       // Add the name after the bin, on a new line
-      if (item.snapdesc) nlnk.html(nlnk.html()+"<br/>"+item.snapdesc);
+      if (item.snapdesc) slnk.html(slnk.html()+"<br/>"+item.snapdesc);
     });
   }
-  $(".snapshotsmenudel").click(function(){
+
+  // Apply Triggers
+  // Take Snapshot
+  $("#snapshotnewbtn").click(function(){
+    event.stopPropagation();
+
+    // Request a new snapshot to be taken
+    var pdata = new Object();
+    pdata.fn = "takenewsnapshot";
+    pdata.profileid = $('#selectprofile').val();
+
+    // Provide feedback to the user
+    var spinelt = createSpinner('snapshotssidemenu','large');
+    spinelt.css('top','100px');
+    spinelt.css('left','50px');
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+        spinelt.remove();
+
+        if (data.result == "ok") BuildSideMenu(data.snaplist.items);
+        else alert(data.message);
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+        spinelt.remove();
+      }
+    });
+  });
+
+  // Any of this class with the snapid attribute set
+  $(".snapshotsmenudel[snapid]").click(function(){
+    event.stopPropagation();
+
     var pdata = new Object();
     pdata.fn = "deletesnapshot";
     pdata.snapshotid = $(this).attr("snapid");
@@ -1315,6 +1369,41 @@ function BuildSideMenu(data) {
       }
     });
   });
+
+  // Trigger for Log File
+  $(".snapshotsmenulog").click(function(){
+    event.stopPropagation();
+
+    var pdata = new Object();
+    pdata.fn = "showsnapshotlog";
+    pdata.snapshotid = $(this).attr("snapid");
+
+    // Provide feedback to the user
+    var spinelt = createSpinner('snapshotssidemenu','large');
+    spinelt.css('top','100px');
+    spinelt.css('left','50px');
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+        spinelt.remove();
+
+//        if (data.result == "ok") BuildSideMenu(data.snaplist.items);
+//        else alert(data.message);
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+        spinelt.remove();
+      }
+    });
+  });
+
+
+  // Click on the rest of the menu link
   $(".snapshotsmenu").click(function(){
     item = $(this);
     // Ensure we're flicked to the Snapshots page
@@ -1383,37 +1472,7 @@ $("#topmenuabout").click(function(){
 
 
 // Snapshot Toolbar
-// Take Snapshot
-$("#snapshotnewbtn").click(function(){
 
-  // Request a new snapshot to be taken
-  var pdata = new Object();
-  pdata.fn = "takenewsnapshot";
-  pdata.profileid = $('#selectprofile').val();
-
-  // Provide feedback to the user
-  var spinelt = createSpinner('snapshotssidemenu','large');
-  spinelt.css('top','100px');
-  spinelt.css('left','50px');
-
-  $.ajax('./vendor/app/php/app.php',
-  {
-    dataType: 'json',
-    type: 'POST',
-    data: pdata,
-    success: function (data,status,xhr) {
-      console.log(data);
-      spinelt.remove();
-
-      if (data.result == "ok") BuildSideMenu(data.snaplist.items);
-      else alert(data.message);
-    },
-    error: function (jqXhr, textStatus, errorMessage) {
-      console.log('Error: ' + errorMessage);
-      spinelt.remove();
-    }
-  });
-});
 
 
 // Refresh Snapshots List

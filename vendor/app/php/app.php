@@ -861,6 +861,18 @@ function dbSelectSnapshotsList($ProfileId) {
 
   $rtn = array();
 
+  // Check for the "Don't Remove Named Snapshots" option being set
+  $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdontremovenamed");
+
+  $DontDelNamed = 0;
+  // No record here = checkbox unset
+  // Record exists and is set
+  if (count($chk["items"]) > 0) {
+    if ($chk["items"][0]["profilevalue"] == "1") {
+      $DontDelNamed = 1;
+    }
+  }
+
   $db = new MyDB();
   if(!$db) {
     $rtn["result"] = "ko";
@@ -877,6 +889,8 @@ function dbSelectSnapshotsList($ProfileId) {
     else {
       $rtn["items"] = array();
       while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        if ($DontDelNamed == 1 && !empty($row["snapdesc"])) $row["candel"] = 0;
+        else $row["candel"] = 1;
         array_push($rtn["items"], $row);
       }
       $rtn["result"] = "ok";
