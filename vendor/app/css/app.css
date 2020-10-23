@@ -20,6 +20,11 @@
 .snapdarkheading { background-color: darkgray; }
 #snapshotsheadingnav { cursor: pointer; }
 #snapshotname { width: 80%; margin: 2px 0px 2px 2px; }
+.snapshotsmenudel {
+  z-index: 10;
+  margin-top: 5px;
+  float: right;  
+}
 
 /* Shortcuts & Files container */
 .appcontainer { padding: 0px; margin: 1px; border: 1px solid gray; }

@@ -1270,11 +1270,51 @@ function BuildSideMenu(data) {
   if (data.length > 0) {
     $.each(data, function (i, item) {
       var sdate = new Date(item.snaptime);  // UTC from server
+      var iconName = "mdi-delete-outline";
       var snapText = sdate.toLocaleString();
-      if (item.snapdesc) { snapText = snapText + "<br/>" + item.snapdesc; }
-      $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).attr("snapdate",sdate.toLocaleString()).html(snapText).appendTo("#snapshotssidemenu");
+
+      var elt0 = $("<div/>").appendTo("#snapshotssidemenu");
+      var nlnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).attr("snapdate",sdate.toLocaleString()).appendTo(elt0);
+      // Del Elements
+      var elt1 = $("<div/>").addClass("snapshotsmenudel").attr("snapid",item.id);
+      var delelt = $("<span/>").addClass("iconify").attr("id","snapshotsdel_"+item.id).attr("data-icon",iconName).appendTo(elt1);
+
+      // Set the bin
+      nlnk.html(elt1);
+      // Add the text before the bin
+      nlnk.html(snapText+nlnk.html());
+      // Add the name after the bin, on a new line
+      if (item.snapdesc) nlnk.html(nlnk.html()+"<br/>"+item.snapdesc);
     });
   }
+  $(".snapshotsmenudel").click(function(){
+    var pdata = new Object();
+    pdata.fn = "deletesnapshot";
+    pdata.snapshotid = $(this).attr("snapid");
+
+    // Provide feedback to the user
+    var spinelt = createSpinner('snapshotssidemenu','large');
+    spinelt.css('top','100px');
+    spinelt.css('left','50px');
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+        spinelt.remove();
+
+        if (data.result == "ok") BuildSideMenu(data.snaplist.items);
+        else alert(data.message);
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+        spinelt.remove();
+      }
+    });
+  });
   $(".snapshotsmenu").click(function(){
     item = $(this);
     // Ensure we're flicked to the Snapshots page
@@ -1284,7 +1324,7 @@ function BuildSideMenu(data) {
     $("#snapshotname").val(item.attr("snapdesc"));
     $("#snapshotname").attr("placeholder",item.attr("snapdate"));
     $("#snapshotname").removeAttr("readonly");
-    
+
     if (item.attr("id") == "snapshotsmenu0") $("#snapshotname").val("").attr("readonly", "readonly"); 
     else $("#snapshotname").removeAttr("readonly");
   });
@@ -1382,38 +1422,6 @@ $("#snapshotrefreshbtn").click(function(){
 });
 
 
-// Remove Snapshot
-$("#snapshotremovebtn").click(function(){
-  // Request a new snapshot to be taken
-  var pdata = new Object();
-  pdata.fn = "deletesnapshot";
-  pdata.snapshotid = $('#snapshotid').val();
-
-  // Provide feedback to the user
-  var spinelt = createSpinner('snapshotssidemenu','large');
-  spinelt.css('top','100px');
-  spinelt.css('left','50px');
-
-  $.ajax('./vendor/app/php/app.php',
-  {
-    dataType: 'json',
-    type: 'POST',
-    data: pdata,
-    success: function (data,status,xhr) {
-      console.log(data);
-      spinelt.remove();
-
-      if (data.result == "ok") BuildSideMenu(data.snaplist.items);
-      else alert(data.message);
-    },
-    error: function (jqXhr, textStatus, errorMessage) {
-      console.log('Error: ' + errorMessage);
-      spinelt.remove();
-    }
-  });
-});
-
-
 // View Snapshot Log
 $("#snapshotlogbtn").click(function(){
   alert('View Snapshot Log');
@@ -1421,10 +1429,6 @@ $("#snapshotlogbtn").click(function(){
 // View Last Log
 $("#snapshotlastlogbtnbtn").click(function(){
   alert('View Last Log');
-});
-// Settings
-$("#snapshotsettingsbtn").click(function(){
-  $("#topmenusettings").trigger("click");
 });
 // Help
 $("#snapshothelpbtn").click(function(){
