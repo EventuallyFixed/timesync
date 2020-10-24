@@ -10,6 +10,7 @@ BrowseSettings["savetoFileBrowseDir"];
 BrowseSettings["savetoType"] = "d";
 BrowseSettings["ShowHidden"] = 0;
 var init = true;
+var snapshotid = "";
 
 // OnLoadsaveto
 $(document).ready(function() {
@@ -377,7 +378,13 @@ $(document).ready(function() {
 
     BrowseSettings["includeFileBrowseDir"] = "/shares";
     BrowseSettings["includeType"] = "d";
-    getDirectoryContents("include", BrowseSettings["includeType"], BrowseSettings["includeFileBrowseDir"], "");
+
+    var inObj = new Object();
+    inObj.browseType = "include";
+    inObj.selType = BrowseSettings["includeType"];
+    inObj.selDir = BrowseSettings["includeFileBrowseDir"];
+    inObj.newDir = "";
+    getDirectoryContents(inObj);
   });
 
 
@@ -394,7 +401,13 @@ $(document).ready(function() {
 
     BrowseSettings["includeFileBrowseDir"] = "/shares";
     BrowseSettings["includeType"] = "-";
-    getDirectoryContents("include", BrowseSettings["includeType"], BrowseSettings["includeFileBrowseDir"], "");
+
+    var inObj = new Object();
+    inObj.browseType = "include";
+    inObj.selType = BrowseSettings["includeType"];
+    inObj.selDir = BrowseSettings["includeFileBrowseDir"];
+    inObj.newDir = "";
+    getDirectoryContents(inObj);
   });
 
 
@@ -467,7 +480,13 @@ $(document).ready(function() {
 
     BrowseSettings["excludeFileBrowseDir"] = "/shares";
     BrowseSettings["excludeType"] = "-";
-    getDirectoryContents("exclude", BrowseSettings["excludeType"], BrowseSettings["excludeFileBrowseDir"], "");
+    
+    var inObj = new Object();
+    inObj.browseType = "exclude";
+    inObj.selType = BrowseSettings["excludeType"];
+    inObj.selDir = BrowseSettings["excludeFileBrowseDir"];
+    inObj.newDir = "";
+    getDirectoryContents(inObj);
   });
 
 
@@ -483,7 +502,13 @@ $(document).ready(function() {
 
     BrowseSettings["excludeFileBrowseDir"] = "/shares";
     BrowseSettings["excludeType"] = "d";
-    getDirectoryContents("exclude", BrowseSettings["excludeType"], BrowseSettings["excludeFileBrowseDir"], "");
+    
+    var inObj = new Object();
+    inObj.browseType = "exclude";
+    inObj.selType = BrowseSettings["excludeType"];
+    inObj.selDir = BrowseSettings["excludeFileBrowseDir"];
+    inObj.newDir = "";
+    getDirectoryContents(inObj);
   });
 
 
@@ -836,34 +861,35 @@ function getIncExcTypeDesc(type) {
 }
 
 
-function getDirectoryContents(actiontype, type, dir, sel){
+function getDirectoryContents(inObj){
 
-  // actiontype = 'include/exclude/show'
-  // type       = 'd/-' (directory/file)
-  // dir        = 'directory'
-  // sel        = change to dir (or blank for current)
+  // inObj.browseType = Type of browse (show, include, exclude, saveto)
+  // inObj.selType    = Type of file (d, l, -)
+  // inObj.selDir     = Current directory
+  // inObj.newDir     = Directory clicked, or blank
 
+  // Build the callback object
   var pdata = new Object();
   pdata.fn = "getdirectorycontents";
-  pdata.type = type;
-  pdata.dir = dir;
-  pdata.sel = sel;
+  pdata.type = inObj.selType;
+  pdata.dir = inObj.selDir;
+  pdata.sel = inObj.newDir;
   pdata.hid = 1;
-  
+
   // Correct showHidden for the front browse
-  if (actiontype == "show") pdata.hid = BrowseSettings["ShowHidden"];
+  if (inObj.browseType == "show") pdata.hid = BrowseSettings["ShowHidden"];
 
   // Get a description of what is being searched for
-  var Bdesc = "Select "+getIncExcTypeDesc(type)+" to "+actiontype;
-  $("#"+actiontype+"addfilebrowse").find("nav").text(Bdesc);
+  var Bdesc = "Select "+getIncExcTypeDesc(inObj.selType)+" to "+inObj.browseType;
+  $("#"+inObj.browseType+"addfilebrowse").find("nav").text(Bdesc);
 
   // Ensure the body of the file browse is clear
-  $("#"+actiontype+"filebrowsebody").find("div."+actiontype+"item").remove();
+  $("#"+inObj.browseType+"filebrowsebody").find("div."+inObj.browseType+"item").remove();
   // Disable the Select button
-  $("#"+actiontype+"addselect").attr("disabled","disabled");
+  $("#"+inObj.browseType+"addselect").attr("disabled","disabled");
 
   // Provide feedback to the user
-  var spinelt = createSpinner(actiontype+'filebrowsebody','');
+  var spinelt = createSpinner(inObj.browseType+'filebrowsebody','');
 
   $.ajax('./vendor/app/php/app.php',
   {
@@ -874,15 +900,15 @@ function getDirectoryContents(actiontype, type, dir, sel){
       console.log(data);
 
       spinelt.remove();
-      
+
       if (data.result == "ok") {
         // Insert the item for 'Back'
-        switch (actiontype) {
+        switch (inObj.browseType) {
           case "include":
           case "exclude":
           case "saveto":
             // Fill in the new location
-            $("#"+actiontype+"addfilelocation").text(data.newdir);
+            $("#"+inObj.browseType+"addfilelocation").text(data.newdir);
 
             // Create an item for the back/up button
             var BackItem = new Object();
@@ -893,22 +919,22 @@ function getDirectoryContents(actiontype, type, dir, sel){
             BackItem.filetype = "back";
 
             // Insert the folder up / back icon, and location
-            createFileLine("back", actiontype, "d", BackItem, $("#"+actiontype+"filebrowsebody"));
+            createFileLine("back", inObj.browseType, "d", BackItem, $("#"+inObj.browseType+"filebrowsebody"));
 
             // Store where we now are
-            BrowseSettings[actiontype+"FileBrowseDir"] = data.newdir;
+            BrowseSettings[inObj.browseType+"FileBrowseDir"] = data.newdir;
             break;
           case "show":
             // Store where we now are
             $("#filedirinput").val(data.newdir);
             break;
           default:
-            console.log("Unknown actiontype: "+actiontype);
+            console.log("Unknown inObj.browseType: "+inObj.browseType);
         }
 
         // Draw the returned contents
         $.each(data.items, function (i, item) {
-          createFileLine(i, actiontype, type, item, $("#"+actiontype+"filebrowsebody"));
+          createFileLine(i, inObj.browseType, inObj.selType, item, $("#"+inObj.browseType+"filebrowsebody"));
         });
       }
       else {
@@ -923,6 +949,7 @@ function getDirectoryContents(actiontype, type, dir, sel){
     }
   });
 }
+
 
 function removeTriggerClass(tclass) {
   // Temporarily remove the 'tclass' class from the element
@@ -1000,6 +1027,8 @@ function createFileLine(i, actiontype, type, item, celt) {
           $("#"+actiontype+"addselect").attr("disabled","disabled");
         }
         break;
+      case "show":
+        break;
       default:
         console.log("Unknown actiontype: "+actiontype);
     }
@@ -1010,14 +1039,23 @@ function createFileLine(i, actiontype, type, item, celt) {
     // You can't drill down into a file
     if ($(this).attr("filetype") != "-") {
       // Callback to get the directory listing
+      var inObj = new Object();
       switch (actiontype) {
         case "include":
         case "exclude":
         case "saveto":
-          getDirectoryContents(actiontype, type, BrowseSettings[actiontype+"FileBrowseDir"], $(this).attr("filename"));
+          inObj.browseType = actiontype;
+          inObj.selType = type;
+          inObj.selDir = BrowseSettings[actiontype+"FileBrowseDir"];
+          inObj.newDir = $(this).attr("filename");
+          getDirectoryContents(inObj);
           break;
         case "show":
-          getDirectoryContents(actiontype, type, $("#filedirinput").val(), $(this).attr("filename"));
+          inObj.browseType = actiontype;
+          inObj.selType = type;
+          inObj.selDir = $("#filedirinput").val();
+          inObj.newDir = $(this).attr("filename");
+          getDirectoryContents(inObj);
           break;
         default:
           console.log("Unknown actiontype: "+actiontype);
@@ -1303,7 +1341,7 @@ function BuildSideMenu(data) {
 
   // Add the 'Now' menu
   var ndiv = $("<div/>").appendTo("#snapshotssidemenu");
-  var nlnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenunow").appendTo(ndiv);
+  var nlnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenunow").attr("snapid","now").appendTo(ndiv);
   // New Snapshot icon
   var nelt = $("<div/>").addClass("snapshotsmenudel").attr("id","snapshotnewbtn").attr("title","Take a new Snapshot");
   var newelt = $("<span/>").addClass("iconify").attr("id","snapshotsnew_0").attr("data-icon","mdi-arrow-down-bold-box-outline").appendTo(nelt);
@@ -1443,12 +1481,85 @@ function BuildSideMenu(data) {
     item = $(this);
     // Ensure we're flicked to the Snapshots page
     if ($("#snapshotsection").css("display") == "none") $("#topmenusnapshots").trigger("click");
-    // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
-    $("#snapshotid").val(item.attr("snapid"));
+    // Set the snapshotid variable, for the snapshot name change to use
+    snapshotid = item.attr("snapid");
+
+    // Show the directory of the snapshot, or of the current state if now.
+    if (snapshotid == "now") {
+      
+    }
+    else {
+      // Return the backup folders of the selected snapshot
+      // Click on the backup folder to show the snapshotted files
+
+      // Callback to get the backup folder, and initial directory files 
+      var pdata = new Object();
+      pdata.fn = "selectsnapshotdata";
+      pdata.snapshotid = snapshotid;
+      
+      // Provide feedback to the user
+      var spinelt = createSpinner('snapshotssidemenu','large');
+      spinelt.css('top','100px');
+      spinelt.css('left','50px');
+
+      $.ajax('./vendor/app/php/app.php',
+      {
+        dataType: 'json',
+        type: 'POST',
+        data: pdata,
+        success: function (data,status,xhr) {
+          console.log(data);
+          spinelt.remove();
+
+          // Remove current items here
+          clearIncludeExcludeItemsBrowse("snapdirs");
+
+          // Clear then rebuild the Profile Path (include directories)
+          var c = 0;
+          var actiontype = "snapdirs";
+          $.each(data.snapshot.paths.items, function (i, item) {        
+            if (item.snapinclexcl == "include" && item.snaptype == "d") {
+              console.log("Item: "+item.snappath);  // This Works
+              // Create the kind of object expected by the receiving function
+              var diritem = new Object();
+              diritem.setid   = item.id;
+              diritem.settype = item.snaptype;
+              diritem.setkey  = item.snapinclexcl;
+              diritem.setval  = item.snappath;
+              // Insert the row
+              var cdiv = insertIncludeExcludeRow(c, actiontype, diritem)
+              c = c + 1;
+
+              // Add trigger
+              $(cdiv).click(function() {
+                // Get the id of the currently selected item using the class name
+                var selid = $("#"+actiontype+"filescontainer").find(".inclexclsel").attr("id");
+                // Get all items in the area with the 'inclexclsel' class, and remove that class
+                clearSnapShortcutsSel();
+
+                // Set the value of the file browse bar, if it is a folder, and trigger a refresh of the files area
+                if (item.settype == "d") {
+                  $("#filedirinput").val(item.setval);
+                  $(this).addClass("inclexclsel");
+                  $("#filedirinput").trigger("change");
+                }
+              });
+              
+            }
+          });
+        },
+        error: function (jqXhr, textStatus, errorMessage) {
+          console.log('Error: ' + errorMessage);
+          spinelt.remove();
+        }
+      });
+    }
+
+
     $("#snapshotname").val(item.attr("snapdesc"));
     $("#snapshotname").attr("placeholder",item.attr("snapdate"));
     $("#snapshotname").removeAttr("readonly");
-
+    // Set the Snapshot description read-only as required
     if (item.attr("id") == "snapshotsmenunow") $("#snapshotname").val("").attr("readonly", "readonly"); 
     else $("#snapshotname").removeAttr("readonly");
   });
@@ -1460,7 +1571,7 @@ $("#snapshotname").change(function(){
   // Callback to register the change of name
   var pdata = new Object();
   pdata.fn = "updatesnapshotname";
-  pdata.snapshotid = $("#snapshotid").val();
+  pdata.snapshotid = snapshotid;
   pdata.snapshotname = $("#snapshotname").val();
 
   // Provide feedback to the user
@@ -1509,12 +1620,22 @@ $("#topmenuabout").click(function(){
 // Files Toolbar
 // Up
 $("#fileupbtn").click(function(){
-  getDirectoryContents("show", "-", $("#filedirinput").val(), "..");
+  var inObj = new Object();
+  inObj.browseType = "show";
+  inObj.selType = "-";
+  inObj.selDir = $("#filedirinput").val();
+  inObj.newDir = "..";
+  getDirectoryContents(inObj);
 });
 // Toggle hidden files
 $("#filetogglehiddenbtn").click(function(){
   if (BrowseSettings["ShowHidden"] == 0) BrowseSettings["ShowHidden"] = 1; else BrowseSettings["ShowHidden"] = 0;
-  getDirectoryContents("show", "-", $("#filedirinput").val(), "");
+  var inObj = new Object();
+  inObj.browseType = "show";
+  inObj.selType = "-";
+  inObj.selDir = $("#filedirinput").val();
+  inObj.newDir = "";
+  getDirectoryContents(inObj);
 });
 // Restore
 $("#filerestorebtn").click(function(){
@@ -1565,13 +1686,14 @@ function clearSnapShortcutsSel(){
   });  
 }
 
-$("#snapshotid").change(function(){
-  // Callback to get the snapshot paths and contents
-  console.log('Snapshot path for snapshot id: '+$("#snapshotid").val());
-});
 
 $("#filedirinput").change(function(){
-  var items = getDirectoryContents("show", "-", $("#filedirinput").val(), "");
+  var inObj = new Object();
+  inObj.browseType = "show";
+  inObj.selType = "-";
+  inObj.selDir = $("#filedirinput").val();
+  inObj.newDir = "";
+  getDirectoryContents(inObj);
 });
 
 $("#savetobutton").click(function(){
@@ -1583,7 +1705,12 @@ $("#savetobutton").click(function(){
   $("#savetofilebrowse").fadeIn();
 
   BrowseSettings["savetoFileBrowseDir"] = $("#settingssaveto").val();
-  getDirectoryContents("saveto", BrowseSettings["savetoType"], BrowseSettings["savetoFileBrowseDir"], "");
+  var inObj = new Object();
+  inObj.browseType = "saveto";
+  inObj.selType = BrowseSettings["savetoType"];
+  inObj.selDir = BrowseSettings["savetoFileBrowseDir"];
+  inObj.newDir = "";
+  getDirectoryContents(inObj);
 });
 
 $("#savetocancel").click(function(){

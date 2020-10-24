@@ -944,7 +944,7 @@ function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
     $rtn["items"] = array();
   } else {
     // Get the snapshot
-    $rows = $db->query("SELECT id, snapshotid snapid, snapshotpath snappath FROM snapshotpaths WHERE snapshotid = ".$SnapshotId.";");
+    $rows = $db->query("SELECT id, snapshotid snapid, snapshotpath snappath, snapshotinclexcl snapinclexcl, snapshotpathtype snaptype FROM snapshotpaths WHERE snapshotid = ".$SnapshotId.";");
     if (!$rows) {
       $rtn["result"] = "ko";
       $rtn["message"] = $db->lastErrorMsg();
@@ -1826,6 +1826,20 @@ function updateSnapshotName(){
 }
 
 
+function selectSnapshotData() {
+
+  $rtn = array();
+  $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
+
+  // Get the Snapshot backup paths
+  $rtn["snapshot"] = dbSelectSnapshotForId($SnapshotId);
+
+  // Get the initial directory listing of the first snapshot backup path
+  
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
 function writeErrorMsg() {
   echo "{ \"result\" : \"Sin dinero, sin esquí!\" }";
 }
@@ -1905,6 +1919,9 @@ switch ($WhatToRun) {
     break;
   case "updatesnapshotname":
     updateSnapshotName();
+    break;
+  case "selectsnapshotdata":
+    selectSnapshotData();
     break;
   default:
     writeErrorMsg();
