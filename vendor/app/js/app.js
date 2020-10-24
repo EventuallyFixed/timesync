@@ -136,7 +136,14 @@ $(document).ready(function() {
         var actiontype = "show";
         if (data.showfiles.length > 0) {
           $.each(data.showfiles, function (i, item) {
-            createFileLine(i, actiontype, "-", item, $("#"+actiontype+"filebrowsebody"));
+            FLine = new Object();
+            FLine.cnt = i;
+            FLine.actionType = actiontype;
+            FLine.fileType = "-";
+            FLine.item = item;
+            FLine.celt = $("#"+actiontype+"filebrowsebody");
+            // Insert the folder up / back icon, and location
+            createFileLine(FLine);
           });
         }
 
@@ -918,8 +925,15 @@ function getDirectoryContents(inObj){
             BackItem.filesize = "";
             BackItem.filetype = "back";
 
+            // Input object for createFileLine
+            FLine = new Object();
+            FLine.cnt = "back";
+            FLine.actionType = inObj.browseType;
+            FLine.fileType = "d";
+            FLine.item = BackItem;
+            FLine.celt = $("#"+inObj.browseType+"filebrowsebody");
             // Insert the folder up / back icon, and location
-            createFileLine("back", inObj.browseType, "d", BackItem, $("#"+inObj.browseType+"filebrowsebody"));
+            createFileLine(FLine);
 
             // Store where we now are
             BrowseSettings[inObj.browseType+"FileBrowseDir"] = data.newdir;
@@ -934,7 +948,14 @@ function getDirectoryContents(inObj){
 
         // Draw the returned contents
         $.each(data.items, function (i, item) {
-          createFileLine(i, inObj.browseType, inObj.selType, item, $("#"+inObj.browseType+"filebrowsebody"));
+          // Input object for createFileLine
+          FLine = new Object();
+          FLine.cnt = i;
+          FLine.actionType = inObj.browseType;
+          FLine.fileType = inObj.selType;
+          FLine.item = item;
+          FLine.celt = $("#"+inObj.browseType+"filebrowsebody");
+          createFileLine(FLine);
         });
       }
       else {
@@ -951,44 +972,35 @@ function getDirectoryContents(inObj){
 }
 
 
-function removeTriggerClass(tclass) {
-  // Temporarily remove the 'tclass' class from the element
-  var tclass_elts = $("."+tclass);
-  tclass_elts.each(function(i, elt){
-    $(elt).removeClass(tclass);
-  });
-  return tclass_elts;
-}
-
-function addTriggerClass(tclass_elts, tclass) {
-  // Reinstate the 'scheduleupd' class to the element
-  tclass_elts.each(function(i, elt){
-    $(elt).addClass(tclass);
-  });
-}
-
 // Draw the divs for the contents - used only for Show Browse in front screen
-function createFileLine(i, actiontype, type, item, celt) {
+function createFileLine(FLine) {
 
-  var iconName = getFileIcon(item.filetype);
-  
+  // Input object for createFileLine
+  // FLine.cnt = counter
+  // FLine.actionType = Action Type (include / exclude / show / saveto)
+  // FLine.fileType = File Type (d/l/-)
+  // FLine.item = File item object
+  // FLine.celt = Containing Element
+
+  var iconName = getFileIcon(FLine.item.filetype);
+
   var stripeclass = "stripeodd";
-  if (i % 2 == 0) stripeclass = "stripeeven";
+  if (FLine.cnt % 2 == 0) stripeclass = "stripeeven";
 
-  var rowelt = $("<div/>").addClass("row snaprow "+actiontype+"item "+stripeclass).attr("id","file_"+item.id).attr("filetype",item.filetype.toLowerCase()).attr("filename",item.filename);
-  var fncelt = $("<span/>").attr("id","fnamecont_"+item.id).addClass("col-6 showitemfile").appendTo(rowelt);
-  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.id).attr("data-icon",iconName).appendTo(fncelt);
-  var namelt = $("<span/>").attr("id","name_"+item.id).text(item.filename).appendTo(fncelt);
-  
+  var rowelt = $("<div/>").addClass("row snaprow "+FLine.actionType+"item "+stripeclass).attr("id","file_"+FLine.item.id).attr("filetype",FLine.item.filetype.toLowerCase()).attr("filename",FLine.item.filename);
+  var fncelt = $("<span/>").attr("id","fnamecont_"+FLine.item.id).addClass("col-6 showitemfile").appendTo(rowelt);
+  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+FLine.item.id).attr("data-icon",iconName).appendTo(fncelt);
+  var namelt = $("<span/>").attr("id","name_"+FLine.item.id).text(FLine.item.filename).appendTo(fncelt);
+
   var strDate = "";
-  var fdt = new Date(item.filedate);
-  if (item.filedate != "") {
+  var fdt = new Date(FLine.item.filedate);
+  if (FLine.item.filedate != "") {
     strDate = fdt.toLocaleString();
   }
-  var datelt = $("<span/>").attr("id","date_"+item.id).text(strDate).addClass("col-3 showitemfile").appendTo(rowelt);
-  
+  var datelt = $("<span/>").attr("id","date_"+FLine.item.id).text(strDate).addClass("col-3 showitemfile").appendTo(rowelt);
+
   var fty = "";
-  switch (item.filetype) {
+  switch (FLine.item.filetype) {
     case "d":
     case "back":
       fty = "Folder";
@@ -1000,37 +1012,37 @@ function createFileLine(i, actiontype, type, item, celt) {
       fty = "File";
       break;
   }
-  var typelt = $("<span/>").attr("id","type_"+item.id).text(fty).addClass("col-1 showitemfile").appendTo(rowelt);
+  var typelt = $("<span/>").attr("id","type_"+FLine.item.id).text(fty).addClass("col-1 showitemfile").appendTo(rowelt);
 
   var fsz = "";
-  if (item.filetype == "-") fsz = item.filesize.toLocaleString();
-  var sizelt = $("<span/>").attr("id","size_"+item.id).text(fsz).addClass("col-2 showitemfile").css("text-align","right").appendTo(rowelt);
-  rowelt.appendTo(celt);
+  if (FLine.item.filetype == "-") fsz = FLine.item.filesize.toLocaleString();
+  var sizelt = $("<span/>").attr("id","size_"+FLine.item.id).text(fsz).addClass("col-2 showitemfile").css("text-align","right").appendTo(rowelt);
+  rowelt.appendTo(FLine.celt);
 
   // Add trigger
   rowelt.click(function() {
     // Get the id of the currently selected item using the class name
     var selid = $(this).attr("id");
     // Get all items in the area with the 'inclexclsel' class, and remove that class
-    var elts = celt.find(".inclexclsel").removeClass("inclexclsel");
+    var elts = FLine.celt.find(".inclexclsel").removeClass("inclexclsel");
     // Set the value of the hidden selector, if it is not the same setid
     $(this).addClass("inclexclsel");
 
-    switch (actiontype) {
+    switch (FLine.actionType) {
       case "include":
       case "exclude":
       case "saveto":
-        if (type == $(this).attr("filetype")) {
-          $("#"+actiontype+"addselect").removeAttr("disabled");
+        if (FLine.fileType == $(this).attr("filetype")) {
+          $("#"+FLine.actionType+"addselect").removeAttr("disabled");
         }
         else {
-          $("#"+actiontype+"addselect").attr("disabled","disabled");
+          $("#"+FLine.actionType+"addselect").attr("disabled","disabled");
         }
         break;
       case "show":
         break;
       default:
-        console.log("Unknown actiontype: "+actiontype);
+        console.log("Unknown actiontype: "+FLine.actionType);
     }
   });
 
@@ -1040,25 +1052,25 @@ function createFileLine(i, actiontype, type, item, celt) {
     if ($(this).attr("filetype") != "-") {
       // Callback to get the directory listing
       var inObj = new Object();
-      switch (actiontype) {
+      switch (FLine.actionType) {
         case "include":
         case "exclude":
         case "saveto":
-          inObj.browseType = actiontype;
-          inObj.selType = type;
-          inObj.selDir = BrowseSettings[actiontype+"FileBrowseDir"];
+          inObj.browseType = FLine.actionType;
+          inObj.selType = FLine.fileType;
+          inObj.selDir = BrowseSettings[FLine.actionType+"FileBrowseDir"];
           inObj.newDir = $(this).attr("filename");
           getDirectoryContents(inObj);
           break;
         case "show":
-          inObj.browseType = actiontype;
-          inObj.selType = type;
+          inObj.browseType = FLine.actionType;
+          inObj.selType = FLine.fileType;
           inObj.selDir = $("#filedirinput").val();
           inObj.newDir = $(this).attr("filename");
           getDirectoryContents(inObj);
           break;
         default:
-          console.log("Unknown actiontype: "+actiontype);
+          console.log("Unknown actiontype: "+FLine.actionType);
       }
     }
   });
@@ -1170,17 +1182,21 @@ function getExcludeItems() {
 }
 
 
-function insertIncludeExcludeRow(i, actiontype, item) {
+function insertIncludeExcludeRow(ieObj) {
 
-  var iconName = getFileIcon(item.settype);
+  // ieObj.cnt = counter
+  // ieObj.actiontype = snapdirs / include / exclude
+  // ieObj.item = file object
+
+  var iconName = getFileIcon(ieObj.item.settype);
 
   var stripeclass = "stripeodd";
-  if (i % 2 == 0) stripeclass = "stripeeven";
+  if (ieObj.cnt % 2 == 0) stripeclass = "stripeeven";
 
-  var cdiv   = $("<div/>").attr("id",actiontype+"row_"+item.setid).addClass("row snaprow "+actiontype+"item "+stripeclass).attr("setid",item.setid);
-  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+item.setid).attr("data-icon",iconName).appendTo(cdiv);
-  var namelt = $("<span/>").attr("id","name_"+item.setid).text(item.setval).appendTo(cdiv);
-  cdiv.appendTo($("#"+actiontype+"filescontainer"));
+  var cdiv   = $("<div/>").attr("id",ieObj.actiontype+"row_"+ieObj.item.setid).addClass("row snaprow "+ieObj.actiontype+"item "+stripeclass).attr("setid",ieObj.item.setid);
+  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+ieObj.item.setid).attr("data-icon",iconName).appendTo(cdiv);
+  var namelt = $("<span/>").attr("id","name_"+ieObj.item.setid).text(ieObj.item.setval).appendTo(cdiv);
+  cdiv.appendTo($("#"+ieObj.actiontype+"filescontainer"));
 
   return cdiv;
 }
@@ -1526,8 +1542,13 @@ function BuildSideMenu(data) {
               diritem.settype = item.snaptype;
               diritem.setkey  = item.snapinclexcl;
               diritem.setval  = item.snappath;
+
               // Insert the row
-              var cdiv = insertIncludeExcludeRow(c, actiontype, diritem)
+              var ieObj = new Object();
+              ieObj.cnt = c;
+              ieObj.actiontype = actiontype;
+              ieObj.item = diritem;
+              var cdiv = insertIncludeExcludeRow(ieObj);
               c = c + 1;
 
               // Add trigger
@@ -1797,46 +1818,52 @@ function insertIncludeItems(data) {
     clearIncludeExcludeItemsBrowse("include");
 
     $.each(data, function (i, item) {
-      var actiontype = "include";
-      
       // Show included items in the frontend
-      var cdiv = insertIncludeExcludeRow(i, actiontype, item);
+      var ieObj = new Object();
+      ieObj.cnt = i;
+      ieObj.actiontype = "include";
+      ieObj.item = item;
+      var cdiv = insertIncludeExcludeRow(ieObj);
 
       // Add trigger
       $(cdiv).click(function() {
         // Get the id of the currently selected item using the class name
-        var selid = $("#"+actiontype+"filescontainer").find(".inclexclsel").attr("id");
+        var selid = $("#"+ieObj.actiontype+"filescontainer").find(".inclexclsel").attr("id");
         // Get all items in the area with the 'inclexclsel' class, and remove that class
-        var elts = $("#"+actiontype+"filescontainer").find(".inclexclsel").removeClass("inclexclsel");
+        var elts = $("#"+ieObj.actiontype+"filescontainer").find(".inclexclsel").removeClass("inclexclsel");
         // Blank the hidden input
-        $("#this"+actiontype+"setid").val("");
+        $("#this"+ieObj.actiontype+"setid").val("");
         // Disable the remove button
-        $("#"+actiontype+"remove").attr("disabled","disabled");
+        $("#"+ieObj.actiontype+"remove").attr("disabled","disabled");
         // Set the value of the hidden selector, if it is not the same setid
         if (selid != $(this).attr("id")) {
-          $("#this"+actiontype+"setid").val($(this).attr("id"));
+          $("#this"+ieObj.actiontype+"setid").val($(this).attr("id"));
           $(this).addClass("inclexclsel");
-          $("#"+actiontype+"remove").removeAttr("disabled");
+          $("#"+ieObj.actiontype+"remove").removeAttr("disabled");
         }
       });
     });
-    
+
     // Remove current items here
     clearIncludeExcludeItemsBrowse("snapdirs");
-    
+
     // Round the loop again, for the Include Directories in the Snapshots screen
     var c = 0;
     $.each(data, function (i, item) {
-      var actiontype = "snapdirs";
-
       // Also add the include folders to the Snapshots 'Backup Folders' list
       if (item.settype == 'd') {
-        var cdiv = insertIncludeExcludeRow(c, actiontype, item)
+        // Insert the row
+        var ieObj = new Object();
+        ieObj.cnt = c;
+        ieObj.actiontype = "snapdirs";
+        ieObj.item = item;
+        var cdiv = insertIncludeExcludeRow(ieObj);
         c = c + 1;
+
         // Add trigger
         $(cdiv).click(function() {
           // Get the id of the currently selected item using the class name
-          var selid = $("#"+actiontype+"filescontainer").find(".inclexclsel").attr("id");
+          var selid = $("#"+ieObj.actiontype+"filescontainer").find(".inclexclsel").attr("id");
           // Get all items in the area with the 'inclexclsel' class, and remove that class
           clearSnapShortcutsSel();
 
@@ -1862,23 +1889,27 @@ function insertExcludeItems(data) {
     $.each(data, function (i, item) {
 
       // Show excluded items in the frontend
-      var cdiv = insertIncludeExcludeRow(i, 'exclude', item);
+      var ieObj = new Object();
+      ieObj.cnt = i;
+      ieObj.actiontype = "exclude";
+      ieObj.item = item;      
+      var cdiv = insertIncludeExcludeRow(ieObj);
 
       // Add trigger
       $(cdiv).click(function() {
         // Get the id of the currently selected item using the class name
-        var selid = $("#excludefilescontainer").find(".inclexclsel").attr("id");
+        var selid = $("#"+ieObj.actiontype+"filescontainer").find(".inclexclsel").attr("id");
         // Get all items in the area with the 'inclexclsel' class, and remove that class
-        var elts = $("#excludefilescontainer").find(".inclexclsel").removeClass("inclexclsel");
+        var elts = $("#"+ieObj.actiontype+"filescontainer").find(".inclexclsel").removeClass("inclexclsel");
         // Blank the hidden input
-        $("#thisexcludesetid").val('');
+        $("#this"+ieObj.actiontype+"setid").val('');
         // Disable the remove button
-        $("#excluderemove").attr("disabled","disabled");
+        $("#"+ieObj.actiontype+"remove").attr("disabled","disabled");
         // Set the value of the hidden selector, if it is not the same setid
         if (selid != $(this).attr("id")) {
-          $("#thisexcludesetid").val($(this).attr("id"));
+          $("#this"+ieObj.actiontype+"setid").val($(this).attr("id"));
           $(this).addClass("inclexclsel");
-          $("#excluderemove").removeAttr("disabled");
+          $("#"+ieObj.actiontype+"remove").removeAttr("disabled");
         }
       });
 
