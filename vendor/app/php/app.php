@@ -15,7 +15,7 @@
 //
 // /usr/local/modules/script/apache restart web
 //
-// SJT - Solution
+// Real Solution:
 // .htaccess file in the directory of the php files
 // Contents:
 //   php_flag apc.cache_by_default 0
@@ -1319,9 +1319,14 @@ function dbSelectRsyncExcludesIncludes($SnapshotId) {
 
 
 function dbExecOSCommand($cmd) {
-
+// Line 1675
   // Execute a command, pass output to Array, success indicator
-  exec($cmd." & echo $!", $ls, $int);
+  // https://serverfault.com/questions/205498/how-to-get-pid-of-just-started-process
+  //   myCommand & echo $!
+  //   sh -c 'echo $$; exec myCommand'
+  //   $ myCommand ; pid=$!
+//  exec("sh -c 'echo $$; exec ".$cmd."'", $ls, $int);  
+  exec($cmd." 2>&1 > out.log & echo $!", $ls, $int);  
   return $ls;
 }
 
@@ -1461,6 +1466,22 @@ function updateProfileSetting() {
 
   $arr = dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
+function updateNoDelNamed() {
+  $rtn = array();
+  $ProfileId    = SQLite3::escapeString($_POST["profileid"]);
+  $ProfileKey   = SQLite3::escapeString($_POST["settingname"]);
+  $ProfileValue = SQLite3::escapeString($_POST["settingvalue"]);
+
+  // Attempt the update
+  $rtn["updatenodelnamed"] = dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue);
+  
+  // Get the updated snapshots list
+  $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
+
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
@@ -1684,18 +1705,18 @@ function takeSnapshot() {
       
       // Build the command for each include directory
       $cmd = "";
-
+$pos = 0;  // SJT DEBUG - remove $pos
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
-
+$pos += 1;
           // Build it
           $cmd = "rsync -aPq ".$inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$BackupTSPath."\"";
-
+$arr["cmd"][$pos] = $cmd;
           // Call the OS command to take the snapshot
           // sh -c 'echo $$; exec myCommand'
           // ((yourcommand) & echo $! >/var/run/pidfile)
           $rsync = dbExecOSCommand($cmd);  // Line 1307
-
+$arr["rsync"][$pos] = $rsync;
         }
       }
       
@@ -1833,6 +1854,9 @@ switch ($WhatToRun) {
     break;
   case "updateprofilesetting":
     updateProfileSetting();
+    break;
+  case "updatenodelnamed":
+    updateNoDelNamed();
     break;
   case "updatesettingspaths":
     updateSettingsPaths();

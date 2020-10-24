@@ -40,38 +40,65 @@ $(document).ready(function() {
     var eltVal = "";
     var eltId = $(this).attr('id');
 
-    // At the init stage we remove autoupd, but later reinstate it
-    if ($(this).hasClass("autoupd")) {
-      switch ($(this).attr("type")) {
-        case "checkbox":
-          eltVal = 0;
-          if ($(this).is(":checked")) eltVal = 1;
-          break;
-        default:
-          eltVal = $(this).val();
+    // Get the value
+    switch ($(this).attr("type")) {
+      case "checkbox":
+        eltVal = 0;
+        if ($(this).is(":checked")) eltVal = 1;
+        break;
+      default:
+        eltVal = $(this).val();
+    }
+
+    var pdata = new Object();
+    pdata.fn = "updateprofilesetting";
+    pdata.profileid = $("#selectprofile").val();
+    pdata.settingname = eltId;
+    pdata.settingvalue = eltVal;
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
       }
-
-      var pdata = new Object();
-      pdata.fn = "updateprofilesetting";
-      pdata.profileid = $("#selectprofile").val();
-      pdata.settingname = eltId;
-      pdata.settingvalue = eltVal;
-
-      $.ajax('./vendor/app/php/app.php',
-      {
-        dataType: 'json',
-        type: 'POST',
-        data: pdata,
-        success: function (data,status,xhr) {
-          console.log(data);
-        },
-        error: function (jqXhr, textStatus, errorMessage) {
-          console.log('Error: ' + errorMessage);
-        }
-      });
-    } // has autoupd class
+    });
   });
 
+
+  // Update the Dnot Saved Named, and refresh the Snapshots list
+  $(".nodelnamed").change(function(){
+
+    // Get the value
+    eltVal = 0;
+    if ($(this).is(":checked")) eltVal = 1;
+
+    var pdata = new Object();
+    pdata.fn = "updatenodelnamed";
+    pdata.profileid = $("#selectprofile").val();
+    pdata.settingname = $(this).attr('id');
+    pdata.settingvalue = eltVal;
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+        
+        BuildSideMenu(data.snaplist.items);
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+      }
+    });
+  });
 
   // On change of Profile ID, get and apply the new settings to screen
   $("#selectprofile").change(function(){
