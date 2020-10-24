@@ -9,6 +9,7 @@ BrowseSettings["excludeType"];
 BrowseSettings["savetoFileBrowseDir"];
 BrowseSettings["savetoType"] = "d";
 BrowseSettings["ShowHidden"] = 0;
+var init = true;
 
 // OnLoadsaveto
 $(document).ready(function() {
@@ -37,7 +38,7 @@ $(document).ready(function() {
 
     // At the init stage we remove autoupd, but later reinstate it
     // Not having this causes sqlite db to be locked
-    if ($(this).hasClass("autoupd")) {
+    if (init==false) {
 
       // Is it a checkbox, or a radio button
       var eltType = $(this).attr('type');
@@ -79,30 +80,32 @@ $(document).ready(function() {
   // Update the Dnot Saved Named, and refresh the Snapshots list
   $(".nodelnamed").change(function(){
 
-    // Get the value
-    eltVal = 0;
-    if ($(this).is(":checked")) eltVal = 1;
+    if (init==false) {
+      // Get the value
+      eltVal = 0;
+      if ($(this).is(":checked")) eltVal = 1;
 
-    var pdata = new Object();
-    pdata.fn = "updatenodelnamed";
-    pdata.profileid = $("#selectprofile").val();
-    pdata.settingname = $(this).attr('id');
-    pdata.settingvalue = eltVal;
+      var pdata = new Object();
+      pdata.fn = "updatenodelnamed";
+      pdata.profileid = $("#selectprofile").val();
+      pdata.settingname = $(this).attr('id');
+      pdata.settingvalue = eltVal;
 
-    $.ajax('./vendor/app/php/app.php',
-    {
-      dataType: 'json',
-      type: 'POST',
-      data: pdata,
-      success: function (data,status,xhr) {
-        console.log(data);
-        
-        BuildSideMenu(data.snaplist.items);
-      },
-      error: function (jqXhr, textStatus, errorMessage) {
-        console.log('Error: ' + errorMessage);
-      }
-    });
+      $.ajax('./vendor/app/php/app.php',
+      {
+        dataType: 'json',
+        type: 'POST',
+        data: pdata,
+        success: function (data,status,xhr) {
+          console.log(data);
+          
+          BuildSideMenu(data.snaplist.items);
+        },
+        error: function (jqXhr, textStatus, errorMessage) {
+          console.log('Error: ' + errorMessage);
+        }
+      });
+    }
   });
 
   // On change of Profile ID, get and apply the new settings to screen
@@ -125,11 +128,7 @@ $(document).ready(function() {
       success: function (data,status,xhr) {
         console.log(data);
 
-        // Temporarily remove the 'autoupd' class from the element
-        var autoupd_elts = removeTriggerClass("autoupd");
-        var scheduleupd_elts = removeTriggerClass("scheduleupd");
-
-        // Refresh the side menu
+       // Refresh the side menu
         BuildSideMenu(data.snaplist);
         
         // Refresh the files list, to show the files of the directory bar
@@ -160,7 +159,6 @@ $(document).ready(function() {
           });
         }
 
-
         // Include Files/Folders
         // Backup Paths
         // Remove current items
@@ -185,10 +183,9 @@ $(document).ready(function() {
         $("#settingssmartremove").trigger("change");
         SetSettingsFullSnapshotPath();
         showScheduleElements()
-
-        // Re-add the trigger classes
-        addTriggerClass(scheduleupd_elts, "scheduleupd");
-        addTriggerClass(autoupd_elts, "autoupd");
+        
+        // Set screen initialisation to false
+        if (init==true) init=false;
       },
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
@@ -1040,35 +1037,37 @@ function ArrAddSettingsObject(arr, key, val) {
 }
 
 function SetSettingsFullSnapshotPath(){
-  $('#settingsfullsnapshotpath').val( $('#settingssaveto').val()+'/timesync/'+$('#settingshost').val()+'/'+$('#settingsuser').val()+'/'+$('#settingsprofile').val() );
+  if (init==false) {
 
-  var pDataArr = new Array();
-  ArrAddSettingsObject(pDataArr, "settingshost", $("#settingshost").val());
-  ArrAddSettingsObject(pDataArr, "settingsuser", $("#settingsuser").val());
-  ArrAddSettingsObject(pDataArr, "settingsprofile", $("#settingsprofile").val());
-  ArrAddSettingsObject(pDataArr, "settingssaveto", $("#settingssaveto").val());
-  ArrAddSettingsObject(pDataArr, "settingsfullsnapshotpath", $("#settingsfullsnapshotpath").val());
+    $('#settingsfullsnapshotpath').val( $('#settingssaveto').val()+'/timesync/'+$('#settingshost').val()+'/'+$('#settingsuser').val()+'/'+$('#settingsprofile').val() );
 
-  // Now add the path to the criteria
-  var pdata = new Object();
-  pdata.fn = "updatesettingspaths";
-  pdata.profileid = $("#selectprofile").val();
-  pdata.settings = JSON.stringify(pDataArr);
+    var pDataArr = new Array();
+    ArrAddSettingsObject(pDataArr, "settingshost", $("#settingshost").val());
+    ArrAddSettingsObject(pDataArr, "settingsuser", $("#settingsuser").val());
+    ArrAddSettingsObject(pDataArr, "settingsprofile", $("#settingsprofile").val());
+    ArrAddSettingsObject(pDataArr, "settingssaveto", $("#settingssaveto").val());
+    ArrAddSettingsObject(pDataArr, "settingsfullsnapshotpath", $("#settingsfullsnapshotpath").val());
 
-  $.ajax("./vendor/app/php/app.php",
-  {
-    dataType: "json",
-    type: "POST",
-    data: pdata,
-    success: function (data,status,xhr) {
-      console.log(data);
-    },
-    error: function (jqXhr, textStatus, errorMessage) {
-      console.log('Error: ' + errorMessage);
-      spinelt.remove();
-    }
-  });  
+    // Now add the path to the criteria
+    var pdata = new Object();
+    pdata.fn = "updatesettingspaths";
+    pdata.profileid = $("#selectprofile").val();
+    pdata.settings = JSON.stringify(pDataArr);
 
+    $.ajax("./vendor/app/php/app.php",
+    {
+      dataType: "json",
+      type: "POST",
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+        spinelt.remove();
+      }
+    });  
+  }
 }
 
 
