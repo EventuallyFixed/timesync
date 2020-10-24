@@ -848,23 +848,32 @@ function showScheduleElements() {
 }
 
 
-// Get a description for the types
-function getIncExcTypeDesc(type) {
-  var desc = "";
+// Get a description and icon for the types
+function GetFileDescObj(type) {
+  console.log("GetFileDescObj(type) - Type: "+type)
+  var FileDescObj = new Object();
   switch (type) {
     case "-":
-      desc = "file";
+      FileDescObj.desc = "File";
+      FileDescObj.icon = "mdi-file-outline";
       break;
     case "d":
-      desc = "folder";
+      FileDescObj.desc = "Folder";
+      FileDescObj.icon = "mdi-folder-outline";
       break;
     case "l":
-      desc = "link";
+      FileDescObj.desc = "Link";
+      FileDescObj.icon = "mdi-file-link-outline";
+      break;
+    case "back":
+      FileDescObj.desc = "Up";
+      FileDescObj.icon = "mdi-folder-upload";
       break;
     default:
-      desc = "unknown";
+      FileDescObj.desc = "";
+      FileDescObj.icon = "mdi-file-question-outline";
   }
-  return desc;
+  return FileDescObj;
 }
 
 
@@ -887,7 +896,8 @@ function getDirectoryContents(inObj){
   if (inObj.browseType == "show") pdata.hid = BrowseSettings["ShowHidden"];
 
   // Get a description of what is being searched for
-  var Bdesc = "Select "+getIncExcTypeDesc(inObj.selType)+" to "+inObj.browseType;
+  var FileDescObj = GetFileDescObj(inObj.selType);
+  var Bdesc = "Select "+FileDescObj.desc.toLowerCase()+" to "+inObj.browseType;
   $("#"+inObj.browseType+"addfilebrowse").find("nav").text(Bdesc);
 
   // Ensure the body of the file browse is clear
@@ -982,14 +992,15 @@ function createFileLine(FLine) {
   // FLine.item = File item object
   // FLine.celt = Containing Element
 
-  var iconName = getFileIcon(FLine.item.filetype);
+  // Get description of the file type
+  var FileTypeInfo = GetFileDescObj(FLine.item.filetype);
 
   var stripeclass = "stripeodd";
   if (FLine.cnt % 2 == 0) stripeclass = "stripeeven";
 
   var rowelt = $("<div/>").addClass("row snaprow "+FLine.actionType+"item "+stripeclass).attr("id","file_"+FLine.item.id).attr("filetype",FLine.item.filetype.toLowerCase()).attr("filename",FLine.item.filename);
   var fncelt = $("<span/>").attr("id","fnamecont_"+FLine.item.id).addClass("col-6 showitemfile").appendTo(rowelt);
-  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+FLine.item.id).attr("data-icon",iconName).appendTo(fncelt);
+  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+FLine.item.id).attr("data-icon",FileTypeInfo.icon).appendTo(fncelt);
   var namelt = $("<span/>").attr("id","name_"+FLine.item.id).text(FLine.item.filename).appendTo(fncelt);
 
   var strDate = "";
@@ -999,20 +1010,7 @@ function createFileLine(FLine) {
   }
   var datelt = $("<span/>").attr("id","date_"+FLine.item.id).text(strDate).addClass("col-3 showitemfile").appendTo(rowelt);
 
-  var fty = "";
-  switch (FLine.item.filetype) {
-    case "d":
-    case "back":
-      fty = "Folder";
-      break;
-    case "l":
-      fty = "Link";
-      break;
-    case "-":
-      fty = "File";
-      break;
-  }
-  var typelt = $("<span/>").attr("id","type_"+FLine.item.id).text(fty).addClass("col-1 showitemfile").appendTo(rowelt);
+  var typelt = $("<span/>").attr("id","type_"+FLine.item.id).text(FileTypeInfo.desc).addClass("col-1 showitemfile").appendTo(rowelt);
 
   var fsz = "";
   if (FLine.item.filetype == "-") fsz = FLine.item.filesize.toLocaleString();
@@ -1188,43 +1186,17 @@ function insertIncludeExcludeRow(ieObj) {
   // ieObj.actiontype = snapdirs / include / exclude
   // ieObj.item = file object
 
-  var iconName = getFileIcon(ieObj.item.settype);
+  var FileDescObj = GetFileDescObj(ieObj.item.settype);
 
   var stripeclass = "stripeodd";
   if (ieObj.cnt % 2 == 0) stripeclass = "stripeeven";
 
   var cdiv   = $("<div/>").attr("id",ieObj.actiontype+"row_"+ieObj.item.setid).addClass("row snaprow "+ieObj.actiontype+"item "+stripeclass).attr("setid",ieObj.item.setid);
-  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+ieObj.item.setid).attr("data-icon",iconName).appendTo(cdiv);
+  var imgelt = $("<span/>").addClass("iconify").attr("id","icon_"+ieObj.item.setid).attr("data-icon",FileDescObj.icon).appendTo(cdiv);
   var namelt = $("<span/>").attr("id","name_"+ieObj.item.setid).text(ieObj.item.setval).appendTo(cdiv);
   cdiv.appendTo($("#"+ieObj.actiontype+"filescontainer"));
 
   return cdiv;
-}
-
-
-function getFileIcon(ftype) {
-  var iconName = "";
-  switch (ftype.toLowerCase()) {
-    case "d":
-      iconName = "mdi-folder-outline";
-      break;
-    case "f":
-    case "-":
-      iconName = "mdi-file-outline";
-      break;
-    case "l":
-      iconName = "mdi-file-link-outline";
-      break;
-    // Special icon for folder up
-    case "back":
-      iconName = "mdi-folder-upload";
-      break;
-    default:
-      iconName = "mdi-file-question-outline";
-      break;
-  }
-
-  return iconName;  
 }
 
 
