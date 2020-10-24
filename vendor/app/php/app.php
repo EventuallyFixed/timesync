@@ -70,7 +70,8 @@ function db_create_schema() {
         profileid                     INTEGER NOT NULL,
         snaptime                      TEXT    NOT NULL,
         snapdesc                      TEXT            ,
-        snapstatus                    INTEGER NOT NULL
+        snapstatus                    INTEGER NOT NULL,
+        snapbasepath                  TEXT    NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS snapshotpaths (
@@ -440,7 +441,6 @@ function dbSelectProfileSettingsRecord($ProfileId, $ProfileKey) {
         $row = $rows->fetchArray(SQLITE3_ASSOC);
         $rtn["items"] = array();
         $rtn["result"] = "ok";
-        // $rtn["items"] = $row;
         array_push($rtn["items"], $row);
         $rtn["message"] = "Found";
       }
@@ -974,6 +974,10 @@ function dbCreateSnapshotRecords($ProfileId) {
   $SnapshotId = "-1";
 
   if ($ProfileId > 0) {
+    
+    // Get Snapshot Settings record, to get the full snapshot path
+    $FullPathArr = dbSelectProfileSettingsRecord($ProfileId, "settingsfullsnapshotpath");
+    $BackupBasePath = $FullPathArr["items"][0]["profilevalue"];
 
     $db = new MyDB();
     if(!$db) {
@@ -993,8 +997,12 @@ function dbCreateSnapshotRecords($ProfileId) {
           break;
         }
 
+        // Remove all of the punctuation from the timestamp
+        $TSdir = RemoveTimestampPunct($TimeStr);
+        $BackupTSPath = $BackupBasePath."/".$TSdir;
+
         // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
-        $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus) VALUES ('".$ProfileId."', '".$TimeStr."', '', 'proc');");
+        $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus, snapbasepath) VALUES ('".$ProfileId."', '".$TimeStr."', '', 'proc', '".$BackupTSPath."');");
         if(!$ret){
           $arr["result"] = "ko";
           $arr["message"] = $db->lastErrorMsg();
@@ -1341,7 +1349,18 @@ function getDirectoryContentsFromShell() {
   $dir = SQLite3::escapeString($_POST["dir"]);        // Where to start browsing
   $sel = SQLite3::escapeString($_POST["sel"]);        // What the user clicked on
   $hid = SQLite3::escapeString($_POST["hid"]);        // Show Hidden
+  $snapid = SQLite3::escapeString($_POST["snapid"]);  // Snapshot ID
+  
+  if ($snapid != "now") {
+    // Get the snapshot's base directory
+    $snapshot = dbSelectSnapshotForId($snapid);
 
+   
+  }
+  else {
+    $snapshot = dbSelectSnapshotForId($snapid);
+    
+  }
   $arr = dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid);
 
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
@@ -1635,7 +1654,7 @@ function RemoveTimestampPunct($TimeStamp) {
 
 
 function takeSnapshot() {
-  
+
   // Create the Snapshot records
   // Use the Snapshot records to build the rsync command exclude/include parts
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
@@ -1657,18 +1676,7 @@ function takeSnapshot() {
     }
   }
 
-  if ($HasDir == 1) {
-    // Get the Profile Path parts, from the settings screen
-    $path[0] = dbSelectProfileSettingsRecord($ProfileId, "settingssaveto");
-    $path[1] = dbSelectProfileSettingsRecord($ProfileId, "settingshost");
-    $path[2] = dbSelectProfileSettingsRecord($ProfileId, "settingsuser");
-    $path[3] = dbSelectProfileSettingsRecord($ProfileId, "settingsprofile");
-    $AppName = dbSelectCodelistRecord("system", "appname");
-
-    // Build a base backup path, as shown on the Settings screen
-    $BackupBasePath = $path[0]["items"][0]["profilevalue"]."/".$AppName[items][0]["codedesc"]."/".$path[1]["items"][0]["profilevalue"]."/".$path[2]["items"][0]["profilevalue"]."/".$path[3]["items"][0]["profilevalue"];
-    $BackupCurrentPath = $BackupBasePath."/current";
-    
+  if ($HasDir == 1) {    
     // Create a record set for this snapshot, returns the record set (header and includes/excludes)
     $arr["snapshotrecords"] = dbCreateSnapshotRecords($ProfileId);
 
@@ -1676,19 +1684,19 @@ function takeSnapshot() {
     if ($arr["snapshotrecords"]["result"] == "ok") {
       // Get the Snapshot ID from the returned arrays
       $SnapshotId = $arr["snapshotrecords"]["snapshot"][0]["id"];
+
+      $BackupTSPath = $arr["snapshotrecords"]["snapshot"][0]["snapbasepath"];
+      $BackupCurrentPath = substr($BackupTSPath, 0, strrpos($BackupTSPath, "/"))."/current";
+
       // Get the includes and excludes of this snapshot
       $InexArr = dbSelectRsyncExcludesIncludes($SnapshotId);
-
-      // Remove all of the punctuation from the timestamp
-      $TSdir = RemoveTimestampPunct($arr["snapshotrecords"]["snapshot"][0]["snaptime"]);
-      $BackupTSPath = $BackupBasePath."/".$TSdir;
 
       // Append the backup path with the TimeStamp, and ensure that path exists
       $mdcmd = "mkdir -p \"".$BackupTSPath."\"";    
       $mdres = dbExecOSCommand($mdcmd);
       $arr["md"]["cmd"] = $mdcmd;
       $arr["md"]["res"] = $mdres;
-     
+
       // Go through each snapshot path to include, and call rsync for it
       // To debug, feed back the command
       $inex = "";
@@ -1702,7 +1710,7 @@ function takeSnapshot() {
           $inex = $inex." --include \"".$item["snapshotpath"]."\"";
         }
       }
-      
+
       // Build the command for each include directory
       $cmd = "";
 $pos = 0;  // SJT DEBUG - remove $pos
@@ -1715,11 +1723,11 @@ $arr["cmd"][$pos] = $cmd;
           // Call the OS command to take the snapshot
           // sh -c 'echo $$; exec myCommand'
           // ((yourcommand) & echo $! >/var/run/pidfile)
-          $rsync = dbExecOSCommand($cmd);  // Line 1307
+//          $rsync = dbExecOSCommand($cmd);  // Line 1307
 $arr["rsync"][$pos] = $rsync;
         }
       }
-      
+
       // Remove the old symbolic link, and point a new one
       $rmres = dbExecOSCommand("rm \"".$BackupCurrentPath."\"");
       // Point a new Symbolic Link

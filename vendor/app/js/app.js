@@ -391,6 +391,7 @@ $(document).ready(function() {
     inObj.selType = BrowseSettings["includeType"];
     inObj.selDir = BrowseSettings["includeFileBrowseDir"];
     inObj.newDir = "";
+    inObj.snapshotId = snapshotid;
     getDirectoryContents(inObj);
   });
 
@@ -414,6 +415,7 @@ $(document).ready(function() {
     inObj.selType = BrowseSettings["includeType"];
     inObj.selDir = BrowseSettings["includeFileBrowseDir"];
     inObj.newDir = "";
+    inObj.snapshotId = snapshotid;
     getDirectoryContents(inObj);
   });
 
@@ -493,6 +495,7 @@ $(document).ready(function() {
     inObj.selType = BrowseSettings["excludeType"];
     inObj.selDir = BrowseSettings["excludeFileBrowseDir"];
     inObj.newDir = "";
+    inObj.snapshotId = snapshotid;
     getDirectoryContents(inObj);
   });
 
@@ -515,6 +518,7 @@ $(document).ready(function() {
     inObj.selType = BrowseSettings["excludeType"];
     inObj.selDir = BrowseSettings["excludeFileBrowseDir"];
     inObj.newDir = "";
+    inObj.snapshotId = snapshotid;
     getDirectoryContents(inObj);
   });
 
@@ -883,6 +887,7 @@ function getDirectoryContents(inObj){
   // inObj.selType    = Type of file (d, l, -)
   // inObj.selDir     = Current directory
   // inObj.newDir     = Directory clicked, or blank
+  // inObj.snapshotId = snapshotid (now, or a number)
 
   // Build the callback object
   var pdata = new Object();
@@ -890,6 +895,7 @@ function getDirectoryContents(inObj){
   pdata.type = inObj.selType;
   pdata.dir = inObj.selDir;
   pdata.sel = inObj.newDir;
+  pdata.snapid = inObj.snapshotId;
   pdata.hid = 1;
 
   // Correct showHidden for the front browse
@@ -1058,6 +1064,7 @@ function createFileLine(FLine) {
           inObj.selType = FLine.fileType;
           inObj.selDir = BrowseSettings[FLine.actionType+"FileBrowseDir"];
           inObj.newDir = $(this).attr("filename");
+          inObj.snapshotId = snapshotid;
           getDirectoryContents(inObj);
           break;
         case "show":
@@ -1065,6 +1072,7 @@ function createFileLine(FLine) {
           inObj.selType = FLine.fileType;
           inObj.selDir = $("#filedirinput").val();
           inObj.newDir = $(this).attr("filename");
+          inObj.snapshotId = snapshotid;
           getDirectoryContents(inObj);
           break;
         default:
@@ -1472,9 +1480,60 @@ function BuildSideMenu(data) {
     // Set the snapshotid variable, for the snapshot name change to use
     snapshotid = item.attr("snapid");
 
+    // Remove current items here
+    clearIncludeExcludeItemsBrowse("snapdirs");
+
     // Show the directory of the snapshot, or of the current state if now.
     if (snapshotid == "now") {
-      
+      // Get the current profile's directories to show
+      var pdata = new Object();
+      pdata.fn = "getincludepatterns";
+      pdata.profileid = $("#selectprofile").val();
+
+      $.ajax('./vendor/app/php/app.php',
+      {
+        dataType: 'json',
+        type: 'POST',
+        data: pdata,
+        success: function (data,status,xhr) {
+          console.log(data);
+
+          // Round the loop again, for the Include Directories in the Snapshots screen
+          var cnt = 0;
+          $.each(data.items, function (i, item) {
+            // Also add the include folders to the Snapshots 'Backup Folders' list
+            if (item.settype == 'd') {
+              // Insert the row
+              var ieObj = new Object();
+              ieObj.cnt = cnt;
+              ieObj.actiontype = "snapdirs";
+              ieObj.item = item;
+              var cdiv = insertIncludeExcludeRow(ieObj);
+              cnt = cnt + 1;
+
+              // Add trigger
+              $(cdiv).click(function() {
+                // Get the id of the currently selected item using the class name
+                var selid = $("#"+ieObj.actiontype+"filescontainer").find(".inclexclsel").attr("id");
+                // Get all items in the area with the 'inclexclsel' class, and remove that class
+                clearSnapShortcutsSel();
+
+                // Set the value of the file browse bar, if it is a folder, and trigger a refresh of the files area
+                if (item.settype == "d") {
+                  $("#filedirinput").val(item.setval);
+                  $(this).addClass("inclexclsel");
+                  $("#filedirinput").trigger("change");
+                }
+              });
+            }
+          });
+
+        },
+        error: function (jqXhr, textStatus, errorMessage) {
+          console.log('Error: ' + errorMessage);
+        }
+      });
+
     }
     else {
       // Return the backup folders of the selected snapshot
@@ -1499,13 +1558,10 @@ function BuildSideMenu(data) {
           console.log(data);
           spinelt.remove();
 
-          // Remove current items here
-          clearIncludeExcludeItemsBrowse("snapdirs");
-
           // Clear then rebuild the Profile Path (include directories)
           var cnt = 0;
           var actiontype = "snapdirs";
-          $.each(data.snapshot.paths.items, function (i, item) {        
+          $.each(data.snapshot.paths.items, function (i, item) {
             if (item.snapinclexcl == "include" && item.snaptype == "d") {
 
               // Create the kind of object expected by the receiving function
@@ -1531,8 +1587,8 @@ function BuildSideMenu(data) {
                 clearSnapShortcutsSel();
 
                 // Set the value of the file browse bar, if it is a folder, and trigger a refresh of the files area
-                if (item.settype == "d") {
-                  $("#filedirinput").val(item.setval);
+                if (item.snaptype == "d") {
+                  $("#filedirinput").val(item.snappath);
                   $(this).addClass("inclexclsel");
                   $("#filedirinput").trigger("change");
                 }
@@ -1618,6 +1674,7 @@ $("#fileupbtn").click(function(){
   inObj.selType = "-";
   inObj.selDir = $("#filedirinput").val();
   inObj.newDir = "..";
+  inObj.snapshotId = snapshotid;
   getDirectoryContents(inObj);
 });
 // Toggle hidden files
@@ -1628,6 +1685,7 @@ $("#filetogglehiddenbtn").click(function(){
   inObj.selType = "-";
   inObj.selDir = $("#filedirinput").val();
   inObj.newDir = "";
+  inObj.snapshotId = snapshotid;
   getDirectoryContents(inObj);
 });
 // Restore
@@ -1681,11 +1739,13 @@ function clearSnapShortcutsSel(){
 
 
 $("#filedirinput").change(function(){
+  // It depends on whether it's the NOW snapshot, or a historic one
   var inObj = new Object();
   inObj.browseType = "show";
   inObj.selType = "-";
   inObj.selDir = $("#filedirinput").val();
   inObj.newDir = "";
+  inObj.snapshotId = snapshotid;
   getDirectoryContents(inObj);
 });
 
@@ -1703,6 +1763,7 @@ $("#savetobutton").click(function(){
   inObj.selType = BrowseSettings["savetoType"];
   inObj.selDir = BrowseSettings["savetoFileBrowseDir"];
   inObj.newDir = "";
+  inObj.snapshotId = snapshotid;
   getDirectoryContents(inObj);
 });
 
