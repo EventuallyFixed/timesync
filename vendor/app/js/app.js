@@ -35,39 +35,44 @@ $(document).ready(function() {
   // Update a settings value on leaving the field
   $(".autoupd").change(function(){
 
-    // Is it a checkbox, or a radio button
-    var eltType = $(this).attr('type');
-    var eltVal = "";
-    var eltId = $(this).attr('id');
+    // At the init stage we remove autoupd, but later reinstate it
+    // Not having this causes sqlite db to be locked
+    if ($(this).hasClass("autoupd")) {
 
-    // Get the value
-    switch ($(this).attr("type")) {
-      case "checkbox":
-        eltVal = 0;
-        if ($(this).is(":checked")) eltVal = 1;
-        break;
-      default:
-        eltVal = $(this).val();
-    }
+      // Is it a checkbox, or a radio button
+      var eltType = $(this).attr('type');
+      var eltVal = "";
+      var eltId = $(this).attr('id');
 
-    var pdata = new Object();
-    pdata.fn = "updateprofilesetting";
-    pdata.profileid = $("#selectprofile").val();
-    pdata.settingname = eltId;
-    pdata.settingvalue = eltVal;
-
-    $.ajax('./vendor/app/php/app.php',
-    {
-      dataType: 'json',
-      type: 'POST',
-      data: pdata,
-      success: function (data,status,xhr) {
-        console.log(data);
-      },
-      error: function (jqXhr, textStatus, errorMessage) {
-        console.log('Error: ' + errorMessage);
+      // Get the value
+      switch ($(this).attr("type")) {
+        case "checkbox":
+          eltVal = 0;
+          if ($(this).is(":checked")) eltVal = 1;
+          break;
+        default:
+          eltVal = $(this).val();
       }
-    });
+
+      var pdata = new Object();
+      pdata.fn = "updateprofilesetting";
+      pdata.profileid = $("#selectprofile").val();
+      pdata.settingname = eltId;
+      pdata.settingvalue = eltVal;
+
+      $.ajax('./vendor/app/php/app.php',
+      {
+        dataType: 'json',
+        type: 'POST',
+        data: pdata,
+        success: function (data,status,xhr) {
+          console.log(data);
+        },
+        error: function (jqXhr, textStatus, errorMessage) {
+          console.log('Error: ' + errorMessage);
+        }
+      });
+    } // has class
   });
 
 
