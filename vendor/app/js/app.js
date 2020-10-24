@@ -182,7 +182,7 @@ $(document).ready(function() {
         $("#settingssmartkeeponepermonthformonths").trigger("change");
         $("#settingssmartremove").trigger("change");
         SetSettingsFullSnapshotPath();
-        showScheduleElements()
+        showScheduleElements();
         
         // Set screen initialisation to false
         if (init==true) init=false;
@@ -1438,22 +1438,21 @@ function BuildSideMenu(data) {
     });
   });
 
-
   // Click on the rest of the menu link
   $(".snapshotsmenu").click(function(){
     item = $(this);
     // Ensure we're flicked to the Snapshots page
-    $("#topmenusnapshots").trigger("click");
+    if ($("#snapshotsection").css("display") == "none") $("#topmenusnapshots").trigger("click");
     // Set the snapshotid on the page, which triggers a callback to refresh the snapshot displays
     $("#snapshotid").val(item.attr("snapid"));
     $("#snapshotname").val(item.attr("snapdesc"));
     $("#snapshotname").attr("placeholder",item.attr("snapdate"));
     $("#snapshotname").removeAttr("readonly");
 
-    if (item.attr("id") == "snapshotsmenu0") $("#snapshotname").val("").attr("readonly", "readonly"); 
+    if (item.attr("id") == "snapshotsmenunow") $("#snapshotname").val("").attr("readonly", "readonly"); 
     else $("#snapshotname").removeAttr("readonly");
   });
-  $("#snapshotsmenu0").trigger("click");
+  $("#snapshotsmenunow").trigger("click");
 }  // BuildSideMenu
 
 

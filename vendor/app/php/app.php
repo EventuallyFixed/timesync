@@ -1827,7 +1827,7 @@ function updateSnapshotName(){
 
 
 function writeErrorMsg() {
-  echo "{ \"result\" : \"De nada deniro!\" }";
+  echo "{ \"result\" : \"Sin dinero, sin esquí!\" }";
 }
 
 
