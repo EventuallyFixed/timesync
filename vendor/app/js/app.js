@@ -850,7 +850,7 @@ function showScheduleElements() {
 
 // Get a description and icon for the types
 function GetFileDescObj(type) {
-  console.log("GetFileDescObj(type) - Type: "+type)
+
   var FileDescObj = new Object();
   switch (type) {
     case "-":
@@ -1344,7 +1344,7 @@ function BuildSideMenu(data) {
       var snapText = sdate.toLocaleString();
 
       var sdiv = $("<div/>").appendTo("#snapshotssidemenu");
-      var slnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).appendTo(sdiv);
+      var slnk = $("<a/>").addClass("list-group-item list-group-item-action bg-light snapshotsmenu").attr("href","#").attr("id","snapshotsmenu"+item.id).attr("snapid",item.id).attr("snapdesc",item.snapdesc).appendTo(sdiv);
 
       var delt = $("<div/>").addClass("snapshotsmenudel");
       if (item.candel==1) {
@@ -1503,11 +1503,11 @@ function BuildSideMenu(data) {
           clearIncludeExcludeItemsBrowse("snapdirs");
 
           // Clear then rebuild the Profile Path (include directories)
-          var c = 0;
+          var cnt = 0;
           var actiontype = "snapdirs";
           $.each(data.snapshot.paths.items, function (i, item) {        
             if (item.snapinclexcl == "include" && item.snaptype == "d") {
-              console.log("Item: "+item.snappath);  // This Works
+
               // Create the kind of object expected by the receiving function
               var diritem = new Object();
               diritem.setid   = item.id;
@@ -1517,11 +1517,11 @@ function BuildSideMenu(data) {
 
               // Insert the row
               var ieObj = new Object();
-              ieObj.cnt = c;
+              ieObj.cnt = cnt;
               ieObj.actiontype = actiontype;
               ieObj.item = diritem;
               var cdiv = insertIncludeExcludeRow(ieObj);
-              c = c + 1;
+              cnt = cnt + 1;
 
               // Add trigger
               $(cdiv).click(function() {
@@ -1820,17 +1820,17 @@ function insertIncludeItems(data) {
     clearIncludeExcludeItemsBrowse("snapdirs");
 
     // Round the loop again, for the Include Directories in the Snapshots screen
-    var c = 0;
+    var cnt = 0;
     $.each(data, function (i, item) {
       // Also add the include folders to the Snapshots 'Backup Folders' list
       if (item.settype == 'd') {
         // Insert the row
         var ieObj = new Object();
-        ieObj.cnt = c;
+        ieObj.cnt = cnt;
         ieObj.actiontype = "snapdirs";
         ieObj.item = item;
         var cdiv = insertIncludeExcludeRow(ieObj);
-        c = c + 1;
+        cnt = cnt + 1;
 
         // Add trigger
         $(cdiv).click(function() {
