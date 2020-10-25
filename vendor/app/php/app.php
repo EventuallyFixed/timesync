@@ -1106,9 +1106,25 @@ function dbDeleteSnapshot($SnapshotId) {
     }
     $db->close();
   }
-  
+
   if ($Exists > 0) {
-    // Delete all snapshot paths too
+    // Get the Snapshots header
+    // Get the snapshot's base directory
+    $SnapshotRecs = dbSelectSnapshotForId($SnapshotId);
+
+    // Get the backup path from the database record
+    $BackupTSPath = $SnapshotRecs["items"][0]["snapbasepath"];
+    $BackupBasePath = substr($BackupTSPath, 0, strrpos($BackupTSPath, "/"));
+    $BackupDir = substr($BackupTSPath, strrpos($BackupTSPath, "/") + 1);
+
+    // Delete this snapshot path from disk
+    $cmd = "rm -rf ".$BackupBasePath."/".$BackupDir;
+    $CmdRes = dbExecOSCommand($cmd);
+
+    // Re-point the 'current' symlink, if required
+    $arr["current"] = dbPointCurrentSymlink($BackupBasePath);
+
+    // Delete all snapshot path records too
     $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
 
     if ($delPathsArr["result"] == "ok") {
@@ -1139,6 +1155,51 @@ function dbDeleteSnapshot($SnapshotId) {
   }
 
   return $arr;
+}
+
+// Points the "current" symlink to the latest existing directory
+function dbPointCurrentSymlink($BackupBasePath) {
+
+  $rtn = array();
+
+  // Ensures that the 'current' symlink points to something, or is not there
+  $inObj = array();
+  $inObj["filetype"] = "-";
+  $inObj["hid"] = "";
+  $inObj["dir"] = $BackupBasePath;
+  $inObj["sel"] = "";
+  $DirContents = dbGetDirectoryContentsFromShell($inObj);
+
+  $ValidChdir = 0;
+  $SymlinkFound = 0;
+  foreach($DirContents["items"] as $item){
+    if ($item["filetype"] == "l" && $item["filename"] == "current") {
+      $SymlinkFound = 1;
+      exec("cd \"".$item["symlink"]."\" && pwd", $chk, $int);
+      foreach ($chk as $chkline) {
+        $ValidChdir = 1;
+      }     
+    }
+  }
+
+  // If wherever the symlink points to does not exist, remove it
+  if ($SymlinkFound == 1) {
+    if ($ValidChdir == 0) {
+      $cmd = "cd \"".$BackupBasePath."\" && rm current";
+      exec($cmd, $chk, $int);
+    }
+  }
+
+  // Where should 'current' point?  List directories only.
+  $LastDir = "";
+  exec("cd \"".$BackupBasePath."\" && ls -ltr | grep ^d", $dir, $int);
+  if (count($dir) > 0) {
+    $LastDir = substr($dir[count($dir) - 1], 57);
+    $cmd = "cd \"".$BackupBasePath."\" && ln -s \"".$BackupBasePath."/".$LastDir."\" current";
+    exec($cmd, $chk, $int);
+  }
+
+  return $rtn;
 }
 
 function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
@@ -1218,6 +1279,7 @@ function dbGetDirectoryContentsFromShell($in) {
       $fname = substr($dirline, 69);
       $fsize = substr($dirline, 34, 9);
       $fdate = strftime("%Y-%m-%d %H:%M:%S", strtotime(substr($dirline, 52, 2)."-".substr($dirline, 48, 3)."-".substr($dirline, 64, 4)." ".substr($dirline, 55, 8)));
+      $slink = ""; // symlink destination
 
       // Include only directories and regular files
       if ($dirind == 'd' || $dirind == '-' || $dirind == 'l') {
@@ -1225,8 +1287,10 @@ function dbGetDirectoryContentsFromShell($in) {
         if (($filetype == "d" && ($dirind == 'd' || $dirind == 'l')) || $filetype != "d") {
 
           if ($dirind == 'l') {
-            // Remove the SymLink symbol & everything to the right: ' ->'
-            $fname = substr($fname,0,strpos($fname, " ->"));
+            // Get the SymLink destination to the right of the symbol
+            $slink = substr($fname,strpos($fname, " -> ") + 1);
+            // Now remove the SymLink symbol & everything to the right: ' ->'
+            $fname = substr($fname,0,strpos($fname, " -> "));
             $fsize = 0;
           }
 
@@ -1243,6 +1307,7 @@ function dbGetDirectoryContentsFromShell($in) {
             $lsinfo["filename"] = $fname;
             $lsinfo["filesize"] = $fsize;
             $lsinfo["filedate"] = $fdate;
+            $lsinfo["symlink"]  = $slink;
 
             array_push($arr, $lsinfo);
             $id = $id + 1;
@@ -1311,8 +1376,8 @@ function dbExecOSCommand($cmd) {
   //   myCommand & echo $!
   //   sh -c 'echo $$; exec myCommand'
   //   $ myCommand ; pid=$!
-//  exec("sh -c 'echo $$; exec ".$cmd."'", $ls, $int);  
-  exec($cmd." 2>&1 > out.log & echo $!", $ls, $int);  
+  exec("sh -c 'echo $$; exec ".$cmd."'", $ls, $int);  
+//  exec($cmd." 2>&1 > out.log & echo $!", $ls, $int);  
   return $ls;
 }
 
@@ -1732,7 +1797,7 @@ function deleteSnapshot() {
 
   $rtn = array();
 
-  if ($SnapshotId == "0") {
+  if ($SnapshotId == "0" || $SnapshotId == "now") {
     $rtn["result"] = "ko";
     $rtn["message"] = "You cannot delete the 'Now' snapshot";
   }
