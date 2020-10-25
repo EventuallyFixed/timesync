@@ -11,6 +11,7 @@ BrowseSettings["savetoType"] = "d";
 BrowseSettings["ShowHidden"] = 0;
 var init = true;
 var snapshotid = "";
+var globallink = true;
 
 // OnLoadsaveto
 $(document).ready(function() {
@@ -1520,6 +1521,7 @@ function BuildSideMenu(data) {
 
                 // Set the value of the file browse bar, if it is a folder, and trigger a refresh of the files area
                 if (item.settype == "d") {
+                  globallink = true;
                   $("#filedirinput").val(item.setval);
                   $(this).addClass("inclexclsel");
                   $("#filedirinput").trigger("change");
@@ -1527,13 +1529,11 @@ function BuildSideMenu(data) {
               });
             }
           });
-
         },
         error: function (jqXhr, textStatus, errorMessage) {
           console.log('Error: ' + errorMessage);
         }
       });
-
     }
     else {
       // Return the backup folders of the selected snapshot
@@ -1588,6 +1588,7 @@ function BuildSideMenu(data) {
 
                 // Set the value of the file browse bar, if it is a folder, and trigger a refresh of the files area
                 if (item.snaptype == "d") {
+                  globallink = false;
                   $("#filedirinput").val(item.snappath);
                   $(this).addClass("inclexclsel");
                   $("#filedirinput").trigger("change");
@@ -1604,15 +1605,17 @@ function BuildSideMenu(data) {
       });
     }
 
-
     $("#snapshotname").val(item.attr("snapdesc"));
     $("#snapshotname").attr("placeholder",item.attr("snapdate"));
     $("#snapshotname").removeAttr("readonly");
     // Set the Snapshot description read-only as required
     if (item.attr("id") == "snapshotsmenunow") $("#snapshotname").val("").attr("readonly", "readonly"); 
     else $("#snapshotname").removeAttr("readonly");
-  });
-  $("#snapshotsmenunow").trigger("click");
+    
+    // Refresh on something that's always here
+    $("#globalshares").trigger("click");    
+  });  // snapshotmenu.click
+
 }  // BuildSideMenu
 
 
@@ -1716,6 +1719,7 @@ $("#snapnow").click(function(){
 
 $("#globalroot").click(function(){
   // Remove inclexclsel class if set, and set to this
+  globallink = true;
   clearSnapShortcutsSel();
   $(this).addClass("inclexclsel");
   $("#filedirinput").val("/").trigger("change");
@@ -1723,6 +1727,7 @@ $("#globalroot").click(function(){
 
 $("#globalshares").click(function(){
   // Remove inclexclsel class if set, and set to this
+  globallink = true;
   clearSnapShortcutsSel();
   $(this).addClass("inclexclsel");
   $("#filedirinput").val("/shares").trigger("change");
@@ -1745,7 +1750,10 @@ $("#filedirinput").change(function(){
   inObj.selType = "-";
   inObj.selDir = $("#filedirinput").val();
   inObj.newDir = "";
-  inObj.snapshotId = snapshotid;
+  
+  // Set the Snapshot ID, depending on whether or not it's a Global Link
+  if (globallink==true) inObj.snapshotId = "now";
+  else inObj.snapshotId = snapshotid;
   getDirectoryContents(inObj);
 });
 

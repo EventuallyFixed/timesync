@@ -33,7 +33,6 @@ class MyDB extends SQLite3 {
   }
 }
 
-
 // Database Creation
 function db_create_schema() {
   $db = new MyDB();
@@ -122,7 +121,6 @@ EOF;
   return $arr;
 } // db_create_schema
 
-
 function dbSelectCodelistRecord($CodeType, $CodeName) {
   // Returns a CodeList record for a ProfileId and ProfileKey
   $Exists = "0";
@@ -172,7 +170,6 @@ function dbSelectCodelistRecord($CodeType, $CodeName) {
   return $rtn;
 }
 
-
 function dbSelectProfileIdForProfileName($ProfileName) {
 
   $rtn = array();
@@ -217,7 +214,6 @@ function dbSelectProfileIdForProfileName($ProfileName) {
   return $rtn;
 }
 
-
 // Select all profiles from the Profiles list
 function dbSelectProfilesList() {
   $rtn = array();
@@ -248,7 +244,6 @@ function dbSelectProfilesList() {
   return $rtn;
 }
 
-
 // Select all profiles from the Profiles list
 function dbSelectProfileForId($ProfileId) {
   $rtn = array();
@@ -278,7 +273,6 @@ function dbSelectProfileForId($ProfileId) {
   }
   return $rtn;
 }
-
 
 function dbDeleteProfileRecordSet($ProfileId) {
 
@@ -322,7 +316,6 @@ function dbDeleteProfileRecordSet($ProfileId) {
 
   return $arr;
 }
-
 
 function dbSelectProfileSettingsId($ProfileId, $ProfileKey) {
   // Returns a ProfileSettings ID ProfileId and ProfileKey
@@ -375,7 +368,6 @@ function dbSelectProfileSettingsId($ProfileId, $ProfileKey) {
   return $rtn;
 }
 
-
 function dbSelectProfileSettings($ProfileId){
   // Selects all ProfileSettings for a ProfileId
   $arr = array();
@@ -406,7 +398,6 @@ function dbSelectProfileSettings($ProfileId){
   }
   return $arr;
 }
-
 
 function dbSelectProfileSettingsRecord($ProfileId, $ProfileKey) {
   // Returns a ProfileSettings record for a ProfileId and ProfileKey
@@ -457,7 +448,6 @@ function dbSelectProfileSettingsRecord($ProfileId, $ProfileKey) {
   return $rtn;
 }
 
-
 // Deletes a Profile Setting key/value pair
 function dbDeleteProfileSetting($SettingId) {
 
@@ -501,7 +491,6 @@ function dbDeleteProfileSetting($SettingId) {
   return $arr;
 }
 
-
 // Select all Include or Exclude Settings for a Profile ID
 function dbSelectProfileIncludeExclude($ProfileId, $InclExcl) {
   $arr = array();
@@ -530,7 +519,6 @@ function dbSelectProfileIncludeExclude($ProfileId, $InclExcl) {
   }
   return $arr;
 }
-
 
 function dbDeleteProfileInclExcl($SettingId) {
 
@@ -573,7 +561,6 @@ function dbDeleteProfileInclExcl($SettingId) {
   return $arr;
 }
 
-
 function dbGetFileSpecId($ProfileId, $InclExcl, $Type, $Pattern) {
 
   $Exists = 0;
@@ -611,7 +598,6 @@ function dbGetFileSpecId($ProfileId, $InclExcl, $Type, $Pattern) {
   return $rtn;
 }
 
-
 function dbDelProfile($ProfileId) {
   $arr = array();
 
@@ -633,7 +619,6 @@ function dbDelProfile($ProfileId) {
   }
   return $arr;
 }
-
 
 function dbDelProfileSettings($ProfileId) {
   $arr = array();
@@ -657,7 +642,6 @@ function dbDelProfileSettings($ProfileId) {
   return $arr;
 }
 
-
 function dbDelProfileInclExcl($ProfileId) {
   $arr = array();
 
@@ -679,7 +663,6 @@ function dbDelProfileInclExcl($ProfileId) {
   }
   return $arr;
 }
-
 
 function dbInsertProfile($ProfileName) {
   // Create a profile, and return the ID & description
@@ -732,7 +715,6 @@ function dbInsertProfile($ProfileName) {
   }
   return $arr;
 }
-
 
 function dbInsertDefaultProfileValues($ProfileId) {
 
@@ -856,7 +838,6 @@ function dbInsertIncludeExcludeValue($ProfileId, $InclExcl, $Type, $Pattern) {
   return $arr;
 }
 
-
 function dbSelectSnapshotsList($ProfileId) {
 
   $rtn = array();
@@ -901,7 +882,6 @@ function dbSelectSnapshotsList($ProfileId) {
   return $rtn;
 }
 
-
 function dbSelectSnapshotForId($SnapshotId) {
 
   $rtn = array();
@@ -913,7 +893,7 @@ function dbSelectSnapshotForId($SnapshotId) {
     $rtn["items"] = array();
   } else {
     // Get the snapshot
-    $rows = $db->query("SELECT id, profileid, snaptime, snapdesc FROM snapshots WHERE id = ".$SnapshotId.";");
+    $rows = $db->query("SELECT * FROM snapshots WHERE id = ".$SnapshotId.";");
     if (!$rows) {
       $rtn["result"] = "ko";
       $rtn["message"] = $db->lastErrorMsg();
@@ -932,7 +912,6 @@ function dbSelectSnapshotForId($SnapshotId) {
   }
   return $rtn;
 }
-
 
 function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
   $rtn = array();
@@ -962,7 +941,6 @@ function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
   }
   return $rtn;
 }
-
 
 function dbCreateSnapshotRecords($ProfileId) {
   // Create a new record in the snapshots table, and copy the profile paths to the snapshotpaths table
@@ -998,7 +976,7 @@ function dbCreateSnapshotRecords($ProfileId) {
         }
 
         // Remove all of the punctuation from the timestamp
-        $TSdir = RemoveTimestampPunct($TimeStr);
+        $TSdir = removeTimestampPunct($TimeStr);
         $BackupTSPath = $BackupBasePath."/".$TSdir;
 
         // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
@@ -1061,7 +1039,6 @@ function dbCreateSnapshotRecords($ProfileId) {
   return $arr;
 }
 
-
 // Deletes a Snapshot plus paths records
 function dbDeleteSnapshotPaths($SnapshotId) {
 
@@ -1103,7 +1080,6 @@ function dbDeleteSnapshotPaths($SnapshotId) {
   }
   return $arr;
 }
-
 
 // Deletes a Snapshot plus paths records
 function dbDeleteSnapshot($SnapshotId) {
@@ -1165,7 +1141,6 @@ function dbDeleteSnapshot($SnapshotId) {
   return $arr;
 }
 
-
 function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
   $arr = array();
 
@@ -1190,12 +1165,12 @@ function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
   return $arr;
 }
 
-
-function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
-
-  // $filetype - 'file' or 'folder'
-  // $dir      - Where to start browsing
-  // $sel      - What the user last clicked on
+function dbGetDirectoryContentsFromShell($in) {
+  // Array elements for $in 
+  // filetype - 'file' or 'folder'
+  // dir      - Where to start browsing
+  // sel      - What the user last clicked on
+  // hid      - Show Hidden Files
 
   $chk = array();
   $ls = array();
@@ -1203,6 +1178,11 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
   $pwd = array();
   $int = 0;
   $rtn = array();
+  
+  $filetype = $in["filetype"];
+  $hid = $in["hid"];
+  $dir = $in["dir"];
+  $sel = $in["sel"];
 
   if (empty($sel)) { $sel = $dir; }
   else {
@@ -1291,7 +1271,6 @@ function dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid) {
   return $rtn;
 }
 
-
 function dbSelectRsyncExcludesIncludes($SnapshotId) {
   // Build the Exclude/Include part of the rsync command
   // using the snapshotpaths records
@@ -1325,7 +1304,6 @@ function dbSelectRsyncExcludesIncludes($SnapshotId) {
   return $arr;
 }
 
-
 function dbExecOSCommand($cmd) {
 // Line 1675
   // Execute a command, pass output to Array, success indicator
@@ -1350,22 +1328,30 @@ function getDirectoryContentsFromShell() {
   $sel = SQLite3::escapeString($_POST["sel"]);        // What the user clicked on
   $hid = SQLite3::escapeString($_POST["hid"]);        // Show Hidden
   $snapid = SQLite3::escapeString($_POST["snapid"]);  // Snapshot ID
-  
+
   if ($snapid != "now") {
     // Get the snapshot's base directory
-    $snapshot = dbSelectSnapshotForId($snapid);
+    $SnapshotRecs = dbSelectSnapshotForId($snapid);
 
-   
+    // Get the backup path from the database record
+    $BackupTSPath = $SnapshotRecs["items"][0]["snapbasepath"];
+
+    // Trim slashes as appropriate
+    $BackupTSPath = rtrim($BackupTSPath, "/");
+    $dir = ltrim(rtrim($dir, "/"), "/");
+    // The snapshot path should prepend the wanted path
+    $dir = $BackupTSPath."/".$dir;
   }
-  else {
-    $snapshot = dbSelectSnapshotForId($snapid);
-    
-  }
-  $arr = dbGetDirectoryContentsFromShell($filetype, $dir, $sel, $hid);
+
+  $dirArr = array();
+  $dirArr["filetype"] = $filetype;
+  $dirArr["dir"] = $dir;
+  $dirArr["sel"] = $sel;
+  $dirArr["hid"] = $hid;
+  $arr = dbGetDirectoryContentsFromShell($dirArr);
 
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function deleteProfile() {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
@@ -1373,7 +1359,6 @@ function deleteProfile() {
   $arr = dbDeleteProfileRecordSet($ProfileId);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 // Inserts default excludes: *.backup*, *~, .Private, .cache/*, .dropbox*, .gvfs, .thumbnails*, [Tt]rash*, lost+found/*
 function addDefaultExcludes() {
@@ -1440,7 +1425,6 @@ function selectProfilesList() {
   echo json_encode(array_change_key_case($rtn), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
 // Adds a profile to the Profiles list, if not already existing
 function addProfile() {
   $ProfileName = SQLite3::escapeString($_POST["profilename"]);
@@ -1466,14 +1450,12 @@ function addProfile() {
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
 // Select all Settings for a Profile ID, except the file includes
 function selectProfileSettings() {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $arr = dbSelectProfileSettings($ProfileId);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 // Inserts or Updates a Profile Setting key/value pair
 function updateProfileSetting() {
@@ -1486,7 +1468,6 @@ function updateProfileSetting() {
   $arr = dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function updateNoDelNamed() {
   $rtn = array();
@@ -1502,7 +1483,6 @@ function updateNoDelNamed() {
 
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function updateSettingsPaths() {
 
@@ -1521,7 +1501,6 @@ function updateSettingsPaths() {
   echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
 function deleteProfileSetting() {
 
   $SettingId = SQLite3::escapeString($_POST["settingid"]);
@@ -1530,7 +1509,6 @@ function deleteProfileSetting() {
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
 function deleteProfileInclExcl() {
 
   $SettingId = SQLite3::escapeString($_POST["settingid"]);
@@ -1538,7 +1516,6 @@ function deleteProfileInclExcl() {
   $arr = dbDeleteProfileInclExcl($SettingId);
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function insertIncludeFileFolder() {
   // Add the user's selected path
@@ -1560,7 +1537,6 @@ function insertIncludeFileFolder() {
   echo " } ";
 }
 
-
 function insertExcludeFileFolder() {
   // Add the user's selected path
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
@@ -1581,7 +1557,6 @@ function insertExcludeFileFolder() {
   echo " } ";
 }
 
-
 function updateSchedule() {
 
   // The separate JSON calls for this group lock the database, so resolve this here...
@@ -1601,14 +1576,12 @@ function updateSchedule() {
   echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
 function init() {
   $rtn = array();
   $rtn["dbinit"] = db_create_schema();
   $rtn["default"] = dbInsertProfile("Default");
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function selectFullProfile($ProfileId) {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
@@ -1632,13 +1605,17 @@ function selectFullProfile($ProfileId) {
 
   $SnapList = dbSelectSnapshotsList($ProfileId);
   $AllProfile["snaplist"] = $SnapList[items];
-  
-  $DirList = dbGetDirectoryContentsFromShell("-", $Dir, "");
+
+  $dirArr = array();
+  $dirArr["filetype"] = "-";
+  $dirArr["dir"] = $Dir;
+  $dirArr["sel"] = "";
+  $dirArr["hid"] = "";
+  $DirList = dbGetDirectoryContentsFromShell($dirArr);
   $AllProfile["showfiles"] = $DirList[items];
 
   echo json_encode($AllProfile, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function selectSnapshotsList(){
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
@@ -1647,11 +1624,9 @@ function selectSnapshotsList(){
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
-function RemoveTimestampPunct($TimeStamp) {
+function removeTimestampPunct($TimeStamp) {
   return str_replace(".", "_", str_replace(":", "", str_replace("T", "_", str_replace("-", "", $TimeStamp))));
 }
-
 
 function takeSnapshot() {
 
@@ -1685,10 +1660,12 @@ function takeSnapshot() {
       // Get the Snapshot ID from the returned arrays
       $SnapshotId = $arr["snapshotrecords"]["snapshot"][0]["id"];
 
+      // Get the backup path from the database record
       $BackupTSPath = $arr["snapshotrecords"]["snapshot"][0]["snapbasepath"];
+      // Work out where 'current' should be
       $BackupCurrentPath = substr($BackupTSPath, 0, strrpos($BackupTSPath, "/"))."/current";
 
-      // Get the includes and excludes of this snapshot
+      // Get the includes and excludes of this snapshot profile
       $InexArr = dbSelectRsyncExcludesIncludes($SnapshotId);
 
       // Append the backup path with the TimeStamp, and ensure that path exists
@@ -1748,7 +1725,6 @@ $arr["rsync"][$pos] = $rsync;
   }
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function deleteSnapshot() {
   $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
@@ -1810,7 +1786,6 @@ function deleteSnapshot() {
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
 function updateSnapshotName(){
   $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
   $SnapshotName= SQLite3::escapeString($_POST["snapshotname"]);
@@ -1833,7 +1808,6 @@ function updateSnapshotName(){
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-
 function selectSnapshotData() {
 
   $rtn = array();
@@ -1846,7 +1820,6 @@ function selectSnapshotData() {
   
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
 
 function writeErrorMsg() {
   echo "{ \"result\" : \"Sin dinero, sin esquí!\" }";
