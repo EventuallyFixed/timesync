@@ -1118,37 +1118,50 @@ function dbDeleteSnapshot($SnapshotId) {
     $BackupDir = substr($BackupTSPath, strrpos($BackupTSPath, "/") + 1);
 
     // Delete this snapshot path from disk
-    $cmd = "rm -rf ".$BackupBasePath."/".$BackupDir;
-    $CmdRes = dbExecOSCommand($cmd);
+    exec("cd \"".$BackupBasePath."\" && rm -rf \"".$BackupDir."\"", $chk, $int);
+    
+    // Check for existence of the directory
+    $validChdir = 0;
+    exec("cd \"".$BackupTSPath."\" && pwd", $chk, $int);
+    foreach ($chk as $chkline) {
+      $validChdir = 1;
+    }
+    
+    if ($validChdir == 0) {
 
-    // Re-point the 'current' symlink, if required
-    $arr["current"] = dbPointCurrentSymlink($BackupBasePath);
+      // Re-point the 'current' symlink, if required
+      $arr["current"] = dbPointCurrentSymlink($BackupBasePath);
 
-    // Delete all snapshot path records too
-    $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
+      // Delete all snapshot path records too
+      $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
 
-    if ($delPathsArr["result"] == "ok") {
-      $db = new MyDB();
-      if(!$db) {
-        $arr["result"] = "ko";
-        $arr["message"] = $db->lastErrorMsg();
-        $arr["paths"] = $delPathsArr;
-      } else {
-        $ret = $db->exec("DELETE FROM snapshots WHERE id = ".$SnapshotId.";");
-        if(!$ret){
+      if ($delPathsArr["result"] == "ok") {
+        $db = new MyDB();
+        if(!$db) {
           $arr["result"] = "ko";
           $arr["message"] = $db->lastErrorMsg();
           $arr["paths"] = $delPathsArr;
+        } else {
+          $ret = $db->exec("DELETE FROM snapshots WHERE id = ".$SnapshotId.";");
+          if(!$ret){
+            $arr["result"] = "ko";
+            $arr["message"] = $db->lastErrorMsg();
+            $arr["paths"] = $delPathsArr;
+          }
+          else {
+            $arr["result"] = "ok";
+            $arr["message"] = "Snapshot record deleted";
+            $arr["paths"] = $delPathsArr;
+          }
+          $db->close();
         }
-        else {
-          $arr["result"] = "ok";
-          $arr["message"] = "Snapshot record deleted";
-          $arr["paths"] = $delPathsArr;
-        }
-        $db->close();
       }
+    }  // directory was deleted
+    else {
+      $arr["result"] = "ko";
+      $arr["message"] = "Could not delete snapshot directory: ".$BackupTSPath;
     }
-  }  
+  }
   else {
     $arr["result"] = "ko";
     $arr["message"] = "No such id: ".$SnapshotId;
