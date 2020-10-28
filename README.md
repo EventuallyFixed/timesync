@@ -25,6 +25,14 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 # Development status
 - Ongoing
 
+# Doing
+- Translate settings into rsync commands:
+  - Execute the rsync commands in a backend shell script.
+  - Move deletions to backend shell script.
+  - Associate log files with the correct instance.
+    - Possibly somehow move the log file(s) to the snapshot directory, post-completion.
+    - Could be tricky, as it's all being done asynchronously.
+
 # ToDo
 - Revise the main Snapshots screen layout, to be more mobile friendly.
   - Complete the implementation of functionality here.
@@ -32,19 +40,18 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
   - Save keys in file system: ./vendor/app/profile/profileId/KeyFile.
   - Check for existence of key before upload (one key per profile? Overwrite option?).
 - Include & Exclude:
-  - Issue with selection of symlinks pointing to files/folders.
+  - Possible issue with selection of symlinks pointing to files/folders (e.g. /shares/<share>).
     - Perhaps these should be selectable as the linked-to type?
       - How will rsync deal with the symlinks?
-- Translate settings into rsync commands:
-  - Execute the rsync commands!
-- Logic to build script to do Smart Remove.
+- Logic of script to do Smart Remove, and call after snapshot completion, with correct parameters.
 - Translate schedules into cron job XMLs (See posts in WD Community: [Post 1](https://community.wd.com/t/crontab-on-mycloud-ex2/98653/21); [Post 2](https://community.wd.com/t/nas-to-usb-automatic-incremental-backup/193625)):
   - Be able to reliably add/delete the cron entries using php's XML tools.
 - Wrap the application in the WD application wrapper (See: [WD Developer SDK](https://developer.westerndigital.com/develop/wd/sdk.html#intro)).
 
 # Completed
+- Get rsync to work from backend script, and pass back process id, save pid in database.
 - Screens - Initial design prototypes.
-- Database - Initialise, Load, & Save.
+- Database - Initialise, Load, & Save, but still is a work in progress.
 - Settings - Initialise, Load, & Save.
 - Include & Exclude folders.
   - Initialise, Load, Save, Add, & Remove.

@@ -81,6 +81,13 @@ function db_create_schema() {
         snapshotpath                  TEXT    NOT NULL
       );
 
+      CREATE TABLE IF NOT EXISTS snapshotpids (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        snapshotid                    INTEGER NOT NULL,
+        snapshotpathid                INTEGER NOT NULL,
+        snapshotpid                   INTEGER NOT NULL
+      );
+
       CREATE TABLE IF NOT EXISTS codelist (
         id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         codetype                      CHAR(20) NOT NULL,
@@ -1039,7 +1046,7 @@ function dbCreateSnapshotRecords($ProfileId) {
   return $arr;
 }
 
-// Deletes a Snapshot plus paths records
+// Deletes paths records for a Snapshot
 function dbDeleteSnapshotPaths($SnapshotId) {
 
   $Exists = "-1";
@@ -1081,6 +1088,48 @@ function dbDeleteSnapshotPaths($SnapshotId) {
   return $arr;
 }
 
+// Deletes pids records for a Snapshot
+function dbDeleteSnapshotPids($SnapshotId) {
+
+  $Exists = "-1";
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    // Is there a row with this Setting ID?
+    $rows = $db->query("SELECT COUNT(*) AS count FROM snapshotpids WHERE snapshotid = ".$SnapshotId.";");
+    if(!$rows){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $row = $rows->fetchArray(SQLITE3_ASSOC);
+      $Exists = $row["count"];
+
+      if ($Exists > 0) {
+        $ret = $db->exec("DELETE FROM snapshotpids WHERE snapshotid = ".$SnapshotId.";");
+        if(!$ret){
+          $arr["result"] = "ko";
+          $arr["message"] = $db->lastErrorMsg();
+        }
+        else {
+          $arr["result"] = "ok";
+          $arr["message"] = "Records deleted";
+        }
+      }
+      else {
+        $arr["result"] = "ok";
+        $arr["message"] = "No snapshot pids for id: ".$SnapshotId;
+      }
+    }
+    $db->close();
+  }
+  return $arr;
+}
+
 // Deletes a Snapshot plus paths records
 function dbDeleteSnapshot($SnapshotId) {
 
@@ -1088,6 +1137,7 @@ function dbDeleteSnapshot($SnapshotId) {
   $arr["result"] = "";
   $arr["message"] = "";
   $arr["paths"] = array();
+  $arr["pids"] = array();
 
   $db = new MyDB();
   if(!$db) {
@@ -1135,23 +1185,29 @@ function dbDeleteSnapshot($SnapshotId) {
       // Delete all snapshot path records too
       $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
 
+      // Delete all snapshot path records too
+      $delPidsArr = dbDeleteSnapshotPids($SnapshotId);
+
       if ($delPathsArr["result"] == "ok") {
         $db = new MyDB();
         if(!$db) {
           $arr["result"] = "ko";
           $arr["message"] = $db->lastErrorMsg();
           $arr["paths"] = $delPathsArr;
+          $arr["pids"] = $delPidsArr;
         } else {
           $ret = $db->exec("DELETE FROM snapshots WHERE id = ".$SnapshotId.";");
           if(!$ret){
             $arr["result"] = "ko";
             $arr["message"] = $db->lastErrorMsg();
             $arr["paths"] = $delPathsArr;
+            $arr["pids"] = $delPidsArr;
           }
           else {
             $arr["result"] = "ok";
             $arr["message"] = "Snapshot record deleted";
             $arr["paths"] = $delPathsArr;
+            $arr["pids"] = $delPidsArr;
           }
           $db->close();
         }
@@ -1232,6 +1288,33 @@ function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
     else {
       $arr["result"] = "ok";
       $arr["message"] = "Snapshot Name updated.";
+    }
+    $db->close();
+  }
+
+  return $arr;
+}
+
+function dbCreateSnapshotPid($SnapshotId, $SnapshotPathId, $SnapshotPid){
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+    $arr["pid"] = "";
+  } else {
+    // Update an existing record
+    $ret = $db->exec("INSERT INTO snapshotpids (snapshotid, snapshotpathid, snapshotpid) VALUES (".$SnapshotId.", ".$SnapshotPathId.", ".$SnapshotPid.");");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+      $arr["pid"] = "";
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Snapshot Pid created.";
+      $arr["pid"] = $SnapshotPid;
     }
     $db->close();
   }
@@ -1364,7 +1447,7 @@ function dbSelectRsyncExcludesIncludes($SnapshotId) {
     $arr["cmd"] = "";
   } else {
     // Get the excludes and then the includes
-    $rows = $db->query("SELECT snapshots.snaptime snaptime, sp.snapshotinclexcl snapshotinclexcl, sp.snapshotpathtype snapshotpathtype, sp.snapshotpath snapshotpath FROM snapshots JOIN (SELECT id pathid, snapshotid, snapshotinclexcl, snapshotpathtype, snapshotpath FROM snapshotpaths) AS sp ON sp.snapshotid = snapshots.id WHERE snapshots.id = ".$SnapshotId." ORDER BY snapshotinclexcl, pathid;");
+    $rows = $db->query("SELECT sp.pathid snappathid, snapshots.snaptime snaptime, sp.snapshotinclexcl snapshotinclexcl, sp.snapshotpathtype snapshotpathtype, sp.snapshotpath snapshotpath FROM snapshots JOIN (SELECT id pathid, snapshotid, snapshotinclexcl, snapshotpathtype, snapshotpath FROM snapshotpaths) AS sp ON sp.snapshotid = snapshots.id WHERE snapshots.id = ".$SnapshotId." ORDER BY snapshotinclexcl, pathid;");
     if(!$rows){
       $arr["result"] = "ko";
       $arr["message"] = $db->lastErrorMsg();
@@ -1713,7 +1796,6 @@ function takeSnapshot() {
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $arr = array();
   $arr["snapshotrecords"] = array();
-  $arr["cmd"] = "";
   $arr["result"] = "";
   $arr["message"] = "";
   $arr["snaplist"] = array();
@@ -1749,8 +1831,6 @@ function takeSnapshot() {
       // Append the backup path with the TimeStamp, and ensure that path exists
       $mdcmd = "mkdir -p \"".$BackupTSPath."\"";    
       $mdres = dbExecOSCommand($mdcmd);
-      $arr["md"]["cmd"] = $mdcmd;
-      $arr["md"]["res"] = $mdres;
 
       // Go through each snapshot path to include, and call rsync for it
       // To debug, feed back the command
@@ -1767,19 +1847,19 @@ function takeSnapshot() {
       }
 
       // Build the command for each include directory
-      $cmd = "";
-$pos = 0;  // SJT DEBUG - remove $pos
+      $pos = 0;
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
-$pos += 1;
-          // Build it
-          $cmd = "rsync -aPq ".$inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$BackupTSPath."\"";
-$arr["cmd"][$pos] = $cmd;
-          // Call the OS command to take the snapshot
-          // sh -c 'echo $$; exec myCommand'
-          // ((yourcommand) & echo $! >/var/run/pidfile)
-//          $rsync = dbExecOSCommand($cmd);  // Line 1307
-$arr["rsync"][$pos] = $rsync;
+          // Build the parameters part of the command
+          $params = $inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$BackupTSPath."\"";
+
+          // Execute the shell script to run rsync, which passes back the pid = $
+          exec("/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/scripts/takesnapshot.sh ".$params, $rsyncpid, $rtn);
+          $SnapshotPid = $rsyncpid[0];
+
+          // Save the PID to the snapshotpids table
+          $arr["pid"][$pos] = dbCreateSnapshotPid($SnapshotId, $item["snappathid"], $SnapshotPid);
+          $pos = $pos + 1;
         }
       }
 
