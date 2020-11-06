@@ -920,6 +920,41 @@ function dbSelectSnapshotForId($SnapshotId) {
   return $rtn;
 }
 
+function dbSelectSnapshotsOverAge($ProfileId, $SnapshotAge) {
+
+  // $SnapshotAge = '+2 years', '+1 day', etc)
+
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Get the snapshot list
+    $rows = $db->query("SELECT * FROM snapshots WHERE profileid = ".$ProfileId." AND snaptime > date('now','".$SnapshotAge."'); ");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        // Use the Snapshot ID to get the snapshot & paths records
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
+  // DEBUG DEBUG DEBUG DEBUG
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
 function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
   $rtn = array();
 
@@ -1159,63 +1194,87 @@ function dbDeleteSnapshot($SnapshotId) {
 
   if ($Exists > 0) {
     // Get the Snapshots header
-    // Get the snapshot's base directory
     $SnapshotRecs = dbSelectSnapshotForId($SnapshotId);
 
-    // Get the backup path from the database record
-    $BackupTSPath = $SnapshotRecs["items"][0]["snapbasepath"];
-    $BackupBasePath = substr($BackupTSPath, 0, strrpos($BackupTSPath, "/"));
-    $BackupDir = substr($BackupTSPath, strrpos($BackupTSPath, "/") + 1);
+    // Get the snapshot profile id, use that to get the CanDeleteNamed flag
+    $ProfileId = $SnapshotRecs["items"][0]["profileid"];
+    $SnapshotName = $SnapshotRecs["items"][0]["snapdesc"];
 
-    // Delete this snapshot path from disk
-    exec("cd \"".$BackupBasePath."\" && rm -rf \"".$BackupDir."\"", $chk, $int);
-    
-    // Check for existence of the directory
-    $validChdir = 0;
-    exec("cd \"".$BackupTSPath."\" && pwd", $chk, $int);
-    foreach ($chk as $chkline) {
-      $validChdir = 1;
+    // Check for the "Don't Remove Named Snapshots" option being set
+    $CanDelNamedSnap = dbGetCanDeleteNamedSnapshots($ProfileId);
+
+    // If $CanDelNamedSnap = 0, check if there's no description
+    $CanDelSnap = 0;
+    if ($CanDelNamedSnap == 0) {
+      if (empty($SnapshotName) ) {
+        $CanDelSnap = 1;
+      }
+    }
+    else {
+      $CanDelSnap = 1;
     }
     
-    if ($validChdir == 0) {
+    if ($CanDelSnap == 1) {
+      // Get the snapshot's base directory
+      // Get the backup path from the database record
+      $BackupTSPath = $SnapshotRecs["items"][0]["snapbasepath"];
+      $BackupBasePath = substr($BackupTSPath, 0, strrpos($BackupTSPath, "/"));
+      $BackupDir = substr($BackupTSPath, strrpos($BackupTSPath, "/") + 1);
 
-      // Re-point the 'current' symlink, if required
-      $arr["current"] = dbPointCurrentSymlink($BackupBasePath);
+      // Delete this snapshot path from disk
+      exec("cd \"".$BackupBasePath."\" && rm -rf \"".$BackupDir."\"", $chk, $int);
+      
+      // Check for existence of the directory
+      $validChdir = 0;
+      exec("cd \"".$BackupTSPath."\" && pwd", $chk, $int);
+      foreach ($chk as $chkline) {
+        $validChdir = 1;
+      }
+      
+      if ($validChdir == 0) {
 
-      // Delete all snapshot path records too
-      $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
+        // Re-point the 'current' symlink, if required
+        $arr["current"] = dbPointCurrentSymlink($BackupBasePath);
 
-      // Delete all snapshot path records too
-      $delPidsArr = dbDeleteSnapshotPids($SnapshotId);
+        // Delete all snapshot path records too
+        $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
 
-      if ($delPathsArr["result"] == "ok") {
-        $db = new MyDB();
-        if(!$db) {
-          $arr["result"] = "ko";
-          $arr["message"] = $db->lastErrorMsg();
-          $arr["paths"] = $delPathsArr;
-          $arr["pids"] = $delPidsArr;
-        } else {
-          $ret = $db->exec("DELETE FROM snapshots WHERE id = ".$SnapshotId.";");
-          if(!$ret){
+        // Delete all snapshot path records too
+        $delPidsArr = dbDeleteSnapshotPids($SnapshotId);
+
+        if ($delPathsArr["result"] == "ok") {
+          $db = new MyDB();
+          if(!$db) {
             $arr["result"] = "ko";
             $arr["message"] = $db->lastErrorMsg();
             $arr["paths"] = $delPathsArr;
             $arr["pids"] = $delPidsArr;
+          } else {
+            $ret = $db->exec("DELETE FROM snapshots WHERE id = ".$SnapshotId.";");
+            if(!$ret){
+              $arr["result"] = "ko";
+              $arr["message"] = $db->lastErrorMsg();
+              $arr["paths"] = $delPathsArr;
+              $arr["pids"] = $delPidsArr;
+            }
+            else {
+              $arr["result"] = "ok";
+              $arr["message"] = "Snapshot record deleted";
+              $arr["paths"] = $delPathsArr;
+              $arr["pids"] = $delPidsArr;
+            }
+            $db->close();
           }
-          else {
-            $arr["result"] = "ok";
-            $arr["message"] = "Snapshot record deleted";
-            $arr["paths"] = $delPathsArr;
-            $arr["pids"] = $delPidsArr;
-          }
-          $db->close();
         }
+      }  // directory was deleted
+      else {
+        $arr["result"] = "ko";
+        $arr["message"] = "Could not delete snapshot directory: ".$BackupTSPath;
       }
-    }  // directory was deleted
+    }
     else {
       $arr["result"] = "ko";
-      $arr["message"] = "Could not delete snapshot directory: ".$BackupTSPath;
+      $arr["message"] = "Cannot delete a named snapshot";
     }
   }
   else {
@@ -1476,6 +1535,86 @@ function dbExecOSCommand($cmd) {
 //  exec($cmd." 2>&1 > out.log & echo $!", $ls, $int);  
   return $ls;
 }
+
+function dbRemoveSnapshotsOverAge($ProfileId) {
+  // For a profile, remove any snapshots older than X years
+  // This is called as part of the Take Snapshot instruction
+
+  $rtn = array();
+  $rtn["result"] = "ok";
+  $rtn["message"] = "";
+  $rtn["items"] = array();
+
+  
+  // Is it checked?
+  $DelOlderThanValue = 0;
+  $DelOlderThanChecked = 0;
+  $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdeleteolderthan");
+  if (count($chk["items"]) > 0) {
+    if ($chk["items"][0]["profilevalue"] == "1") {
+      $DelOlderThanChecked = 1;
+    }
+  }
+  
+  if ($DelOlderThanChecked == 1) {
+    $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdeleteolderthanage");
+    if (count($chk["items"]) > 0) {
+      $DelOlderThanValue = $chk["items"][0]["profilevalue"];
+    }
+
+    $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdeletebackupolderthanperiod");
+    // Possible periods: days, weeks, months, and years
+    if (count($chk["items"]) > 0) {
+      $DelOlderThanPeriod = $chk["items"][0]["profilevalue"];
+    }
+    
+    // Get all snapshot records over that age
+    $SnapshotList = dbSelectSnapshotsOverAge($ProfileId, "-".$DelOlderThanValue." ".$DelOlderThanPeriod);
+    
+    // Go through the snapshot list, and delete the snapshots
+    $rtn["message"] = "No snapshots to delete";
+    if (count($SnapshotList["items"]) > 0) {
+      // Potentially there are snapshots to delete
+      // Can we delete named snapshots
+      foreach($SnapshotList["items"] as $snap) {
+        array_push($rtn["items"], dbDeleteSnapshot($snap["id"]));
+      }
+      $rtn["message"] = "Deleted snapshots";
+    }
+    
+  } // DelOlderThanChecked is checked
+  else {
+    $rtn["message"] = "'Delete Older Than' is unchecked";
+  }
+  
+  return $rtn;
+}
+
+function dbSmartRemove($ProfileId) {
+  return array();
+}
+
+function dbGetCanDeleteNamedSnapshots($ProfileId) {
+
+  // This flips the select, to read 'Can Delete Named Snapshots'
+
+  // Check for the "Don't Remove Named Snapshots" option being set
+  $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdontremovenamed");
+
+  $CanDelSnap = 0;
+  // No record here = checkbox unset
+  if ( count($chk["items"]) == 0 ) {
+    $CanDelSnap = 1;
+  }
+  else {
+    // Record exists and is unset
+    if ($chk["items"][0]["profilevalue"] == "0") {
+      $CanDelSnap = 1;
+    }
+  }
+  
+  return $CanDelSnap;
+} 
 
 
 // ==============================================================================
@@ -1870,6 +2009,12 @@ function takeSnapshot() {
 
       $arr["result"] = "ok";
       $arr["message"] = "Snapshot underway!";
+      
+      // Remove snapshots over age
+      $arr["removeoverage"] = $dbRemoveSnapshotsOverAge($ProfileId);
+      
+      // Now deal with any Smart Remove options
+      $arr["smartremove"] = dbSmartRemove($ProfileId);
     }
   }
   else {
@@ -1900,40 +2045,12 @@ function deleteSnapshot() {
     // If both are true, refuse to delete 
     $arr = dbSelectSnapshotForId($SnapshotId);  
     if ($arr["result"] == "ok") {  
-      $ProfileId = $arr["items"][0]["profileid"];
-      // Check for the "Don't Remove Named Snapshots" option being set
-      $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdontremovenamed");
-
-      $CanDelSnap = 0;
-      // No record here = checkbox unset
-      if ( count($chk["items"]) == 0 ) {
-        $CanDelSnap = 1;
-      }
-      // Record exists and is unset
-      if ($chk["items"][0]["profilevalue"] == "0") {
-        $CanDelSnap = 1;
-      }
-      // If there's no description
-      if (empty($arr["items"][0]["snapdesc"]) ) {
-        $CanDelSnap = 1;
-      }
-
-      if ( $CanDelSnap == 0) {
-        $rtn["result"] = "ko";
-        $rtn["message"] = "Cannot delete a snapshot with a description.";
-      }
-      else {
-        // Snapshot found and either there is no description
-        // or the "Don't Remove Named Snapshots" option is unchecked
-        $arr = dbDeleteSnapshot($SnapshotId);
-        $rtn = $arr;
-        
-        // TODO CALL THE OS COMMAND TO DELETE THE SNAPSHOT ON THE DISK
-        
-        // Return the latest list of snapshots to save making an extra ajax callback
-        if ($arr["result"] == "ok") {
-          $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
-        }
+      $arr = dbDeleteSnapshot($SnapshotId);
+      $rtn = $arr;
+      
+      // Return the latest list of snapshots to save making an extra ajax callback
+      if ($arr["result"] == "ok") {
+        $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
       }
     }
     else {
