@@ -868,7 +868,7 @@ function dbSelectSnapshotsList($ProfileId) {
     $rtn["items"] = array();
   } else {
     // Sort in ascending order - this is default
-    $rows = $db->query("SELECT id, profileid, snaptime, snapdesc FROM snapshots WHERE profileid = ".$ProfileId." ORDER BY id;");
+    $rows = $db->query("SELECT id, profileid, snaptime, snapdesc FROM snapshots WHERE profileid = ".$ProfileId." ORDER BY snaptime desc;");
     if (!$rows) {
       $rtn["result"] = "ko";
       $rtn["message"] = $db->lastErrorMsg();
@@ -926,6 +926,16 @@ function dbSelectSnapshotsOverAge($ProfileId, $SnapshotAge) {
 
   $rtn = array();
 
+  // Take into account whether named snapshots can be deleted
+  $DontDelNamed = '';
+  // No record here = checkbox unset
+  // Record exists and is set
+  if (count($chk["items"]) > 0) {
+    if ($chk["items"][0]["profilevalue"] == "1") {
+      $DontDelNamed = " and ifnull(snapshots.snapdesc,'') = '' ";
+    }
+  }
+
   $db = new MyDB();
   if(!$db) {
     $rtn["result"] = "ko";
@@ -933,7 +943,7 @@ function dbSelectSnapshotsOverAge($ProfileId, $SnapshotAge) {
     $rtn["items"] = array();
   } else {
     // Get the snapshot list
-    $rows = $db->query("SELECT * FROM snapshots WHERE profileid = ".$ProfileId." AND snaptime > date('now','".$SnapshotAge."'); ");
+    $rows = $db->query("SELECT * FROM snapshots WHERE profileid = ".$ProfileId." AND snaptime < date('now','".$SnapshotAge."')".$DontDelNamed.";");
     if (!$rows) {
       $rtn["result"] = "ko";
       $rtn["message"] = $db->lastErrorMsg();
@@ -1545,32 +1555,20 @@ function dbRemoveSnapshotsOverAge($ProfileId) {
   $rtn["message"] = "";
   $rtn["items"] = array();
 
-  
-  // Is it checked?
-  $DelOlderThanValue = 0;
-  $DelOlderThanChecked = 0;
-  $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdeleteolderthan");
-  if (count($chk["items"]) > 0) {
-    if ($chk["items"][0]["profilevalue"] == "1") {
-      $DelOlderThanChecked = 1;
-    }
-  }
-  
-  if ($DelOlderThanChecked == 1) {
-    $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdeleteolderthanage");
-    if (count($chk["items"]) > 0) {
-      $DelOlderThanValue = $chk["items"][0]["profilevalue"];
-    }
+  $DelOlderThanValue = dbGetSmartRemoveParameter($ProfileId, "settingsdeleteolderthan", "settingsdeleteolderthanage");
 
+  // Is it checked & the age assigned a value?
+  if ($DelOlderThanValue > 0) {
+    // Get the units of that age
     $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdeletebackupolderthanperiod");
     // Possible periods: days, weeks, months, and years
     if (count($chk["items"]) > 0) {
       $DelOlderThanPeriod = $chk["items"][0]["profilevalue"];
     }
-    
+
     // Get all snapshot records over that age
     $SnapshotList = dbSelectSnapshotsOverAge($ProfileId, "-".$DelOlderThanValue." ".$DelOlderThanPeriod);
-    
+
     // Go through the snapshot list, and delete the snapshots
     $rtn["message"] = "No snapshots to delete";
     if (count($SnapshotList["items"]) > 0) {
@@ -1581,17 +1579,172 @@ function dbRemoveSnapshotsOverAge($ProfileId) {
       }
       $rtn["message"] = "Deleted snapshots";
     }
-    
+
   } // DelOlderThanChecked is checked
   else {
-    $rtn["message"] = "'Delete Older Than' is unchecked";
+    $rtn["message"] = "'Delete Older Than' is unchecked or is not set";
   }
-  
+
+  return $rtn;
+}
+
+function dbGetSmartRemoveParameter($ProfileId, $CheckboxId, $FillinId) {
+
+  // Is the parameter checkbox checked?
+  $chk = dbSelectProfileSettingsRecord($ProfileId, $CheckboxId);
+
+  $rtn = 0;
+  // No record here = checkbox unset
+  if ( count($chk["items"]) > 0 ) {
+    // Record exists and is set
+    if ($chk["items"][0]["profilevalue"] == "1") {
+      $val = dbSelectProfileSettingsRecord($ProfileId, $FillinId);
+      if ( count($val["items"]) > 0 ) {
+        $rtn = $val["items"][0]["profilevalue"];
+      }
+    }
+  }
+
   return $rtn;
 }
 
 function dbSmartRemove($ProfileId) {
-  return array();
+
+  $arr = array();
+
+  // Is the Smart Remove checkbox checked?
+  $IsChecked = 0;
+  $chk = dbSelectProfileSettingsRecord($ProfileId, "settingssmartremove");
+  if (count($chk["items"]) > 0) {
+    if ($chk["items"][0]["profilevalue"] == "1") {
+      $IsChecked = 1;
+    }
+  }
+
+  // If checked, get the other values
+  if ($IsChecked == 1) {
+    // Get the parameter settings
+    $KeepAllForDays = dbGetSmartRemoveParameter($ProfileId, "settingssmartkeepallfordays", "settingssmartkeepallfordaysvalue");
+    $KeepOnePerDayForDays = dbGetSmartRemoveParameter($ProfileId, "settingssmartkeeponeperdayfordays", "settingssmartkeeponeperdayfordaysvalue");
+    $KeepOnePerWeekForWeeks = dbGetSmartRemoveParameter($ProfileId, "settingssmartkeeponeperweekforweeks", "settingssmartkeeponeperweekforweeksvalue");
+    $KeepOnePerMonthForMonths = dbGetSmartRemoveParameter($ProfileId, "settingssmartkeeponepermonthformonths", "settingssmartkeeponepermonthformonthsvalue");
+
+    // Check for the "Don't Remove Named Snapshots" option being set
+    $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdontremovenamed");
+
+    // Take into account whether named snapshots can be deleted
+    $DontDelNamed = '';
+    $DontDelNamedSQ = '';
+    // No record here = checkbox unset
+    // Record exists and is set
+    if (count($chk["items"]) > 0) {
+      if ($chk["items"][0]["profilevalue"] == "1") {
+        $DontDelNamed = " and ifnull(snapshots.snapdesc,'') = '' ";
+        $DontDelNamedSQ = " and ifnull(md.snapdesc,'') = '' ";
+      }
+    }
+
+    // The specified times are all concurrent, based on today. WYGIWYD.
+
+    $KeepIds = array();
+    // Add the keeper IDs for 'Keep all for days'
+    if ($KeepAllForDays > 0) {
+      $sql = "select id as kid from snapshots where snaptime >= date('now','-".$KeepAllForDays." days')".$DontDelNamed.";";
+      $res = dbExecQuery($sql);
+      foreach($res["items"] as $item) {
+        if(!in_array($item["kid"], $KeepIds)) {
+          $KeepIds[count($KeepIds)] = $item["kid"];
+        }
+      }
+    }
+
+    // Add the keeper IDs for 'One Per Day For Days' - newest
+    if ($KeepOnePerDayForDays > 0){
+      $lowday = $KeepOnePerDayForDays;
+      $highday = $KeepAllForDays;
+      $sql = "select distinct (select max(id) from snapshots md where strftime('%Y-%m-%d',md.snaptime) = strftime('%Y-%m-%d',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.snaptime >= date('now','-".$KeepOnePerDayForDays." days')".$DontDelNamed.";";
+      $res = dbExecQuery($sql);
+      foreach($res["items"] as $item) {
+        if(!in_array($item["kid"], $KeepIds)) {
+          $KeepIds[count($KeepIds)] = $item["kid"];
+        }
+      }
+    }
+
+    // Add the keeper IDs for 'One Per Week For Weeks'
+    if ($KeepOnePerWeekForWeeks > 0){
+      $sql = "select distinct (select max(id) from snapshots md where strftime('%Y-%W',md.snaptime) = strftime('%Y-%W',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.snaptime >= date('now','-".$KeepOnePerWeekForWeeks." days')".$DontDelNamed.";";
+      $res = dbExecQuery($sql);
+      foreach($res["items"] as $item) {
+        if(!in_array($item["kid"], $KeepIds)) {
+          $KeepIds[count($KeepIds)] = $item["kid"];
+        }
+      }
+    }
+
+    // Add the keeper IDs for 'One Per Month For Months'
+    if ($KeepOnePerMonthForMonths > 0){
+      $sql = "select distinct (select max(id) from snapshots md where strftime('%Y-%m',md.snaptime) = strftime('%Y-%m',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.snaptime >= date('now','-".$KeepOnePerMonthForMonths." months')".$DontDelNamed.";";
+      $res = dbExecQuery($sql);
+      foreach($res["items"] as $item) {
+        if(!in_array($item["kid"], $KeepIds)) {
+          $KeepIds[count($KeepIds)] = $item["kid"];
+        }
+      }
+    }
+
+    // Add the keeper IDs for 'Keep One Per Year For All Years'
+    $sql = "select distinct (select max(id) from snapshots md where strftime('%Y',md.snaptime) = strftime('%Y',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots where 1 = 1".$DontDelNamed.";";
+    $res = dbExecQuery($sql);
+    foreach($res["items"] as $item) {
+      if(!in_array($item["kid"], $KeepIds)) {
+        $KeepIds[count($KeepIds)] = $item["kid"];
+      }
+    }
+    
+    // We now have the ids to be kept, so build a query to get the ids to delete
+    $sql = "select id from snapshots where id not in (".implode(",", $KeepIds).")".$DontDelNamed.";";
+    $res = dbExecQuery($sql);
+    
+    // Call the standard function to delete the snapshots
+    $cnt = 0;
+    foreach($res["items"] as $item) {
+      $arr[$cnt] = dbDeleteSnapshot( $item["id"] );
+      $cnt = $cnt + 1;
+    }
+  }
+
+  return $arr;
+}
+
+// Select all profiles from the Profiles list
+function dbExecQuery($sql) {
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Sort in ascending order - this is default
+    $rows = $db->query($sql);
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
 }
 
 function dbGetCanDeleteNamedSnapshots($ProfileId) {
@@ -1612,9 +1765,21 @@ function dbGetCanDeleteNamedSnapshots($ProfileId) {
       $CanDelSnap = 1;
     }
   }
-  
+
   return $CanDelSnap;
 } 
+
+function dbFreeSpaceCheck($ProfileId) {
+  $arr = array();
+  
+  return $arr;
+}
+
+function dbFreeInodesCheck($ProfileId) {
+  $arr = array();
+  
+  return $arr;
+}
 
 
 // ==============================================================================
@@ -2009,12 +2174,18 @@ function takeSnapshot() {
 
       $arr["result"] = "ok";
       $arr["message"] = "Snapshot underway!";
-      
+
       // Remove snapshots over age
-      $arr["removeoverage"] = $dbRemoveSnapshotsOverAge($ProfileId);
-      
+      $arr["removeoverage"] = dbRemoveSnapshotsOverAge($ProfileId);
+
       // Now deal with any Smart Remove options
       $arr["smartremove"] = dbSmartRemove($ProfileId);
+
+      // Deal with free inodes
+      $arr["freeinodes"] = dbFreeInodesCheck($ProfileId);
+
+      // Deal with free space on disk
+      $arr["freespace"] = dbFreeSpaceCheck($ProfileId);
     }
   }
   else {
