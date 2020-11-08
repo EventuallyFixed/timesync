@@ -1295,6 +1295,32 @@ function dbDeleteSnapshot($SnapshotId) {
   return $arr;
 }
 
+function dbDeleteLastSnapshot($ProfileId) {
+
+  // Delete the last snapshot for the profile id
+  $rtn = array();
+
+  // Take into account whether named snapshots can be deleted
+  $DontDelNamed = '';
+  // No record here = checkbox unset
+  // Record exists and is set
+  if (count($chk["items"]) > 0) {
+    if ($chk["items"][0]["profilevalue"] == "1") {
+      $DontDelNamed = " and ifnull(snapshots.snapdesc,'') = '' ";
+    }
+  }
+
+  // Query to get the last valid snapshot to delete, ensuring that
+  // there is always going to be one snapshot remaining for a profile
+  $sql = "select min(id) id, (select count(profileid) cnt from snapshots md where md.profileid = snapshots.profileid) cnt from snapshots where profileid = ".$ProfileId." ".$DontDelNamed." and cnt > 1;";
+  $res = dbExecQuery($sql);
+  foreach($res["items"] as $item) {
+    $rtn = dbDeleteSnapshot($item['id']);
+  }
+
+  return $rtn;
+}
+
 // Points the "current" symlink to the latest existing directory
 function dbPointCurrentSymlink($BackupBasePath) {
 
@@ -1625,6 +1651,8 @@ function dbGetSmartRemoveParameter($ProfileId, $CheckboxId, $FillinId) {
 function dbSmartRemove($ProfileId) {
 
   $arr = array();
+  $arr["deleted"] = array();
+  $arr["message"] = "No Snapshots were deleted by smart-remove";
 
   // Is the Smart Remove checkbox checked?
   $IsChecked = 0;
@@ -1663,7 +1691,7 @@ function dbSmartRemove($ProfileId) {
     $KeepIds = array();
     // Add the keeper IDs for 'Keep all for days'
     if ($KeepAllForDays > 0) {
-      $sql = "select id as kid from snapshots where snaptime >= date('now','-".$KeepAllForDays." days')".$DontDelNamed.";";
+      $sql = "select id as kid from snapshots where profileid = ".$ProfileId." and snaptime >= date('now','-".$KeepAllForDays." days')".$DontDelNamed.";";
       $res = dbExecQuery($sql);
       foreach($res["items"] as $item) {
         if(!in_array($item["kid"], $KeepIds)) {
@@ -1676,7 +1704,7 @@ function dbSmartRemove($ProfileId) {
     if ($KeepOnePerDayForDays > 0){
       $lowday = $KeepOnePerDayForDays;
       $highday = $KeepAllForDays;
-      $sql = "select distinct (select max(id) from snapshots md where strftime('%Y-%m-%d',md.snaptime) = strftime('%Y-%m-%d',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.snaptime >= date('now','-".$KeepOnePerDayForDays." days')".$DontDelNamed.";";
+      $sql = "select distinct (select max(id) from snapshots md where md.profileid = ".$ProfileId." and strftime('%Y-%m-%d',md.snaptime) = strftime('%Y-%m-%d',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.profileid = ".$ProfileId." and snapshots.snaptime >= date('now','-".$KeepOnePerDayForDays." days')".$DontDelNamed.";";
       $res = dbExecQuery($sql);
       foreach($res["items"] as $item) {
         if(!in_array($item["kid"], $KeepIds)) {
@@ -1687,7 +1715,7 @@ function dbSmartRemove($ProfileId) {
 
     // Add the keeper IDs for 'One Per Week For Weeks'
     if ($KeepOnePerWeekForWeeks > 0){
-      $sql = "select distinct (select max(id) from snapshots md where strftime('%Y-%W',md.snaptime) = strftime('%Y-%W',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.snaptime >= date('now','-".$KeepOnePerWeekForWeeks." days')".$DontDelNamed.";";
+      $sql = "select distinct (select max(id) from snapshots md where md.profileid = ".$ProfileId." and strftime('%Y-%W',md.snaptime) = strftime('%Y-%W',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.profileid = ".$ProfileId." and snapshots.snaptime >= date('now','-".$KeepOnePerWeekForWeeks." days')".$DontDelNamed.";";
       $res = dbExecQuery($sql);
       foreach($res["items"] as $item) {
         if(!in_array($item["kid"], $KeepIds)) {
@@ -1698,7 +1726,7 @@ function dbSmartRemove($ProfileId) {
 
     // Add the keeper IDs for 'One Per Month For Months'
     if ($KeepOnePerMonthForMonths > 0){
-      $sql = "select distinct (select max(id) from snapshots md where strftime('%Y-%m',md.snaptime) = strftime('%Y-%m',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.snaptime >= date('now','-".$KeepOnePerMonthForMonths." months')".$DontDelNamed.";";
+      $sql = "select distinct (select max(id) from snapshots md where md.profileid = ".$ProfileId." and strftime('%Y-%m',md.snaptime) = strftime('%Y-%m',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.profileid = ".$ProfileId." and snapshots.snaptime >= date('now','-".$KeepOnePerMonthForMonths." months')".$DontDelNamed.";";
       $res = dbExecQuery($sql);
       foreach($res["items"] as $item) {
         if(!in_array($item["kid"], $KeepIds)) {
@@ -1708,7 +1736,7 @@ function dbSmartRemove($ProfileId) {
     }
 
     // Add the keeper IDs for 'Keep One Per Year For All Years'
-    $sql = "select distinct (select max(id) from snapshots md where strftime('%Y',md.snaptime) = strftime('%Y',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots where 1 = 1".$DontDelNamed.";";
+    $sql = "select distinct (select max(id) from snapshots md where md.profileid = ".$ProfileId." and strftime('%Y',md.snaptime) = strftime('%Y',snapshots.snaptime)".$DontDelNamedSQ.") kid from snapshots WHERE snapshots.profileid = ".$ProfileId." and".$DontDelNamed.";";
     $res = dbExecQuery($sql);
     foreach($res["items"] as $item) {
       if(!in_array($item["kid"], $KeepIds)) {
@@ -1717,15 +1745,16 @@ function dbSmartRemove($ProfileId) {
     }
     
     // We now have the ids to be kept, so build a query to get the ids to delete
-    $sql = "select id from snapshots where id not in (".implode(",", $KeepIds).")".$DontDelNamed.";";
+    $sql = "select id from snapshots where profileid = ".$ProfileId." and id not in (".implode(",", $KeepIds).")".$DontDelNamed.";";
     $res = dbExecQuery($sql);
     
     // Call the standard function to delete the snapshots
     $cnt = 0;
     foreach($res["items"] as $item) {
-      $arr[$cnt] = dbDeleteSnapshot( $item["id"] );
+      $arr["items"][$cnt] = dbDeleteSnapshot( $item["id"] );
       $cnt = $cnt + 1;
     }
+    if ($cnt > 0) $arr["message"] = "Snapshots were deleted by smart-remove";
   }
 
   return $arr;
@@ -1784,15 +1813,117 @@ function dbGetCanDeleteNamedSnapshots($ProfileId) {
 } 
 
 function dbFreeSpaceCheck($ProfileId) {
-  $arr = array();
+  $rtn = array();
+  $rtn["result"] = "ok";
+  $rtn["message"] = "";
+  $rtn["availspaceMB"] = 0;
+  $rtn["requiredspaceMB"] = 0;
+  $rtn["freeok"] = "ko";
   
-  return $arr;
+  // Is the delete if free space option set?
+  $FreeSpaceCheck = dbGetSmartRemoveParameter($ProfileId, "settingsdeletefreespacelessthan", "settingsdeletefreespacelessthanvalue");
+  $FreeSpaceUnits = "";
+  // It's checked and there's a value here
+  if ($FreeSpaceCheck > 0) {
+    // Get the units of free space to check for
+    $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdeletefreespacelessthanunit");
+    // Record exists and is set
+    if (count($chk["items"]) > 0) {
+      $FreeSpaceUnits = strtolower( $chk["items"][0]["profilevalue"] );
+    }
+
+    // The filesystem space will be quoted in 1MB blocks
+    // so convert the user specified space to MB
+    $multiplier = 1;
+    switch ($FreeSpaceUnits) {
+      case "GiB":
+        $multiplier = 1024;
+        break;
+      case "TiB":
+        $multiplier = 1048576;  // 1024 * 1024
+        break;
+      default:
+        $multiplier = 1;
+        break;
+    }
+
+    // Convert to MiB
+    $RequiredSpace = $FreeSpaceCheck * $multiplier;
+
+    // For this profile, get where to save snapshots
+    $SnapshotPathArr = dbSelectProfileSettingsRecord($ProfileId, "settingssaveto");
+    $SnapshotPath = $SnapshotPathArr["items"][0]["profilevalue"];
+
+    // Get the free space
+    // df -k "/mnt/USB/USB1_e1/Backup" | awk ' { gsub (/ [ ]+/," "); print }'
+    $cmd = 'df -k "'.$SnapshotPath.'" | awk '."'".' { gsub (/ [ ]+/," "); print }'."'";
+    exec($cmd, $res, $int);
+
+    // $ df -m "/mnt/USB/USB1_e1/Backup" | awk ' { gsub (/ [ ]+/," "); print }'
+    // Filesystem Inodes Used Available Use% Mounted on
+    // /dev/mapper/md1 243671040 203854 243467186 0% /mnt/HD/HD_a2
+
+    // Parse the output of the command
+    // Split into an array using the space separator
+    $resArr = explode(" ", $res[1]);
+    $freeok = "ok";
+    if ($resArr[3] - $RequiredSpace < 0) $freeok = "ko";
+    
+    // Space is in 1024b blocks, so make the multiplication
+
+    // Return the number of free inodes
+    $rtn["availspaceMB"] = $resArr[3];
+    $rtn["requiredspaceMB"] = $RequiredSpace;
+    $rtn["freeok"] = $freeok;
+    $rtn["message"] = "'Amount of Free Space' returned";   
+  }
+  else {
+    $rtn["message"] = "'Delete Free Space' is unchecked or is not set";   
+  }
+
+  return $rtn;
 }
 
 function dbFreeInodesCheck($ProfileId) {
-  $arr = array();
-  
-  return $arr;
+  $rtn = array();
+  $rtn["result"] = "ok";
+  $rtn["message"] = "";
+  $rtn["availinodes"] = 0;
+  $rtn["requiredinodes"] = 0;
+  $rtn["freeok"] = "ko";
+
+  // Is the delete if free inodes option set?
+  $FreeInodeCheck = dbGetSmartRemoveParameter($ProfileId, "settingsdeleteinodeslessthan", "settingsdeleteinodeslessthanvalue");
+  if ($FreeInodeCheck > 0) {
+    // For this profile, get where to save snapshots
+    $SnapshotPathArr = dbSelectProfileSettingsRecord($ProfileId, "settingssaveto");
+    $SnapshotPath = $SnapshotPathArr["items"][0]["profilevalue"];
+
+    // Get the free inodes 
+    $cmd = 'df -i "'.$SnapshotPath.'" | awk '."'".' { gsub (/ [ ]+/," "); print }'."'";
+    exec($cmd, $res, $int);
+
+    // $ df -i "/mnt/USB/USB1_e1/Backup" | awk ' { gsub (/ [ ]+/," "); print }'
+    // Filesystem Inodes Used Available Use% Mounted on
+    // /dev/sde1 122101760 9521 122092239 0% /mnt/USB/USB1_e1
+
+    // Parse the output of the command
+    // Split into an array using the space separator
+    $resArr = explode(" ", $res[1]);
+    $freeok = "ok";
+    if ($resArr[3] - $FreeInodeCheck < 0) $freeok = "ko";
+
+    // Return the number of free inodes
+    $rtn["availinodes"] = $resArr[3];
+    $rtn["requiredinodes"] = $FreeInodeCheck;
+    $rtn["freeok"] = $freeok;
+    $rtn["message"] = "'Number of Free Inodes' returned";   
+  }
+  else {
+    $rtn["message"] = "'Delete Free Inodes' is unchecked or is not set";   
+  }
+
+  return $rtn;
 }
 
 
@@ -2195,11 +2326,33 @@ function takeSnapshot() {
       // Now deal with any Smart Remove options
       $arr["smartremove"] = dbSmartRemove($ProfileId);
 
-      // Deal with free inodes
-      $arr["freeinodes"] = dbFreeInodesCheck($ProfileId);
+      // Deal with deletions required by free inodes specifier
+      $max = 100;
+      $try = 0;
+      $chk = dbFreeInodesCheck($ProfileId);
+      $arr["freeinodes"][$try] = $chk;
+      while ($chk["freeok"] == "ko" && $try < $max) {
+        $arr["freeinodes"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
 
-      // Deal with free space on disk
-      $arr["freespace"] = dbFreeSpaceCheck($ProfileId);
+        // Is there enough free inode yet?
+        $try = $try + 1;
+        $chk = dbFreeInodesCheck($ProfileId);
+        $arr["freeinodes"][$try] = $chk;
+      }
+
+      // Deal with deletions required by free space specifier
+      $max = 100;
+      $try = 0;
+      $chk = dbFreeSpaceCheck($ProfileId);
+      $arr["freespace"][$try] = $chk;
+      while ($chk[0]["freeok"] == "ko" && $try < $max) {
+        $arr["freespace"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
+
+        // Is there enough free space yet?
+        $try = $try + 1;
+        $chk = dbFreeSpaceCheck($ProfileId);
+        $arr["freespace"][$try] = $chk;
+      }
     }
   }
   else {
