@@ -1433,18 +1433,32 @@ function dbGetDirectoryContentsFromShell($in) {
     if ($hid == 1) $cmd = $cmd."A";  // A = a, but doesn't show '.' or '..'
 
     // Get the contents of the clicked into directory
-    // Execute a command, pass output to Array, success indicator
-    exec("cd \"".$sel."\" && ".$cmd, $ls, $int);
+    // Append the 'awk' command to combine multiple spaces into a single one,
+    // so that 'explode' can be reliably used on the output string
+    // The output columns are space separated. E.g.
+    //   drwxrwxrwx 4 user share 4096 Mon Oct 26 21:36:23 2015 A File Name
+    $cmd = 'cd "'.$sel.'" && '.$cmd.' | awk '."'".' { gsub (/ [ ]+/," "); print }'."'";
+    // Execute the command, pass output to $ls, success indicator to $int
+    exec($cmd, $ls, $int);
 
     $id = 0;
     foreach ($ls as $dirline) {
       $lsinfo = array();
-      // Substring the columns to get the file info
-      $dirind = substr($dirline, 0, 1);
-      $fname = substr($dirline, 69);
-      $fsize = substr($dirline, 34, 9);
-      $fdate = strftime("%Y-%m-%d %H:%M:%S", strtotime(substr($dirline, 52, 2)."-".substr($dirline, 48, 3)."-".substr($dirline, 64, 4)." ".substr($dirline, 55, 8)));
+
+      // Explode the output to query the file info
+      $dirArr = explode(" ", $dirline);
+      $dirind = substr($dirArr[0], 0, 1);
+      $fdate = strftime("%Y-%m-%d %H:%M:%S", strtotime($dirArr[9]."-".$dirArr[6]."-".$dirArr[7]." ".$dirArr[8]));
+      $fsize = $dirArr[4];
       $slink = ""; // symlink destination
+
+      $fname = '';
+      $pos = 10;
+      while ($pos < count($dirArr)) {
+        if (!empty($fname)) $fname = $fname." ";
+        $fname = $fname.$dirArr[$pos];
+        $pos = $pos + 1;
+      }
 
       // Include only directories and regular files
       if ($dirind == 'd' || $dirind == '-' || $dirind == 'l') {
