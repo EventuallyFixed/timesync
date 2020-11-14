@@ -237,8 +237,15 @@
                     <input id="settingssshpath" class="form-control form-control-sm autoupd" type="text" placeholder="Path" />
                   </div>
                   <div class="col-12">
-                    <label class="appinputlabel" for="settingssshprivatekey">Private Key:</label>
-                    <input id="settingssshprivatekey" class="form-control form-control-sm autoupd" type="text" placeholder="Private Key" />
+                    <label class="appinputlabel" for="settingssaveto">Private Key:</label>
+                    <div class="input-group mb-3">
+                      <input id="privatekey" class="form-control" type="text" placeholder="Private Key File" readonly="readonly" />
+                      <div class="input-group-append">
+                        <div class="input-group-text" id="privatekeybutton"></div>
+
+<!--                        <span class="input-group-text" id="privatekeybutton">...</span> -->
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -655,6 +662,7 @@
           <li><a href="https://getbootstrap.com/" title="Bootstrap" target="_blank">Bootstrap</a> (and <a href="https://startbootstrap.com" title="StartBootstrap" target="_blank">StartBootstrap</a>)</li>
           <li><a href="https://www.w3.org/Style/CSS" title="CSS" target="_blank">CSS</a></li>
           </ul></p>
+          <p>Thanks to <a href="http://hayageek.com/docs/jquery-upload-file.php">Ravishanker Kusuma</a> for the <a href="http://hayageek.com/docs/jquery-upload-file.php">jQuery Upload File Plugin</a>.</p>
           <p>A big thanks to the many sites and - of course - to the countless number of contributors over the years, that were used as a resource for tips and tricks,
           and without which the timeline of this project would have been greatly extended.  Thanks also to those who inspired the project, and who invented the platforms on which it sits.
           In no particular order, some of these are:
@@ -681,10 +689,7 @@
       </div>
     </div>
 
-
-
     <!-- /#page-content-wrapper -->
-
   </div>
   <!-- /#wrapper -->
 
@@ -693,6 +698,9 @@
   <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="vendor/app/js/app.js"></script>
   <script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
+
+  <link href="vendor/app/css/jquery.uploadfile.css" rel="stylesheet">
+  <script src="vendor/app/js/jquery.uploadfile.min.js"></script>
 
   <!-- Menu Toggle Script -->
   <script>

@@ -26,29 +26,35 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 - Ongoing
 
 # Doing
-- Translate settings into rsync commands:
+- Allow upload and save of SSH private keys.
+  - Save keys in file system: ./vendor/app/profile/profileId/KeyFile.
+  - Check for existence of key before upload (one key per profile? Overwrite option?).
+
+- Translate settings into rsync commands (mostly done)
   - Execute the rsync commands in a backend shell script.
-  - Move deletions to backend shell script.
-  - Associate log files with the correct instance.
-    - Possibly somehow move the log file(s) to the snapshot directory, post-completion.
+    - Need to be able to get status
+    - Only one rsync call at a time
+  - Move snapshot backup deletions to backend shell script.
+  - Associate rsync log files with the correct snapshot directory instance.
+    - Possibly somehow move the log file(s) to the correct snapshot directory, post-completion.
     - Could be tricky, as it's all being done asynchronously.
 
 # ToDo
 - Revise the main Snapshots screen layout, to be more mobile friendly.
   - Complete the implementation of functionality here.
-- Allow upload and save of SSH private keys.
-  - Save keys in file system: ./vendor/app/profile/profileId/KeyFile.
-  - Check for existence of key before upload (one key per profile? Overwrite option?).
 - Include & Exclude:
   - Possible issue with selection of symlinks pointing to files/folders (e.g. /shares/<share>).
     - Perhaps these should be selectable as the linked-to type?
       - How will rsync deal with the symlinks?
-- Logic of script to do Smart Remove, and call after snapshot completion, with correct parameters.
+- Restore
+  - File Change History Window
+  - Restore to disk (ensuring the path exists)
 - Translate schedules into cron job XMLs (See posts in WD Community: [Post 1](https://community.wd.com/t/crontab-on-mycloud-ex2/98653/21); [Post 2](https://community.wd.com/t/nas-to-usb-automatic-incremental-backup/193625)):
   - Be able to reliably add/delete the cron entries using php's XML tools.
 - Wrap the application in the WD application wrapper (See: [WD Developer SDK](https://developer.westerndigital.com/develop/wd/sdk.html#intro)).
 
 # Completed
+- Logic of script to do Smart Remove, and call it after snapshot completion.
 - Get rsync to work from backend script, and pass back process id, save pid in database.
 - Screens - Initial design prototypes.
 - Database - Initialise, Load, & Save, but still is a work in progress.

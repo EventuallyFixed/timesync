@@ -783,6 +783,17 @@ $(document).ready(function() {
 
   Init();
 
+  // http://hayageek.com/docs/jquery-upload-file.php
+  $("#privatekeybutton").uploadFile({
+    url: window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "/vendor/app/php/jquery-upload-file/upload.php",
+    formData: { profileid: function() { return $("#selectprofile").val(); } },
+    fileName:"myfile",
+    multiple:false,
+    maxFileCount:1,
+    dragDrop:false,
+    acceptFiles:"text/plain"
+  });
+
 }); // Page Ready
 
 // ============================================================================================================================================
