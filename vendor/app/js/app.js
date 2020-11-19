@@ -190,6 +190,7 @@ $(document).ready(function() {
         $("#settingssmartkeeponeperdayforweeks").trigger("change");
         $("#settingssmartkeeponepermonthformonths").trigger("change");
         $("#settingssmartremove").trigger("change");
+        $("#selectmode").trigger("change");
         SetSettingsFullSnapshotPath();
         showScheduleElements();
         
@@ -783,15 +784,44 @@ $(document).ready(function() {
 
   Init();
 
-  // http://hayageek.com/docs/jquery-upload-file.php
-  $("#privatekeybutton").uploadFile({
-    url: window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "/vendor/app/php/jquery-upload-file/upload.php",
-    formData: { profileid: function() { return $("#selectprofile").val(); } },
-    fileName:"myfile",
-    multiple:false,
-    maxFileCount:1,
-    dragDrop:false,
-    acceptFiles:"text/plain"
+  $("#inputGroupFile01").change(function(){
+    $("label[for=inputGroupFile01]").text( $("#inputGroupFile01").val().substring( $("#inputGroupFile01").val().lastIndexOf("\\")+1 ) );
+  });
+
+  $("#inputGroupFileAddon01").click(function() { 
+    var fd = new FormData(); 
+    var files = $("#inputGroupFile01")[0].files[0]; 
+    fd.append("myfile", files); 
+    fd.append("profileid", $("#selectprofile").val() );
+
+    $("privatekey").val();
+    $.ajax({
+      url: window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "/vendor/app/php/jquery-upload-file/upload.php",
+      type: "post",
+      data: fd,
+      contentType: false,
+      processData: false,
+      dataType: "json",
+      success: function(response){
+        // Populate Private Key
+        $.each(response.files, function(i, item) {
+          $("#privatekey").removeAttr("readonly");
+          if (item.result == "ok") {
+            $("#privatekey").val(item.filename);
+            $("label[for=inputGroupFile01]").text();
+            $("#inputGroupFile01").val();
+          }
+          else {
+            $("#privatekey").val(item.message);
+          }
+          $("#privatekey").attr("readonly", "readonly");
+        });
+      }, 
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log("Error: " + errorMessage);
+        //spinelt.remove();
+      }
+    });
   });
 
 }); // Page Ready
