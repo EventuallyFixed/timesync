@@ -101,3 +101,5 @@
   margin: 2px;
   padding: 2px;
 }
+
+#inputGroupFile01, #inputGroupFile01label, #inputGroupFileAddon01, #privatekeydel { cursor: pointer; }

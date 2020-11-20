@@ -236,29 +236,38 @@
                     <label class="appinputlabel" for="settingssshpath">Path:</label>
                     <input id="settingssshpath" class="form-control form-control-sm autoupd" type="text" placeholder="Path" />
                   </div>
-                  <div class="col-12">
-                    <label class="appinputlabel" for="settingssaveto">Private Key:</label>
-                    <div class="input-group mb-3">
-                      <input id="privatekey" class="form-control" type="text" placeholder="Private Key File" readonly="readonly" />
-                      <div class="input-group-append">
+
+                  <div id="privatekeygroup" class="col-12">
+                    <div id="privatekeyfields" class="row settingsrow">
+                      <label class="appinputlabel" for="privatekey">Private Key:</label>
+                      <div class="input-group mb-3">
+                        <input id="privatekey" class="form-control autoupd" type="text" placeholder="Private Key File" readonly="readonly" />
+                        <div class="input-group-append">
+                          <span class="input-group-text" id="privatekeydel">Delete</span>
+                        </div>
                       </div>
                     </div>
+                    <div id="privatekeydeletingfields">
+                    </div>
                   </div>
-                  
-                  <div class="col-12">
-                    <div class="input-group">
+
+                  <div id="privatekeyuploadgroup" class="col-12">
+                    <label class="appinputlabel" for="inputGroupFileAddon01">Upload Private Key File:</label>
+                    <div id="privatekeyuploadfields" class="input-group">
                       <div class="input-group-prepend">
                         <span class="input-group-text" id="inputGroupFileAddon01">Upload</span>
                       </div>
                       <div class="custom-file">
                         <form method="post" action="" enctype="multipart/form-data" id="myform">
                           <input type="file" class="custom-file-input" id="inputGroupFile01" aria-describedby="inputGroupFileAddon01">
-                          <label class="custom-file-label" for="inputGroupFile01">Choose file</label>
+                          <label id="inputGroupFile01label" class="custom-file-label" for="inputGroupFile01">Choose file</label>
                         </form>
                       </div>
                     </div>
+                    <div id="privatekeyuploadingfields">
+                    </div>
                   </div>
-                </div>
+                </div>  <!-- modessh -->
 
                 <div class="row settingsrow modessh"><h5>Password</h5></div>
 

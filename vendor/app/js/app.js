@@ -193,7 +193,17 @@ $(document).ready(function() {
         $("#selectmode").trigger("change");
         SetSettingsFullSnapshotPath();
         showScheduleElements();
-        
+
+        // If there's a Private Key, hide the upload & show the private key fieldset
+        $("#privatekeyuploadgroup").css("display", "none");
+        $("#privatekeygroup").css("display", "none");
+        if ( $("#privatekey").val() ) {
+          $("#privatekeygroup").fadeIn();
+        }
+        else {
+          $("#privatekeyuploadgroup").fadeIn();
+        }
+
         // Set screen initialisation to false
         if (init==true) init=false;
       },
@@ -202,8 +212,6 @@ $(document).ready(function() {
       }
     });
   });
-
-
 
   $("#selectmode").change(function(){
     // Undisplay all of the items
@@ -782,10 +790,8 @@ $(document).ready(function() {
     GetSideMenu();
   });
 
-  Init();
-
   $("#inputGroupFile01").change(function(){
-    $("label[for=inputGroupFile01]").text( $("#inputGroupFile01").val().substring( $("#inputGroupFile01").val().lastIndexOf("\\")+1 ) );
+    $("#inputGroupFile01label").text( $("#inputGroupFile01").val().substring( $("#inputGroupFile01").val().lastIndexOf("\\")+1 ) );
   });
 
   $("#inputGroupFileAddon01").click(function() { 
@@ -793,6 +799,10 @@ $(document).ready(function() {
     var files = $("#inputGroupFile01")[0].files[0]; 
     fd.append("myfile", files); 
     fd.append("profileid", $("#selectprofile").val() );
+
+    // Update fields on screen for loading
+    // Create a spinner
+    var spinelt = createSpinner("privatekeyuploadingfields","");
 
     $("privatekey").val();
     $.ajax({
@@ -808,21 +818,76 @@ $(document).ready(function() {
           $("#privatekey").removeAttr("readonly");
           if (item.result == "ok") {
             $("#privatekey").val(item.filename);
+            $("#privatekey").trigger("change");
             $("label[for=inputGroupFile01]").text();
             $("#inputGroupFile01").val();
+
+            // Show & hide the fields
+            $("#privatekeyuploadgroup").css("display","none");
+            $("#privatekeygroup").fadeIn();
           }
           else {
             $("#privatekey").val(item.message);
+            $("#privatekeygroup").fadeIn();
           }
           $("#privatekey").attr("readonly", "readonly");
+
+          // Remove the spinner
+          spinelt.remove();
         });
       }, 
       error: function (jqXhr, textStatus, errorMessage) {
         console.log("Error: " + errorMessage);
-        //spinelt.remove();
+        spinelt.remove();
       }
     });
   });
+
+  $("#privatekeydel").click(function(){
+    // Create data to send
+    var fd = new FormData();
+    var dfile = $("#privatekey").val();
+    fd.append("file", dfile);
+    fd.append("profileid", $("#selectprofile").val() );
+    fd.append("op", "delete" );
+
+    // Update fields on screen for loading
+    // Create a spinner
+    var spinelt = createSpinner("privatekeydeletingfields","");
+
+    // Delete the uploaded file
+    $.ajax({
+      url: window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "/vendor/app/php/jquery-upload-file/delete.php",
+      type: "post",
+      data: fd,
+      contentType: false,
+      processData: false,
+      dataType: "json",
+      success: function(response){
+        // Depopulate Private Key
+        if (response.result == "ok") {
+          $("#privatekey").val("");
+          $("#inputGroupFile01").val("");
+          $("#inputGroupFile01label").text("Choose file");
+          $("#inputGroupFileAddon01").val("Upload");
+          $("#privatekey").trigger("change");
+
+          // Show & hide the fields
+          $("#privatekeyuploadgroup").fadeIn();
+          $("#privatekeygroup").css("display","none");
+        }
+
+        // Remove the spinner
+        spinelt.remove();
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log("Error: " + errorMessage);
+        spinelt.remove();
+      }
+    });
+  });
+
+  Init();
 
 }); // Page Ready
 
