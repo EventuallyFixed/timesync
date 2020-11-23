@@ -215,7 +215,7 @@ $(document).ready(function() {
 
   $("#selectmode").change(function(){
     // Undisplay all of the items
-    $('.modelocalencrypted, .modessh, .modesshencrypted').css('display', 'none');
+    $('.modelocal, .modessh').css('display', 'none');
     // Display the required items
     $("."+$("#selectmode").val()).fadeIn();
   });

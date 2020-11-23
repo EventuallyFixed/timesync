@@ -186,34 +186,15 @@
                   </select>
                 </div>
 
-                <div class="row settingsrow">
+                <div class="row settingsrow modelocal"><h5>Local Settings</h5></div>
+
+                <div class="row settingsrow modelocal">
                   <label class="appinputlabel" for="settingssaveto">Where to save snapshots:</label>
                   <div class="input-group mb-3">
                     <input id="settingssaveto" class="form-control" type="text" placeholder="Save snapshots to" readonly="readonly" />
                     <div class="input-group-append">
                       <span class="input-group-text" id="savetobutton">...</span>
                     </div>
-                  </div>
-                </div>
-
-                <div class="row settingsrow"><h5>Advanced</h5></div>
-
-                <div class="row settingsrow">
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingshost">Host:</label>
-                    <input id="settingshost" class="form-control form-control-sm" type="text" placeholder="Host" />
-                  </div>
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingsuser">User:</label>
-                    <input id="settingsuser" class="form-control form-control-sm" type="text" placeholder="User" />
-                  </div>
-                  <div class="col-4">
-                    <label class="appinputlabel" for="settingsprofile">Profile:</label>
-                    <input id="settingsprofile" class="form-control form-control-sm" type="text" placeholder="Profile" />
-                  </div>
-                  <div class="col-12">
-                    <label class="appinputlabel" for="settingsfullsnapshotpath">Full Snapshot Path:</label>
-                    <input id="settingsfullsnapshotpath" class="form-control form-control-sm" type="text" readonly="readonly" placeholder="Profile" />
                   </div>
                 </div>
 
@@ -290,6 +271,27 @@
                   </div>
                 </div>
 
+                <div class="row settingsrow"><h5>Advanced</h5></div>
+
+                <div class="row settingsrow">
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingshost">Host:</label>
+                    <input id="settingshost" class="form-control form-control-sm" type="text" placeholder="Host" />
+                  </div>
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingsuser">User:</label>
+                    <input id="settingsuser" class="form-control form-control-sm" type="text" placeholder="User" />
+                  </div>
+                  <div class="col-4">
+                    <label class="appinputlabel" for="settingsprofile">Profile:</label>
+                    <input id="settingsprofile" class="form-control form-control-sm" type="text" placeholder="Profile" />
+                  </div>
+                  <div class="col-12">
+                    <label class="appinputlabel" for="settingsfullsnapshotpath">Full Snapshot Path:</label>
+                    <input id="settingsfullsnapshotpath" class="form-control form-control-sm" type="text" readonly="readonly" placeholder="Profile" />
+                  </div>
+                </div>
+
                 <div class="row settingsrow"><h5>Schedule</h5></div>
 
                 <div class="row settingsrow">
@@ -297,14 +299,14 @@
                   <select id="selectschedule" class="form-control col-12 appselect scheduleupd">
   <!--                    <option value="boot"        crit="">At every boot/reboot</option> -->
                     <option value="manual">Manual Snapshots</option>
-                    <option value="minute">Every X minutes</option>
-                    <option value="hour">Every X hours</option>
+  <!--              <option value="minute">Every X minutes</option> -->
+  <!--              <option value="hour">Every X hours</option> -->
   <!--                    <option value="customhours">Custom Hours</option> -->
-                    <option value="daily">Every Day</option>
+  <!--              <option value="daily">Every Day</option> -->
   <!--                    <option value="connected">When drive get connected</option> -->
   <!--                    <option value="repeatedly">Repeatedly</option> -->
-                    <option value="weekly">Every Week</option>
-                    <option value="monthly">Every Month</option>
+  <!--              <option value="weekly">Every Week</option> -->
+  <!--              <option value="monthly">Every Month</option> -->
                   </select>
                 </div>
                 <div id="settingsscheduleminutediv" class="row settingsrow schedule">

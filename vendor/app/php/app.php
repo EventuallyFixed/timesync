@@ -1541,6 +1541,35 @@ function dbGetDirectoryContentsFromShell($in) {
   return $rtn;
 }
 
+function dbSelectSshOpts($SnapshotId) {
+  // Build the SSH part of the rsync command
+  // using the SSH options records
+  $arr = array();
+
+  // Is it an ssh type?
+  $sshOpt = array();
+  $chk = dbSelectProfileSettingsRecord($ProfileId, "selectmode");
+  if (count($chk["items"]) > 0) {
+    if ($chk["items"][0]["profilevalue"] == "modessh") {
+      $sshdbopt = dbSelectProfileSettingsRecord($ProfileId, "settingssshhost");
+      $sshOpt["host"] = $sshdbopt["items"][0]["profilevalue"];
+      $sshdbopt = dbSelectProfileSettingsRecord($ProfileId, "settingssshport");
+      $sshOpt["port"] = $sshdbopt["items"][0]["profilevalue"];
+      $sshdbopt = dbSelectProfileSettingsRecord($ProfileId, "settingssshuser");
+      $sshOpt["user"] = $sshdbopt["items"][0]["profilevalue"];
+      $sshdbopt = dbSelectProfileSettingsRecord($ProfileId, "settingssshpath");
+      $sshOpt["path"] = $sshdbopt["items"][0]["profilevalue"];
+      $sshdbopt = dbSelectProfileSettingsRecord($ProfileId, "privatekey");
+      $sshOpt["privatekey"] = $sshdbopt["items"][0]["profilevalue"];
+      $sshdbopt = dbSelectProfileSettingsRecord($ProfileId, "settingssshprivatekeypassword");
+      $sshOpt["privatekeypassword"] = $sshdbopt["items"][0]["profilevalue"];
+      $arr = $sshOpt;
+    }
+  }
+
+  return $arr;
+}
+
 function dbSelectRsyncExcludesIncludes($SnapshotId) {
   // Build the Exclude/Include part of the rsync command
   // using the snapshotpaths records
@@ -2238,29 +2267,105 @@ function removeTimestampPunct($TimeStamp) {
   return str_replace(".", "_", str_replace(":", "", str_replace("T", "_", str_replace("-", "", $TimeStamp))));
 }
 
+
+
+
+
+
+
+function buildRsyncSsh($SshOpt) {
+  
+  // Mount the ssh filesystem, if required
+  if (count($SshOpt) > 0) {
+    $SshCmd[0] = ' -e "ssh';
+    // ssh part
+    if (!empty($SshOpt["port"])) {
+      $SshCmd[0] = $SshCmd[0]." -p ".$SshOpt["port"];   // e.g.:  -e 'ssh -p 2222'
+    }
+    $SshCmd[0] = $SshCmd[0]." -i /mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/profiles/".$ProfileId."/".$SshOpt["privatekey"].'"';
+    
+    // User@Host:Path
+    $SshCmd[1] = $SshOpt["user"]."@".$SshOpt["host"].":".$SshOpt["path"];
+    
+
+  }
+}
+
+
+
+
+
+
 function takeSnapshot() {
 
   // Create the Snapshot records
-  // Use the Snapshot records to build the rsync command exclude/include parts
+  // Decide what kind of snapshot, and go for it!
   $ProfileId = SQLite3::escapeString($_POST["profileid"]);
+  $arr = array();
+  $arr["snapshotrecords"] = array();
+  $arr["result"] = "ko";
+  $arr["message"] = "No snapshot type found";
+
+  // If it's a local 
+  // Check for at least one included directory
+  $chk = dbSelectProfileIncludeExclude($ProfileId, "selectmode");
+  if (count($chk["items"]) > 0) {
+    switch ($chk["items"][0]["profilevalue"]) {
+      case "modelocal":
+        $arr = takeLocalSnapshot($ProfileId);
+        break;
+      case "modessh":  
+        $arr = takeSshSnapshot($ProfileId);
+        break;
+      default:
+        $arr["result"] = "ok";
+        $arr["message"] = "Unknown backup type: ".$chk["items"][0]["profilevalue"];
+        $arr["snaplist"] = array();
+    }
+  }
+
+  // Return a new snapshot list to save making an extra ajax callback
+  $arr["snaplist"] = dbSelectSnapshotsList($ProfileId);
+  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+
+function takeSshSnapshot($ProfileId) {
+  // Creates snapshot files by executing rsync commands on a remote machine
+  // Presupposes that the user has connected at least once before
+  // Assumes that there are SSH keys available - Private here, Public on remote
+  // Creates an SSH session on the remote machine, and executes commands
+  $arr = array();
+  $arr["snapshotrecords"] = array();
+  $arr["result"] = "ok";
+  $arr["message"] = "Function not yet available";  
+
+  return $arr;
+}
+
+
+function takeLocalSnapshot($ProfileId) {
+
+  // Creates snapshot files on a locally connected filesystem/folder
+
+  // Create the Snapshot records
+  // Use the Snapshot records to build the rsync command exclude/include parts
   $arr = array();
   $arr["snapshotrecords"] = array();
   $arr["result"] = "";
   $arr["message"] = "";
-  $arr["snaplist"] = array();
 
   // Check for at least one included directory
   $ProfileIncl = dbSelectProfileIncludeExclude($ProfileId, "include");
-  $HasDir = 0;
-
+  $HasIncludedDir = 0;
   foreach ( $ProfileIncl["items"] as $Incl ) {
     if ($Incl["settype"] == "d") {
-      $HasDir = 1;
+      $HasIncludedDir = 1;
       break;
     }
   }
 
-  if ($HasDir == 1) {    
+  if ($HasIncludedDir == 1) {
     // Create a record set for this snapshot, returns the record set (header and includes/excludes)
     $arr["snapshotrecords"] = dbCreateSnapshotRecords($ProfileId);
 
@@ -2360,11 +2465,7 @@ function takeSnapshot() {
     $arr["message"] = "No Backup Folders (Include Directories) were found.";
   }
 
-  // Return a new snapshot list to save making an extra ajax callback
-  if ($arr["result"] == "ok") {
-    $arr["snaplist"] = dbSelectSnapshotsList($ProfileId);
-  }
-  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+  return $arr;
 }
 
 function deleteSnapshot() {
