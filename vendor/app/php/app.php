@@ -251,6 +251,36 @@ function dbSelectProfilesList() {
   return $rtn;
 }
 
+// Select all enabled profiles from the Profiles list
+function dbSelectProfilesEnabledList() {
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Sort in ascending order - this is default
+    $rows = $db->query("SELECT id, profilename FROM profiles JOIN (SELECT profileid, profilekey setkey, profilevalue setval FROM profilesettings WHERE profilekey = 'settingsprofileactive' and profilevalue = 1) AS ps ON ps.profileid = profiles.id ORDER BY profilename;");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
+}
+
 // Select all profiles from the Profiles list
 function dbSelectProfileForId($ProfileId) {
   $rtn = array();
@@ -2300,33 +2330,60 @@ function takeSnapshot() {
 
   // Create the Snapshot records
   // Decide what kind of snapshot, and go for it!
-  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
-  $arr = array();
-  $arr["snapshotrecords"] = array();
-  $arr["result"] = "ko";
-  $arr["message"] = "No snapshot type found";
+  $ProfileCount = 0;
+  $rtn = array();
+  $rtn["result"] = "ko";
+  $rtn["message"] = "No active snapshot configuration found";
+  $rtn["items"] = array();
 
-  // If it's a local 
-  // Check for at least one included directory
-  $chk = dbSelectProfileIncludeExclude($ProfileId, "selectmode");
-  if (count($chk["items"]) > 0) {
-    switch ($chk["items"][0]["profilevalue"]) {
-      case "modelocal":
-        $arr = takeLocalSnapshot($ProfileId);
-        break;
-      case "modessh":  
-        $arr = takeSshSnapshot($ProfileId);
-        break;
-      default:
-        $arr["result"] = "ok";
-        $arr["message"] = "Unknown backup type: ".$chk["items"][0]["profilevalue"];
-        $arr["snaplist"] = array();
-    }
-  }
+  // Get all Profile records
+  $ProfileArr = dbSelectProfilesEnabledList();
+
+  // For each profile
+  if ($ProfileArr["result"] == "ok") {
+    $rtn["result"] = "ok";
+    $rtn["message"] = "";
+
+    foreach($ProfileArr["items"] as $Profile) {
+
+      // Get the Profile ID
+      $ProfileId = $Profile["id"];
+
+      // Initialise the return array
+      $arr["result"] = "ko";
+      $arr["items"] = array();
+      $arr["message"] = "Profile ID: ".$ProfileId." - unknown error";
+
+      // If it's a local 
+      // Check for at least one included directory
+      $chk = dbSelectProfileSettingsRecord($ProfileId, "selectmode");
+      if (count($chk["items"]) > 0) {
+        switch ($chk["items"][0]["profilevalue"]) {
+          case "modelocal":
+            $arr = takeLocalSnapshot($ProfileId);
+            break;
+          case "modessh":  
+            $arr = takeSshSnapshot($ProfileId);
+            break;
+          default:
+            $arr["result"] = "ok";
+            $arr["items"] = array();
+            $arr["message"] = "Unknown backup type: ".$chk["items"][0]["profilevalue"];
+        }
+      }
+
+      // Add the result to the output
+      $rtn["items"][$ProfileCount] = $arr;
+
+      // Increment the number of profiles counter
+      $ProfileCount = $ProfileCount + 1;
+
+    } // foreach Profile
+  } // result ok
 
   // Return a new snapshot list to save making an extra ajax callback
-  $arr["snaplist"] = dbSelectSnapshotsList($ProfileId);
-  echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+  $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
@@ -2338,13 +2395,18 @@ function takeSshSnapshot($ProfileId) {
   $arr = array();
   $arr["snapshotrecords"] = array();
   $arr["result"] = "ok";
-  $arr["message"] = "Function not yet available";  
+  $arr["message"] = "SSH backup function not yet available";
 
   return $arr;
 }
 
 
 function takeLocalSnapshot($ProfileId) {
+  
+  // ssh user1@server1 date
+  // ssh user1@server1 'df -H'
+  // ssh root@nas01 uname -mrs
+  
 
   // Creates snapshot files on a locally connected filesystem/folder
 

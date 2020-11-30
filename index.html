@@ -178,6 +178,12 @@
           <div class="tab-content" id="SettingsTabsContent">
             <div class="tab-pane fade show active" id="settings-general" role="tabpanel" aria-labelledby="settings-general-tab">
               <div id="settings-general-main">
+
+                <div class="row settingsrow col-12">
+                  <label class="appinputlabel" for="settingsprofileactive">Profile Active</label>
+                  <input id="settingsprofileactive" class="form-check-input autoupd" type="checkbox" value="" />
+                </div>
+
                 <div class="row settingsrow">
                   <label class="appselectlabel" for="selectmode">Mode:</label>
                   <select id="selectmode" class="form-control col-2 appselect autoupd">
@@ -260,13 +266,13 @@
                 </div>
                 <div class="row settingsrow modessh">
                   <div class="form-check col-12">
-                    <input id="settingssavepasswordtokeyring" class="form-check-input autoupd" type="checkbox" value="">
+                    <input id="settingssavepasswordtokeyring" class="form-check-input autoupd" type="checkbox" value="" />
                     <label class="form-check-label" for="settingssavepasswordtokeyring">Save Password To Keyring</label>
                   </div>
                 </div>
                 <div class="row settingsrow modessh">
                   <div class="form-check col-12">
-                    <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="">
+                    <input id="settingscachepasswordtocron" class="form-check-input autoupd" type="checkbox" value="" />
                     <label class="form-check-label" for="settingscachepasswordtocron">Cache Password To Cron</label>
                   </div>
                 </div>
@@ -517,7 +523,7 @@
 
               <div class="row settingsrow">
                 <div class="col-3">
-                  <input id="settingsdeleteolderthan" class="form-check-input autoupd" type="checkbox" value="">
+                  <input id="settingsdeleteolderthan" class="form-check-input autoupd" type="checkbox" value="" />
                   <label class="form-check-label" for="settingsdeleteolderthan">Older than</label>
                 </div>
                 <input id="settingsdeleteolderthanage" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Age" />
@@ -532,7 +538,7 @@
 
               <div class="row settingsrow">
                 <div class="form-check col-3">
-                  <input id="settingsdeletefreespacelessthan" class="form-check-input autoupd" type="checkbox" value="">
+                  <input id="settingsdeletefreespacelessthan" class="form-check-input autoupd" type="checkbox" value="" />
                   <label class="form-check-label" for="settingsdeletefreespacelessthan">If free space is less than</label>
                 </div>
                 <input id="settingsdeletefreespacelessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Space" />
@@ -545,7 +551,7 @@
               </div>
               <div class="row settingsrow">
                 <div class="form-check col-3">
-                  <input id="settingsdeleteinodeslessthan" class="form-check-input autoupd" type="checkbox" value="">
+                  <input id="settingsdeleteinodeslessthan" class="form-check-input autoupd" type="checkbox" value="" />
                   <label class="form-check-label" for="settingsdeleteinodeslessthan">If free inodes is less than</label>
                 </div>
                 <input id="settingsdeleteinodeslessthanvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Inodes" />
@@ -553,7 +559,7 @@
 
               <div class="row settingsrow">
                 <div class="form-check col-12">
-                  <input id="settingssmartremove" class="form-check-input autoupd" type="checkbox" value="">
+                  <input id="settingssmartremove" class="form-check-input autoupd" type="checkbox" value="" />
                   <label class="form-check-label" for="settingssmartremove">Smart Remove</label>
                 </div>
               </div>
@@ -561,7 +567,7 @@
               <div id="smartremovediv">
                 <div class="row settingsrow smartremoverow">
                   <div class="form-check col-3">
-                    <input id="settingssmartkeepallfordays" class="form-check-input autoupd" type="checkbox" value="">
+                    <input id="settingssmartkeepallfordays" class="form-check-input autoupd" type="checkbox" value="" />
                     <label class="form-check-label" for="settingssmartkeepallfordays">Keep all snapshots for the last</label>
                   </div>
                   <input id="settingssmartkeepallfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
@@ -571,7 +577,7 @@
 
                 <div class="row settingsrow smartremoverow">
                   <div class="form-check col-3">
-                    <input id="settingssmartkeeponeperdayfordays" class="form-check-input autoupd" type="checkbox" value="">
+                    <input id="settingssmartkeeponeperdayfordays" class="form-check-input autoupd" type="checkbox" value="" />
                     <label class="form-check-label" for="settingssmartkeeponeperdayfordays">Keep one snapshot per day for the last</label>
                   </div>
                   <input id="settingssmartkeeponeperdayfordaysvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Days" />
@@ -581,7 +587,7 @@
 
                 <div class="row settingsrow smartremoverow">
                   <div class="form-check col-3">
-                    <input id="settingssmartkeeponeperweekforweeks" class="form-check-input autoupd" type="checkbox" value="">
+                    <input id="settingssmartkeeponeperweekforweeks" class="form-check-input autoupd" type="checkbox" value="" />
                     <label class="form-check-label" for="settingssmartkeeponeperweekforweeks">Keep one snapshot per week for the last</label>
                   </div>
                   <input id="settingssmartkeeponeperweekforweeksvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Weeks" />
@@ -591,7 +597,7 @@
 
                 <div class="row settingsrow smartremoverow">
                   <div class="form-check col-3">
-                    <input id="settingssmartkeeponepermonthformonths" class="form-check-input autoupd" type="checkbox" value="">
+                    <input id="settingssmartkeeponepermonthformonths" class="form-check-input autoupd" type="checkbox" value="" />
                     <label class="form-check-label" for="settingssmartkeeponepermonthformonths">Keep one snapshot per month for the last</label>
                   </div>
                   <input id="settingssmartkeeponepermonthformonthsvalue" class="form-control form-control-sm col-3 autoupd" type="text" placeholder="Months" />
@@ -608,7 +614,7 @@
 
               <div class="row settingsrow">
                 <div class="form-check col-12">
-                  <input id="settingsdontremovenamed" class="form-check-input nodelnamed" type="checkbox" value="">
+                  <input id="settingsdontremovenamed" class="form-check-input nodelnamed" type="checkbox" value="" />
                   <label class="form-check-label" for="settingsdontremovenamed">Don't Remove Named Snapshots</label>
                 </div>
               </div>
@@ -618,21 +624,21 @@
 
               <div class="row settingsrow">
                 <div class="form-check">
-                  <input id="settingsreplaceonrestore" class="form-check-input autoupd" type="checkbox" value="">
+                  <input id="settingsreplaceonrestore" class="form-check-input autoupd" type="checkbox" value="" />
                   <label class="form-check-label" for="settingsreplaceonrestore">Backup replaced files on restore</label>
                 </div>
               </div>
 
               <div class="row settingsrow">
                 <div class="form-check">
-                  <input id="settingscontinueonerror" class="form-check-input autoupd" type="checkbox" value="">
+                  <input id="settingscontinueonerror" class="form-check-input autoupd" type="checkbox" value="" />
                   <label class="form-check-label" for="settingscontinueonerror">Continue on errors (keep incomplete snapshots)</label>
                 </div>
               </div>
 
               <div class="row settingsrow">
                 <div class="form-check">
-                  <input id="settingssnapshotifnochanges" class="form-check-input autoupd" type="checkbox" value="">
+                  <input id="settingssnapshotifnochanges" class="form-check-input autoupd" type="checkbox" value="" />
                   <label class="form-check-label" for="settingssnapshotifnochanges">Take a new snapshots, even if no changes are detected</label>
                 </div>
               </div>

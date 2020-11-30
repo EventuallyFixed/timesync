@@ -79,7 +79,7 @@ $(document).ready(function() {
   });
 
 
-  // Update the Dnot Saved Named, and refresh the Snapshots list
+  // Update the Do Not Saved Named, and refresh the Snapshots list
   $(".nodelnamed").change(function(){
 
     if (init==false) {
