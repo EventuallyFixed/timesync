@@ -2355,44 +2355,49 @@ function takeSnapshot() {
     $rtn["result"] = "ok";
     $rtn["message"] = "";
 
-    foreach($ProfileArr["items"] as $Profile) {
+    if (count($ProfileArr["items"]) > 0) {
 
-      // Get the Profile ID
-      $ProfileId = $Profile["id"];
+      foreach($ProfileArr["items"] as $Profile) {
 
-      // Initialise the return array
-      $arr["result"] = "ko";
-      $arr["items"] = array();
-      $arr["message"] = "Profile ID: ".$ProfileId." - unknown error";
+        // Get the Profile ID
+        $ProfileId = $Profile["id"];
 
-      // If it's a local 
-      // Check for at least one included directory
-      $chk = dbSelectProfileSettingsRecord($ProfileId, "selectmode");
-      if (count($chk["items"]) > 0) {
-        switch ($chk["items"][0]["profilevalue"]) {
-          case "modelocal":
-            $arr = takeLocalSnapshot($ProfileId);
-            break;
-          case "modessh":  
-            $arr = takeSshSnapshot($ProfileId);
-            break;
-          default:
-            $arr["result"] = "ok";
-            $arr["items"] = array();
-            $arr["message"] = "Unknown backup type: ".$chk["items"][0]["profilevalue"];
+        // Initialise the return array
+        $arr["result"] = "ko";
+        $arr["items"] = array();
+        $arr["message"] = "Profile ID: ".$ProfileId." - unknown error";
+
+        // If it's a local 
+        // Check for at least one included directory
+        $chk = dbSelectProfileSettingsRecord($ProfileId, "selectmode");
+        if (count($chk["items"]) > 0) {
+          switch ($chk["items"][0]["profilevalue"]) {
+            case "modelocal":
+              $arr = takeLocalSnapshot($ProfileId);
+              break;
+            case "modessh":  
+              $arr = takeSshSnapshot($ProfileId);
+              break;
+            default:
+              $arr["result"] = "ok";
+              $arr["items"] = array();
+              $arr["message"] = "Unknown backup type: ".$chk["items"][0]["profilevalue"];
+          }
         }
-      }
 
-      // Add the result to the output
-      $rtn["items"][$ProfileCount] = $arr;
+        // Add the result to the output
+        $rtn["items"][$ProfileCount] = $arr;
 
-      // Increment the number of profiles counter
-      $ProfileCount = $ProfileCount + 1;
+        // Increment the number of profiles counter
+        $ProfileCount = $ProfileCount + 1;
 
-    } // foreach Profile
+      } // foreach Profile
+
+    } // Count > 0
   } // result ok
 
   // Return a new snapshot list to save making an extra ajax callback
+  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
   $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
@@ -2477,8 +2482,15 @@ function takeLocalSnapshot($ProfileId) {
       $pos = 0;
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
+          
+          // Work out the full path of the backup, base plus include
+          $FullBackupPath = $BackupTSPath.$item["snapshotpath"];
+
+          $mdcmd = "mkdir -p \"".$FullBackupPath."\"";    
+          $mdres = dbExecOSCommand($mdcmd);
+
           // Build the parameters part of the command
-          $params = $inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$BackupTSPath."\"";
+          $params = $inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$FullBackupPath."\"";
 
           // Execute the shell script to run rsync, which passes back the pid = $
           exec("/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/scripts/takesnapshot.sh ".$params, $rsyncpid, $rtn);
@@ -2489,6 +2501,11 @@ function takeLocalSnapshot($ProfileId) {
           $pos = $pos + 1;
         }
       }
+      
+      // Copy across the database file
+      // Need to get the profilesetting backup dir
+      $cmd = "cp '/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/php/app.sqlite.db' '".$BackupTSPath."'";
+      exec($cmd, $cmdres, $int);
 
       // Remove the old symbolic link, and point a new one
       $rmres = dbExecOSCommand("rm \"".$BackupCurrentPath."\"");
