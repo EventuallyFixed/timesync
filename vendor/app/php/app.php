@@ -1518,24 +1518,34 @@ function dbGetDirectoryContentsFromShell($in) {
 
       // Include only directories and regular files
       if ($dirind == 'd' || $dirind == '-' || $dirind == 'l') {
+        // What kind of object is symlinked to? d, -, neither
+        $slinktype = "";
+        if ($dirind == 'l') {
+          // Get the SymLink destination to the right of the symbol
+          $slink = substr($fname,strpos($fname, " -> ") + 4);
+          // Now remove the SymLink symbol & everything to the right: ' ->'
+          $fname = substr($fname,0,strpos($fname, " -> "));
+          $fsize = 0;
+          // Does the SymLink link to a file, to a folder, or to something else
+          $symlcmd = "if [[ -d '".$sel."/".$fname."' ]]; then echo 'd'; elif [[ -f '".$sel."/".$fname."' ]]; then echo '-'; else echo ''; fi";
+          // Execute the command, and get the result from the returned array
+          exec($symlcmd, $slinktype, $int);
+          $slinktype = $slinktype[0];
+
+          // Replace the type of object seen in the frontend. This
+          // means there will be no SymLinks seen, and SymLinks
+          // can be chosen as include/exclude files/folders
+          if ($dirind == 'l') $dirind = $slinktype;
+        }
 
         if (($filetype == "d" && ($dirind == 'd' || $dirind == 'l')) || $filetype != "d") {
-
-          if ($dirind == 'l') {
-            // Get the SymLink destination to the right of the symbol
-            $slink = substr($fname,strpos($fname, " -> ") + 1);
-            // Now remove the SymLink symbol & everything to the right: ' ->'
-            $fname = substr($fname,0,strpos($fname, " -> "));
-            $fsize = 0;
-          }
 
           // Set file size to zero
           if ($dirind == 'd') {
             $fsize = 0;
           }
 
-          // ********* NEED TO CHECK IF SYMLINKED RESOURCE IS A DIRECTORY, OR A FILE, AND FLAG AS SUCH *********
-
+          // Add to the returned object
           if ($fname != '.') {
             $lsinfo["id"] = $id;
             $lsinfo["filetype"] = $dirind;
@@ -1543,6 +1553,7 @@ function dbGetDirectoryContentsFromShell($in) {
             $lsinfo["filesize"] = $fsize;
             $lsinfo["filedate"] = $fdate;
             $lsinfo["symlink"]  = $slink;
+            $lsinfo["symlinktype"]  = $slinktype;
 
             array_push($arr, $lsinfo);
             $id = $id + 1;
