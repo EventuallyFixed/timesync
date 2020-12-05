@@ -26,34 +26,37 @@ The excellent [BackInTime](https://github.com/bit-team/backintime) project.
 - Ongoing
 
 # Doing
-- Allow upload and save of SSH private keys.
-  - Save keys in file system: ./vendor/app/profile/profileId/KeyFile.
-  - Check for existence of key before upload (one key per profile? Overwrite option?).
-
-- Translate settings into rsync commands (mostly done)
-  - Execute the rsync commands in a backend shell script.
-    - Need to be able to get status
-    - Only one rsync call at a time
-  - Move snapshot backup deletions to backend shell script.
-  - Associate rsync log files with the correct snapshot directory instance.
-    - Possibly somehow move the log file(s) to the correct snapshot directory, post-completion.
-    - Could be tricky, as it's all being done asynchronously.
+- After a backup, copy the database on to the backup media, so that if the database gets corrupted, there's another copy of it
 
 # ToDo
+- Check if a backup is ongoing. If so, 
+  - Indicate in the Snapshots Menu.
+  - Disable a snapshot from being taken.
+  - Periodically poll to see whether or not the snapshot is ongoing (is the unix process id still active).
+  - If completed, update the status & re-enable the take new backup button.
+- Develop SSH backup type
+  - Allow upload and save of SSH keys.
+    - Check for existence of key before upload (one key per profile? Overwrite option?).
+  - Translate settings into rsync commands
+    - Execute the rsync commands on the remote machine, in the background, get the process id.
+      - Need to be able to get status
+      - Only one rsync call at a time
+    - Move snapshot backup deletions to backend shell script.
+    - Associate rsync log files with the correct snapshot directory instance.
+      - Possibly somehow move the log file(s) to the correct snapshot directory, post-completion.
+      - Could be tricky, as it's all being done asynchronously.
 - Revise the main Snapshots screen layout, to be more mobile friendly.
   - Complete the implementation of functionality here.
-- Include & Exclude:
-  - Possible issue with selection of symlinks pointing to files/folders (e.g. /shares/<share>).
-    - Perhaps these should be selectable as the linked-to type?
-      - How will rsync deal with the symlinks?
-- Restore
+- Restore Functionality
   - File Change History Window
   - Restore to disk (ensuring the path exists)
-- Translate schedules into cron job XMLs (See posts in WD Community: [Post 1](https://community.wd.com/t/crontab-on-mycloud-ex2/98653/21); [Post 2](https://community.wd.com/t/nas-to-usb-automatic-incremental-backup/193625)):
+- Cron Jobs
+  - Translate schedules into cron job XMLs (See posts in WD Community: [Post 1](https://community.wd.com/t/crontab-on-mycloud-ex2/98653/21); [Post 2](https://community.wd.com/t/nas-to-usb-automatic-incremental-backup/193625)):
   - Be able to reliably add/delete the cron entries using php's XML tools.
 - Wrap the application in the WD application wrapper (See: [WD Developer SDK](https://developer.westerndigital.com/develop/wd/sdk.html#intro)).
 
 # Completed
+- Upload SSH private key file
 - Logic of script to do Smart Remove, and call it after snapshot completion.
 - Get rsync to work from backend script, and pass back process id, save pid in database.
 - Screens - Initial design prototypes.
