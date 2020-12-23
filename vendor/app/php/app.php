@@ -430,10 +430,8 @@ function dbSelectProfileSettings($ProfileId){
       $arr["items"] = array();
     }
     else {
-      $pos = 0;
       while($row = $rows->fetchArray(SQLITE3_ASSOC)){
-        $arr["items"][$pos] = $row;
-        $pos = $pos + 1;
+        array_push($arr["items"], $row);
       }
       $arr["result"] = "ok";
       $arr["message"] = "Fetched Items";
@@ -947,6 +945,36 @@ function dbSelectSnapshotForId($SnapshotId) {
   return $rtn;
 }
 
+function dbSelectSnapshotsForStatus($SnapshotStatus) {
+
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Get the snapshot
+    $rows = $db->query("SELECT * FROM snapshots WHERE snapstatus = '".$SnapshotStatus."';");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
+}
+
 function dbSelectSnapshotsOverAge($ProfileId, $SnapshotAge) {
 
   // $SnapshotAge = '+2 years', '+1 day', etc)
@@ -1180,8 +1208,8 @@ function dbDeleteSnapshotPaths($SnapshotId) {
   return $arr;
 }
 
-// Deletes pids records for a Snapshot
-function dbDeleteSnapshotPids($SnapshotId) {
+// Deletes all pid records for a Snapshot ID
+function dbDeleteSnapshotPidsForSnapshotId($SnapshotId) {
 
   $Exists = "-1";
   $arr = array();
@@ -1297,7 +1325,7 @@ function dbDeleteSnapshot($SnapshotId) {
         $delPathsArr = dbDeleteSnapshotPaths($SnapshotId);
 
         // Delete all snapshot path records too
-        $delPidsArr = dbDeleteSnapshotPids($SnapshotId);
+        $delPidsArr = dbDeleteSnapshotPidsForSnapshotId($SnapshotId);
 
         if ($delPathsArr["result"] == "ok") {
           $db = new MyDB();
@@ -1437,6 +1465,30 @@ function dbUpdateSnapshotName($SnapshotId, $SnapshotName){
   return $arr;
 }
 
+function dbUpdateSnapshotStatus($SnapshotId, $SnapshotStatus){
+  $arr = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    // Update an existing record
+    $ret = $db->exec("UPDATE snapshots SET snapstatus = '".$SnapshotStatus."' WHERE id = ".$SnapshotId.";");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Snapshot Status updated.";
+    }
+    $db->close();
+  }
+
+  return $arr;
+}
+
 function dbCreateSnapshotPid($SnapshotId, $SnapshotPathId, $SnapshotPid){
   $arr = array();
 
@@ -1444,24 +1496,76 @@ function dbCreateSnapshotPid($SnapshotId, $SnapshotPathId, $SnapshotPid){
   if(!$db) {
     $arr["result"] = "ko";
     $arr["message"] = $db->lastErrorMsg();
-    $arr["pid"] = "";
   } else {
     // Update an existing record
     $ret = $db->exec("INSERT INTO snapshotpids (snapshotid, snapshotpathid, snapshotpid) VALUES (".$SnapshotId.", ".$SnapshotPathId.", ".$SnapshotPid.");");
     if(!$ret){
       $arr["result"] = "ko";
       $arr["message"] = $db->lastErrorMsg();
-      $arr["pid"] = "";
     }
     else {
       $arr["result"] = "ok";
-      $arr["message"] = "Snapshot Pid created.";
-      $arr["pid"] = $SnapshotPid;
+      $arr["message"] = "Snapshot Pid created";
     }
     $db->close();
   }
 
   return $arr;
+}
+
+function dbDeleteSnapshotPid($id){
+  $arr = array();
+  $arr["items"] = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $arr["result"] = "ko";
+    $arr["message"] = $db->lastErrorMsg();
+  } else {
+    // Delete a record
+    $ret = $db->exec("DELETE FROM snapshotpids WHERE id = ".$id.";");
+    if(!$ret){
+      $arr["result"] = "ko";
+      $arr["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $arr["result"] = "ok";
+      $arr["message"] = "Snapshot Pid deleted";
+    }
+    $db->close();
+  }
+
+  return $arr;
+}
+
+function dbSelectSnapshotPidForSnapshotId($SnapshotId) {
+
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Get the snapshot
+    $rows = $db->query("SELECT * FROM snapshotpids WHERE snapshotid = ".$SnapshotId.";");
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
 }
 
 function dbGetDirectoryContentsFromShell($in) {
@@ -2013,7 +2117,6 @@ function dbFreeInodesCheck($ProfileId) {
   return $rtn;
 }
 
-
 function dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr) {
 
   $rtn = array();
@@ -2055,12 +2158,10 @@ function dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr) {
 
     // Increment the number of profiles counter
     $ProfileCount = $ProfileCount + 1;
-
   } // foreach Profile
-  
+
   return $rtn;
 }
-
 
 function dbTakeSshSnapshot($ProfileId, $dbTimeStampDirStr) {
   // Creates snapshot files by executing rsync commands on a remote machine
@@ -2074,7 +2175,6 @@ function dbTakeSshSnapshot($ProfileId, $dbTimeStampDirStr) {
 
   return $arr;
 }
-
 
 function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
   
@@ -2142,7 +2242,6 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
       }
 
       // Build the command for each include directory
-      $pos = 0;
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
           
@@ -2155,16 +2254,16 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
           // Build the parameters part of the command
           $params = $inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$FullBackupPath."\"";
 
+          // Save the PID to the snapshotpids table
+          $pidrtn = dbCreateSnapshotPid($SnapshotId, $item["snappathid"], $SnapshotPid);
+          array_push($arr["pid"], $SnapshotPid); 
+
           // Execute the rsync command
           $cmd = "/usr/sbin/rsync --log-file=/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/scripts/rsync.log -aPv ".$params;
           $cmdres = dbExecOSCommand($cmd);
-
-          // Save the PID to the snapshotpids table
-          $arr["pid"][$pos] = dbCreateSnapshotPid($SnapshotId, $item["snappathid"], $SnapshotPid);
-          $pos = $pos + 1;
         }
       }
-      
+
       // Copy across the database file
       // Need to get the profilesetting backup dir
       $cmd = "cp '/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/php/app.sqlite.db' '".$BackupTSPath."'";
@@ -2211,6 +2310,9 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
         $chk = dbFreeSpaceCheck($ProfileId);
         $arr["freespace"][$try] = $chk;
       }
+
+      // Get rid of the SnapshotPIDs records
+      $arrdel = dbDeleteSnapshotPidsForSnapshotId($SnapshotId);
     }
   }
   else {
@@ -2219,6 +2321,63 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
   }
 
   return $arr;
+}
+
+function dbGetSnapshotStatus($SnapshotId) {
+
+  $rtn = array();
+
+  // Get the Snapshot record
+  $SnapshotPids = dbSelectSnapshotPidForSnapshotId($SnapshotId);
+
+  // Is the process ID still executing
+  foreach($SnapshotPids as $PidRec) {
+    $pid = $PidRec["items"]["snapshotpid"];
+    $cmd = 'if kill -0 '.$pid.' > /dev/null 2>&1; then echo "'.$pid.' is running" >&2; fi';
+
+    $res = dbExecOSCommand($cmd);
+
+    if ( empty($res) || $res == "" ) {
+      // The process is not running any more.
+      // Delete the PID record
+      $delpid = dbDeleteSnapshotPid( $PidRec["items"]["id"] );
+    }
+  }
+
+  // If there are no more PID records, update the snapshot status
+  $SnapshotPids = dbSelectSnapshotPidForSnapshotId($SnapshotId);
+    
+  if ( count($SnapshotPids["items"]) == 0 ) {
+    // Update the snapshot status
+    $arr = dbUpdateSnapshotStatus($SnapshotId, 'comp');
+  }
+
+  // Get the snapshot record
+  $Snapshots = dbSelectSnapshotForId($SnapshotId);
+
+  $arr = array();
+  $arr["items"] = $Snapshots;
+  $arr["result"] = "ok";
+  $arr["message"] = "Snapshot Status Returned";
+
+  return $arr;
+}
+
+function dbUpdateSnapshotStatuses() {
+  $rtn = array();
+  $rtn["result"] = "ok";
+  $rtn["items"] = array();
+  $rtn["message"] = "Statuses Updated";
+
+  // Get all snapshots that are processing
+  $Snapshots = dbSelectSnapshotsForStatus('proc');
+
+  foreach($Snapshots as $Snapshot) {
+    $arr = dbGetSnapshotStatus($Snapshot["id"]);
+    array_push($rtn["items"], $arr);
+  }
+  
+  return $rtn;
 }
 
 // ==============================================================================
@@ -2394,12 +2553,9 @@ function updateSettingsPaths() {
   $ProfileId    = SQLite3::escapeString($_POST["profileid"]);
   $SettingsArr  = json_decode(SQLite3::escapeString($_POST["settings"]), true);
 
-
-  $pos = 0;
   foreach($SettingsArr as $so) {
     $arr = dbInsertUpdateProfileSetting($ProfileId, $so["key"], $so["val"]);
     $res[$so["key"]] = $arr;
-    $pos = $pos + 1;
   }
 
   echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
@@ -2470,11 +2626,9 @@ function updateSchedule() {
   $arr = array();
   $res = array();
 
-  $pos = 0;
   foreach($ScheduleOpts as $so) {
     $arr = dbInsertUpdateProfileSetting($ProfileId, $so["key"], $so["val"]);
     $res[$so["key"]] = $arr;
-    $pos = $pos + 1;
   }
 
   echo json_encode($res, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
@@ -2552,11 +2706,6 @@ function buildRsyncSsh($SshOpt) {
 
   }
 }
-
-
-
-
-
 
 function takeSnapshot() {
 
@@ -2689,6 +2838,22 @@ function selectSnapshotData() {
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
+function getSnapshotStatus() {
+  // Gets the status of the snapshot
+  $rtn = array();
+  $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
+
+  // Get the Snapshot backup paths
+  $rtn["status"] = dbGetSnapshotStatus($SnapshotId);
+
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
+function updateSnapshotStatuses(){
+  $rtn = dbUpdateSnapshotStatuses();
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+
 function writeErrorMsg() {
   echo "{ \"result\" : \"Sin dinero, sin esquí!\" }";
 }
@@ -2771,6 +2936,12 @@ switch ($WhatToRun) {
     break;
   case "selectsnapshotdata":
     selectSnapshotData();
+    break;
+  case "getsnapshotstatus":
+    getSnapshotStatus();
+    break;
+  case "":
+    updateSnapshotStatuses();
     break;
   default:
     writeErrorMsg();
