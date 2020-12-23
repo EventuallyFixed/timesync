@@ -73,9 +73,16 @@ function db_create_schema() {
         snapbasepath                  TEXT    NOT NULL
       );
 
+      CREATE TABLE IF NOT EXISTS snapshotprofiles (
+        id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        snapshotid                    INTEGER NOT NULL,
+        profileid                     INTEGER NOT NULL
+      );
+
       CREATE TABLE IF NOT EXISTS snapshotpaths (
         id                            INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         snapshotid                    INTEGER NOT NULL,
+        profileid                     INTEGER NOT NULL,
         snapshotinclexcl              CHAR(10) NOT NULL,
         snapshotpathtype              CHAR(2) NOT NULL,
         snapshotpath                  TEXT    NOT NULL
@@ -875,21 +882,9 @@ function dbInsertIncludeExcludeValue($ProfileId, $InclExcl, $Type, $Pattern) {
   return $arr;
 }
 
-function dbSelectSnapshotsList($ProfileId) {
+function dbSelectSnapshotsList() {
 
   $rtn = array();
-
-  // Check for the "Don't Remove Named Snapshots" option being set
-  $chk = dbSelectProfileSettingsRecord($ProfileId, "settingsdontremovenamed");
-
-  $DontDelNamed = 0;
-  // No record here = checkbox unset
-  // Record exists and is set
-  if (count($chk["items"]) > 0) {
-    if ($chk["items"][0]["profilevalue"] == "1") {
-      $DontDelNamed = 1;
-    }
-  }
 
   $db = new MyDB();
   if(!$db) {
@@ -898,7 +893,8 @@ function dbSelectSnapshotsList($ProfileId) {
     $rtn["items"] = array();
   } else {
     // Sort in ascending order - this is default
-    $rows = $db->query("SELECT id, profileid, snaptime, snapdesc FROM snapshots WHERE profileid = ".$ProfileId." ORDER BY snaptime desc;");
+    $rows = $db->query("SELECT snapshots.id, snapshots.profileid, snapshots.snaptime, snapshots.snapdesc, ifnull(ps.dontremovenamed,0) dontremovenamed FROM snapshots LEFT JOIN (SELECT profileid, profilevalue dontremovenamed FROM profilesettings WHERE profilekey = 'settingsdontremovenamed') ps ON ps.profileid = snapshots.profileid ORDER BY snaptime desc;");
+
     if (!$rows) {
       $rtn["result"] = "ko";
       $rtn["message"] = $db->lastErrorMsg();
@@ -907,8 +903,9 @@ function dbSelectSnapshotsList($ProfileId) {
     else {
       $rtn["items"] = array();
       while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
-        if ($DontDelNamed == 1 && !empty($row["snapdesc"])) $row["candel"] = 0;
+        if ($row["dontremovenamed"] == 1 && !empty($row["snapdesc"])) $row["candel"] = 0;
         else $row["candel"] = 1;
+        array_pop($row["dontremovenamed"]);  // remove the database field from the results
         array_push($rtn["items"], $row);
       }
       $rtn["result"] = "ok";
@@ -992,7 +989,7 @@ function dbSelectSnapshotsOverAge($ProfileId, $SnapshotAge) {
   }
   return $rtn;
   // DEBUG DEBUG DEBUG DEBUG
-  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+//  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
@@ -1024,7 +1021,43 @@ function dbGetSnapshotPathsForSnapshotId($SnapshotId) {
   return $rtn;
 }
 
-function dbCreateSnapshotRecords($ProfileId) {
+function dbGetTimeStampDirStr() {
+
+  $rtn = array();
+  $rtn["result"] = "ko";
+  $rtn["items"] = array();
+  $rtn["message"] = "Unknown error";
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+  } else {
+    // Get the timestamp to use
+    $rows = $db->query("SELECT strftime('%Y-%m-%dT%H:%M:%f') ts;");
+    if(!$rows){
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+    }
+    else {
+      $TimeStr = "";
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        $TimeStr = $row["ts"];
+        break;
+      }
+
+      // Remove all of the punctuation from the timestamp
+      $rtn["result"] = "ok";
+      $rtn["items"][0] = $TimeStr;
+      $rtn["message"] = "Delivered Timestamp";
+    }
+  }
+  
+  return $rtn;
+}
+
+
+function dbCreateSnapshotRecords($ProfileId, $TimeStr) {
   // Create a new record in the snapshots table, and copy the profile paths to the snapshotpaths table
   $arr = array();
   $arr["snapshot"] = array();
@@ -1038,80 +1071,64 @@ function dbCreateSnapshotRecords($ProfileId) {
     // Get Snapshot Settings record, to get the full snapshot path
     $FullPathArr = dbSelectProfileSettingsRecord($ProfileId, "settingsfullsnapshotpath");
     $BackupBasePath = $FullPathArr["items"][0]["profilevalue"];
+    $BackupTSPath = $BackupBasePath."/".removeTimestampPunct($TimeStr);
 
     $db = new MyDB();
     if(!$db) {
       $arr["result"] = "ko";
       $arr["message"] = $db->lastErrorMsg();
     } else {
-      // Get the timestamp to use
-      $rows = $db->query("SELECT strftime('%Y-%m-%dT%H:%M:%f') ts;");
-      if(!$rows){
+
+      // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
+      $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus, snapbasepath) VALUES ('".$ProfileId."', '".$TimeStr."', '', 'proc', '".$BackupTSPath."');");
+      if(!$ret){
         $arr["result"] = "ko";
         $arr["message"] = $db->lastErrorMsg();
       }
       else {
-        $TimeStr = "";
-        while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
-          $TimeStr = $row["ts"];
-          break;
-        }
+        $arr["result"] = "ok";
+        $arr["message"] = "Snapshot record created";
 
-        // Remove all of the punctuation from the timestamp
-        $TSdir = removeTimestampPunct($TimeStr);
-        $BackupTSPath = $BackupBasePath."/".$TSdir;
-
-        // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
-        $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus, snapbasepath) VALUES ('".$ProfileId."', '".$TimeStr."', '', 'proc', '".$BackupTSPath."');");
-        if(!$ret){
+        // Find that snapshot id using the timestr
+        $rows = $db->query("SELECT * FROM snapshots WHERE profileid = ".$ProfileId." AND snaptime = '".$TimeStr."';");
+        if(!$rows){
           $arr["result"] = "ko";
           $arr["message"] = $db->lastErrorMsg();
         }
         else {
-          $arr["result"] = "ok";
-          $arr["message"] = "Snapshot record created";
+          while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+            array_push($arr["snapshot"], $row);
+            $SnapshotId = $row["id"];
+            break;
+          }
 
-          // Find that snapshot id using the timestr
-          $rows = $db->query("SELECT * FROM snapshots WHERE snaptime = '".$TimeStr."';");
-          if(!$rows){
-            $arr["result"] = "ko";
-            $arr["message"] = $db->lastErrorMsg();
+          // Create the Snapshot Paths
+          // As well as being a record of the snapshot paths,
+          // it'll be used to take the snapshot
+          $pathres = array();
+          $pathres["items"] = array();
+          $ret = $db->exec("INSERT INTO snapshotpaths (snapshotid, snapshotinclexcl, snapshotpathtype, snapshotpath) SELECT ".$SnapshotId.", inclexcl, filetype, filepath FROM profileinclexcl WHERE profileid = ".$ProfileId.";");
+          if(!$ret){
+            $pathres["result"] = "ko";
+            $pathres["message"] = $db->lastErrorMsg();
           }
           else {
-            while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
-              array_push($arr["snapshot"], $row);
-              $SnapshotId = $row["id"];
-              break;
+            $rows = $db->query("SELECT * FROM snapshotpaths WHERE snapshotid = ".$SnapshotId.";");
+            if(!$rows){
+              $arr["result"] = "ko";
+              $arr["message"] = $db->lastErrorMsg();
             }
-
-            // Create the Snapshot Paths
-            // As well as being a record of the snapshot paths,
-            // it'll be used to take the snapshot
-            $pathres = array();
-            $pathres["items"] = array();
-            $ret = $db->exec("INSERT INTO snapshotpaths (snapshotid, snapshotinclexcl, snapshotpathtype, snapshotpath) SELECT ".$SnapshotId.", inclexcl, filetype, filepath FROM profileinclexcl WHERE profileid = ".$ProfileId.";");
-            if(!$ret){
-              $pathres["result"] = "ko";
-              $pathres["message"] = $db->lastErrorMsg();
-            }
-            else {
-              $rows = $db->query("SELECT * FROM snapshotpaths WHERE snapshotid = ".$SnapshotId.";");
-              if(!$rows){
-                $arr["result"] = "ko";
-                $arr["message"] = $db->lastErrorMsg();
-              }
-              else {              
-                $pathres["result"] = "ok";
-                $pathres["message"] = "Path records returned";
-                $pathres["items"] = array();
-                while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
-                  array_push($pathres["items"], $row);
-                }
+            else {              
+              $pathres["result"] = "ok";
+              $pathres["message"] = "Path records returned";
+              $pathres["items"] = array();
+              while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+                array_push($pathres["items"], $row);
               }
             }
-            // Add to the Snapshot array
-            $arr["snapshot"]["snapshotpaths"] = $pathres;
           }
+          // Add to the Snapshot array
+          $arr["snapshot"]["snapshotpaths"] = $pathres;
         }
       }
       $db->close();
@@ -1997,6 +2014,213 @@ function dbFreeInodesCheck($ProfileId) {
 }
 
 
+function dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr) {
+
+  $rtn = array();
+  $rtn["result"] = "ok";
+  $rtn["items"] = array();
+  $rtn["message"] = "";
+
+  $ProfileCount = 0;
+  foreach($ProfileArr["items"] as $Profile) {
+
+    // Get the Profile ID
+    $ProfileId = $Profile["id"];
+
+    // Initialise the return array
+    $arr["result"] = "ko";
+    $arr["items"] = array();
+    $arr["message"] = "Profile ID: ".$ProfileId." - unknown error";
+
+    // If it's a local 
+    // Check for the backup type/mode
+    $chk = dbSelectProfileSettingsRecord($ProfileId, "selectmode");
+    if (count($chk["items"]) > 0) {
+      switch ($chk["items"][0]["profilevalue"]) {
+        case "modelocal":
+          $arr = dbTakeLocalSnapshot($ProfileId, $dbTimeStampDirStr);
+          break;
+        case "modessh":  
+          $arr = dbTakeSshSnapshot($ProfileId, $dbTimeStampDirStr);
+          break;
+        default:
+          $arr["result"] = "ok";
+          $arr["items"] = array();
+          $arr["message"] = "Unknown backup type: ".$chk["items"][0]["profilevalue"];
+      }
+    }
+
+    // Add the result to the output
+    $rtn["items"][$ProfileCount] = $arr;
+
+    // Increment the number of profiles counter
+    $ProfileCount = $ProfileCount + 1;
+
+  } // foreach Profile
+  
+  return $rtn;
+}
+
+
+function dbTakeSshSnapshot($ProfileId, $dbTimeStampDirStr) {
+  // Creates snapshot files by executing rsync commands on a remote machine
+  // Presupposes that the user has connected at least once before
+  // Assumes that there are SSH keys available - Private here, Public on remote
+  // Creates an SSH session on the remote machine, and executes commands
+  $arr = array();
+  $arr["snapshotrecords"] = array();
+  $arr["result"] = "ok";
+  $arr["message"] = "SSH backup function not yet available";
+
+  return $arr;
+}
+
+
+function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
+  
+  // ssh user1@server1 date
+  // ssh user1@server1 'df -H'
+  // ssh root@nas01 uname -mrs
+  
+  // Get the PID of the current php process
+  $SnapshotPid = getmypid();
+
+  // Creates snapshot files on a locally connected filesystem/folder
+
+  // Create the Snapshot records
+  // Use the Snapshot records to build the rsync command exclude/include parts
+  $arr = array();
+  $arr["snapshotrecords"] = array();
+  $arr["result"] = "";
+  $arr["message"] = "";
+
+  // Check for at least one included directory
+  $ProfileIncl = dbSelectProfileIncludeExclude($ProfileId, "include");
+  $HasIncludedDir = 0;
+  foreach ( $ProfileIncl["items"] as $Incl ) {
+    if ($Incl["settype"] == "d") {
+      $HasIncludedDir = 1;
+      break;
+    }
+  }
+
+  if ($HasIncludedDir == 1) {
+    // Create a record set for this snapshot, returns the record set (header and includes/excludes)
+    
+    $arr["snapshotrecords"] = dbCreateSnapshotRecords($ProfileId, $dbTimeStampStr);
+
+    $SnapshotId = "-1";
+    if ($arr["snapshotrecords"]["result"] == "ok") {
+      // Get the Snapshot ID from the returned arrays
+      $SnapshotId = $arr["snapshotrecords"]["snapshot"][0]["id"];
+
+      // Get the backup path from the database record
+      $BackupTSPath = $arr["snapshotrecords"]["snapshot"][0]["snapbasepath"];
+      // Work out where 'current' should be
+      $BackupCurrentPath = substr($BackupTSPath, 0, strrpos($BackupTSPath, "/"))."/current";
+
+      // Get the includes and excludes of this snapshot profile
+      $InexArr = dbSelectRsyncExcludesIncludes($SnapshotId);
+
+      // Append the backup path with the TimeStamp, and ensure that path exists
+      $mdcmd = "mkdir -p \"".$BackupTSPath."\"";    
+      $mdres = dbExecOSCommand($mdcmd);
+
+      // Go through each snapshot path to include, and call rsync for it
+      // Excludes covers all directories, files, and patterns
+      // Includes covers only patterns
+      $inex = "";
+      foreach($InexArr["items"] as $item) {
+        // Excludes
+        if ($item["snapshotinclexcl"] == "exclude") {
+          $inex = $inex." --exclude \"".$item["snapshotpath"]."\"";
+        }
+        // Includes
+        if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] != "d") {
+          $inex = $inex." --include \"".$item["snapshotpath"]."\"";
+        }
+      }
+
+      // Build the command for each include directory
+      $pos = 0;
+      foreach($InexArr["items"] as $item) {
+        if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
+          
+          
+          // Work out the full path of the backup, base plus include
+          $FullBackupPath = $BackupTSPath."/".$ProfileId."/".$item["snapshotpath"];
+          $mdcmd = "mkdir -p \"".$FullBackupPath."\"";    
+          exec($mdcmd, $cmdres, $int);
+
+          // Build the parameters part of the command
+          $params = $inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$FullBackupPath."\"";
+
+          // Execute the rsync command
+          $cmd = "/usr/sbin/rsync --log-file=/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/scripts/rsync.log -aPv ".$params;
+          $cmdres = dbExecOSCommand($cmd);
+
+          // Save the PID to the snapshotpids table
+          $arr["pid"][$pos] = dbCreateSnapshotPid($SnapshotId, $item["snappathid"], $SnapshotPid);
+          $pos = $pos + 1;
+        }
+      }
+      
+      // Copy across the database file
+      // Need to get the profilesetting backup dir
+      $cmd = "cp '/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/php/app.sqlite.db' '".$BackupTSPath."'";
+      exec($cmd, $cmdres, $int);
+
+      // Remove the old symbolic link, and point a new one
+      $rmres = dbExecOSCommand("rm \"".$BackupCurrentPath."\"");
+      // Point a new Symbolic Link
+      $lnres = dbExecOSCommand("ln -s \"".$BackupTSPath."\" \"".$BackupCurrentPath."\"");
+
+      $arr["result"] = "ok";
+      $arr["message"] = "Snapshot underway!";
+
+      // Remove snapshots over age
+      $arr["removeoverage"] = dbRemoveSnapshotsOverAge($ProfileId);
+
+      // Now deal with any Smart Remove options
+      $arr["smartremove"] = dbSmartRemove($ProfileId);
+
+      // Deal with deletions required by free inodes specifier
+      $max = 100;
+      $try = 0;
+      $chk = dbFreeInodesCheck($ProfileId);
+      $arr["freeinodes"][$try] = $chk;
+      while ($chk["freeok"] == "ko" && $try < $max) {
+        $arr["freeinodes"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
+
+        // Is there enough free inode yet?
+        $try = $try + 1;
+        $chk = dbFreeInodesCheck($ProfileId);
+        $arr["freeinodes"][$try] = $chk;
+      }
+
+      // Deal with deletions required by free space specifier
+      $max = 100;
+      $try = 0;
+      $chk = dbFreeSpaceCheck($ProfileId);
+      $arr["freespace"][$try] = $chk;
+      while ($chk[0]["freeok"] == "ko" && $try < $max) {
+        $arr["freespace"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
+
+        // Is there enough free space yet?
+        $try = $try + 1;
+        $chk = dbFreeSpaceCheck($ProfileId);
+        $arr["freespace"][$try] = $chk;
+      }
+    }
+  }
+  else {
+    $arr["result"] = "ko";
+    $arr["message"] = "No Backup Folders (Include Directories) were found.";
+  }
+
+  return $arr;
+}
+
 // ==============================================================================
 // Web Method Functions
 // ==============================================================================
@@ -2159,7 +2383,7 @@ function updateNoDelNamed() {
   $rtn["updatenodelnamed"] = dbInsertUpdateProfileSetting($ProfileId, $ProfileKey, $ProfileValue);
   
   // Get the updated snapshots list
-  $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
+  $rtn["snaplist"] = dbSelectSnapshotsList();
 
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
@@ -2283,7 +2507,7 @@ function selectFullProfile($ProfileId) {
   $ProfileExcl = dbSelectProfileIncludeExclude($ProfileId, "exclude");
   $AllProfile["profileexclude"] = $ProfileExcl[items];
 
-  $SnapList = dbSelectSnapshotsList($ProfileId);
+  $SnapList = dbSelectSnapshotsList();
   $AllProfile["snaplist"] = $SnapList[items];
 
   $dirArr = array();
@@ -2298,17 +2522,14 @@ function selectFullProfile($ProfileId) {
 }
 
 function selectSnapshotsList(){
-  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
 
-  $arr = dbSelectSnapshotsList($ProfileId);
+  $arr = dbSelectSnapshotsList();
   echo json_encode($arr, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 function removeTimestampPunct($TimeStamp) {
   return str_replace(".", "_", str_replace(":", "", str_replace("T", "_", str_replace("-", "", $TimeStamp))));
 }
-
-
 
 
 
@@ -2352,215 +2573,68 @@ function takeSnapshot() {
 
   // For each profile
   if ($ProfileArr["result"] == "ok") {
-    $rtn["result"] = "ok";
-    $rtn["message"] = "";
-
     if (count($ProfileArr["items"]) > 0) {
+      
+      // Get the TimeStampDir to save everything in
+      $dbTimeStampRes = dbGetTimeStampDirStr();
+      if ($dbTimeStampRes["result"] == 'ok') {
+        $dbTimeStampDirStr = $dbTimeStampRes["items"][0];
 
-      foreach($ProfileArr["items"] as $Profile) {
+        $rtn["result"] = "ok";
+        $rtn["message"] = "Snapshot started";
+        $rtn["timestamp"] = $dbTimeStampDirStr;
 
-        // Get the Profile ID
-        $ProfileId = $Profile["id"];
+        // Return a new snapshot list to save making an extra ajax callback
+        $rtn["snaplist"] = dbSelectSnapshotsList();
+    
+        // Send headers hack to the browser, to avoid a timeout
+        ignore_user_abort(true);
+        set_time_limit(0);
 
-        // Initialise the return array
-        $arr["result"] = "ko";
-        $arr["items"] = array();
-        $arr["message"] = "Profile ID: ".$ProfileId." - unknown error";
+        ob_start();
+        // Do initial processing here
+        echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+        // Disable compression (in case content length is compressed).
+        header("Content-Encoding: none");
+        header('Content-Length: '.ob_get_length());
+        header('Connection: close');
+        ob_end_flush();
+        ob_flush();
+        flush();
 
-        // If it's a local 
-        // Check for at least one included directory
-        $chk = dbSelectProfileSettingsRecord($ProfileId, "selectmode");
-        if (count($chk["items"]) > 0) {
-          switch ($chk["items"][0]["profilevalue"]) {
-            case "modelocal":
-              $arr = takeLocalSnapshot($ProfileId);
-              break;
-            case "modessh":  
-              $arr = takeSshSnapshot($ProfileId);
-              break;
-            default:
-              $arr["result"] = "ok";
-              $arr["items"] = array();
-              $arr["message"] = "Unknown backup type: ".$chk["items"][0]["profilevalue"];
-          }
-        }
+        // Close current session (if it exists).
+        if(session_id()) session_write_close();
 
-        // Add the result to the output
-        $rtn["items"][$ProfileCount] = $arr;
+        // Now execute the code to take a snapshot
+        // Here the $rtn is a dummy variable
+        $rtn = dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr);
+        // Kill the thread
+        die;
+      }
+      else {
+        $rtn["result"] = "ko";
+        $rtn["message"] = "Could not get a snapshot timestamp";
 
-        // Increment the number of profiles counter
-        $ProfileCount = $ProfileCount + 1;
-
-      } // foreach Profile
-
-    } // Count > 0
-  } // result ok
-
-  // Return a new snapshot list to save making an extra ajax callback
-  $ProfileId = SQLite3::escapeString($_POST["profileid"]);
-  $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
+        // Return a new snapshot list to save making an extra ajax callback
+        $rtn["snaplist"] = dbSelectSnapshotsList();
+      }
+    }
+    else {
+      $rtn["result"] = "ok";
+      $rtn["message"] = "No enabled snapshot profiles found";
+      // Return a new snapshot list to save making an extra ajax callback
+      $rtn["snaplist"] = dbSelectSnapshotsList();
+    }
+  }
+  
+  // Return to the client
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 
-function takeSshSnapshot($ProfileId) {
-  // Creates snapshot files by executing rsync commands on a remote machine
-  // Presupposes that the user has connected at least once before
-  // Assumes that there are SSH keys available - Private here, Public on remote
-  // Creates an SSH session on the remote machine, and executes commands
-  $arr = array();
-  $arr["snapshotrecords"] = array();
-  $arr["result"] = "ok";
-  $arr["message"] = "SSH backup function not yet available";
-
-  return $arr;
-}
-
-
-function takeLocalSnapshot($ProfileId) {
-  
-  // ssh user1@server1 date
-  // ssh user1@server1 'df -H'
-  // ssh root@nas01 uname -mrs
-  
-
-  // Creates snapshot files on a locally connected filesystem/folder
-
-  // Create the Snapshot records
-  // Use the Snapshot records to build the rsync command exclude/include parts
-  $arr = array();
-  $arr["snapshotrecords"] = array();
-  $arr["result"] = "";
-  $arr["message"] = "";
-
-  // Check for at least one included directory
-  $ProfileIncl = dbSelectProfileIncludeExclude($ProfileId, "include");
-  $HasIncludedDir = 0;
-  foreach ( $ProfileIncl["items"] as $Incl ) {
-    if ($Incl["settype"] == "d") {
-      $HasIncludedDir = 1;
-      break;
-    }
-  }
-
-  if ($HasIncludedDir == 1) {
-    // Create a record set for this snapshot, returns the record set (header and includes/excludes)
-    $arr["snapshotrecords"] = dbCreateSnapshotRecords($ProfileId);
-
-    $SnapshotId = "-1";
-    if ($arr["snapshotrecords"]["result"] == "ok") {
-      // Get the Snapshot ID from the returned arrays
-      $SnapshotId = $arr["snapshotrecords"]["snapshot"][0]["id"];
-
-      // Get the backup path from the database record
-      $BackupTSPath = $arr["snapshotrecords"]["snapshot"][0]["snapbasepath"];
-      // Work out where 'current' should be
-      $BackupCurrentPath = substr($BackupTSPath, 0, strrpos($BackupTSPath, "/"))."/current";
-
-      // Get the includes and excludes of this snapshot profile
-      $InexArr = dbSelectRsyncExcludesIncludes($SnapshotId);
-
-      // Append the backup path with the TimeStamp, and ensure that path exists
-      $mdcmd = "mkdir -p \"".$BackupTSPath."\"";    
-      $mdres = dbExecOSCommand($mdcmd);
-
-      // Go through each snapshot path to include, and call rsync for it
-      // To debug, feed back the command
-      $inex = "";
-      foreach($InexArr["items"] as $item) {
-        // Excludes
-        if ($item["snapshotinclexcl"] == "exclude") {
-          $inex = $inex." --exclude \"".$item["snapshotpath"]."\"";
-        }
-        // Includes
-        if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] != "d") {
-          $inex = $inex." --include \"".$item["snapshotpath"]."\"";
-        }
-      }
-
-      // Build the command for each include directory
-      $pos = 0;
-      foreach($InexArr["items"] as $item) {
-        if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
-          
-          // Work out the full path of the backup, base plus include
-          $FullBackupPath = $BackupTSPath.$item["snapshotpath"];
-
-          $mdcmd = "mkdir -p \"".$FullBackupPath."\"";    
-          $mdres = dbExecOSCommand($mdcmd);
-
-          // Build the parameters part of the command
-          $params = $inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$FullBackupPath."\"";
-
-          // Execute the shell script to run rsync, which passes back the pid = $
-          exec("/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/scripts/takesnapshot.sh ".$params, $rsyncpid, $rtn);
-          $SnapshotPid = $rsyncpid[0];
-
-          // Save the PID to the snapshotpids table
-          $arr["pid"][$pos] = dbCreateSnapshotPid($SnapshotId, $item["snappathid"], $SnapshotPid);
-          $pos = $pos + 1;
-        }
-      }
-      
-      // Copy across the database file
-      // Need to get the profilesetting backup dir
-      $cmd = "cp '/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/php/app.sqlite.db' '".$BackupTSPath."'";
-      exec($cmd, $cmdres, $int);
-
-      // Remove the old symbolic link, and point a new one
-      $rmres = dbExecOSCommand("rm \"".$BackupCurrentPath."\"");
-      // Point a new Symbolic Link
-      $lnres = dbExecOSCommand("ln -s \"".$BackupTSPath."\" \"".$BackupCurrentPath."\"");
-
-      $arr["result"] = "ok";
-      $arr["message"] = "Snapshot underway!";
-
-      // Remove snapshots over age
-      $arr["removeoverage"] = dbRemoveSnapshotsOverAge($ProfileId);
-
-      // Now deal with any Smart Remove options
-      $arr["smartremove"] = dbSmartRemove($ProfileId);
-
-      // Deal with deletions required by free inodes specifier
-      $max = 100;
-      $try = 0;
-      $chk = dbFreeInodesCheck($ProfileId);
-      $arr["freeinodes"][$try] = $chk;
-      while ($chk["freeok"] == "ko" && $try < $max) {
-        $arr["freeinodes"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
-
-        // Is there enough free inode yet?
-        $try = $try + 1;
-        $chk = dbFreeInodesCheck($ProfileId);
-        $arr["freeinodes"][$try] = $chk;
-      }
-
-      // Deal with deletions required by free space specifier
-      $max = 100;
-      $try = 0;
-      $chk = dbFreeSpaceCheck($ProfileId);
-      $arr["freespace"][$try] = $chk;
-      while ($chk[0]["freeok"] == "ko" && $try < $max) {
-        $arr["freespace"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
-
-        // Is there enough free space yet?
-        $try = $try + 1;
-        $chk = dbFreeSpaceCheck($ProfileId);
-        $arr["freespace"][$try] = $chk;
-      }
-    }
-  }
-  else {
-    $arr["result"] = "ko";
-    $arr["message"] = "No Backup Folders (Include Directories) were found.";
-  }
-
-  return $arr;
-}
 
 function deleteSnapshot() {
   $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
-  $ProfileId = "0";
 
   $rtn = array();
 
@@ -2579,7 +2653,7 @@ function deleteSnapshot() {
       
       // Return the latest list of snapshots to save making an extra ajax callback
       if ($arr["result"] == "ok") {
-        $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
+        $rtn["snaplist"] = dbSelectSnapshotsList();
       }
     }
     else {
@@ -2594,19 +2668,9 @@ function updateSnapshotName(){
   $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
   $SnapshotName= SQLite3::escapeString($_POST["snapshotname"]);
 
-  $rtn = array();
-  $rtn["snaplist"] = array();
-
-  $SnapDet = dbSelectSnapshotForId($SnapshotId);
-  if ($SnapDet["result"] == "ok") {
-    $ProfileId = $SnapDet["items"][0]["profileid"];
-    $rtn = dbUpdateSnapshotName($SnapshotId, $SnapshotName);
-    if ($rtn["result"] == "ok") {
-      $rtn["snaplist"] = dbSelectSnapshotsList($ProfileId);
-    }
-  }
-  else {
-    $rtn = $SnapDet;
+  $rtn = dbUpdateSnapshotName($SnapshotId, $SnapshotName);
+  if ($rtn["result"] == "ok") {
+    $rtn["snaplist"] = dbSelectSnapshotsList();
   }
 
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
