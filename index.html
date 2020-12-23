@@ -81,6 +81,29 @@
             <input id="snapshotname" class="form-control appinput" type="text" placeholder="Key in snapshot name" />
           </div>
           <!-- Snapshots Toolbar -->
+
+
+          <div id="shortcutscontainer" class="appcontainer">
+            <nav id="snapshortcutsnav" class="navbar navbar-light bg-light apptoolbar">
+              <div class="snapheading">Shortcuts</div>
+            </nav>
+            <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading">
+              <div id="snapshotsheading">Global</div>
+            </nav>
+            <div id="globalroot" class="row snaprow stripeodd">
+              <span class="iconify" data-icon="mdi-monitor"></span>
+              <span class="showitem">Root</span>
+            </div>
+            <div id="globalshares" class="row snaprow stripeeven">
+              <span class="iconify" data-icon="mdi-folder-multiple"></span>
+              <span class="">Shares</span>
+            </div>
+            <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading">
+              <div id="snapshotsheading">Backup Folders</div>
+            </nav>
+            <div id="snapdirsfilescontainer"></div>
+          </div>
+          
           <div class="row">
             <nav class="bg-light apptoolbar col-12">
               <img id="fileupbtn" class="toolbarbtn" src="vendor/app/img/filestoolbar/go-up_btn.svg" alt="Up" title="Up" />
@@ -93,36 +116,16 @@
               <img id="filesnapshotsbtn" class="toolbarbtn" src="vendor/app/img/filestoolbar/file-manager_btn.svg" alt="Snapshots" title="Snapshots" />
             </nav>
           </div>
-          <div class="row">
-            <div id="shortcutscontainer" class="appcontainer col-2">
-              <nav id="snapshortcutsnav" class="navbar navbar-light bg-light apptoolbar">
-                <div class="snapheading">Shortcuts</div>
-              </nav>
-              <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading">
-                <div id="snapshotsheading">Global</div>
-              </nav>
-              <div id="globalroot" class="row snaprow stripeodd">
-                <span class="iconify" data-icon="mdi-monitor"></span>
-                <span class="showitem">Root</span>
-              </div>
-              <div id="globalshares" class="row snaprow stripeeven">
-                <span class="iconify" data-icon="mdi-folder-multiple"></span>
-                <span class="">Shares</span>
-              </div>
-              <nav class="navbar apptoolbar navbar-light bg-light apptoolbar snapdarkheading">
-                <div id="snapshotsheading">Backup Folders</div>
-              </nav>
-              <div id="snapdirsfilescontainer"></div>
-            </div>
-            <div id="showfilebrowsebody" class="appcontainer col-9">
-              <nav id="snapshotfiles" class="row navbar navbar-light bg-light apptoolbar">
-                <div class="snapheading col-6">Name</div>
-                <div class="snapheading col-3">Date Modified</div>
-                <div class="snapheading col-1">Type</div>
-                <div class="snapheading snapheadingsize col-2">Size</div>
-              </nav>
-            </div>
+          
+          <div id="showfilebrowsebody" class="appcontainer">
+            <nav id="snapshotfiles" class="row navbar navbar-light bg-light apptoolbar">
+              <div class="snapheading col-5">Name</div>
+              <div class="snapheading col-4">Date Modified</div>
+              <div class="snapheading col-3">Type</div>
+              <div class="snapheading snapheadingsize col-2">Size</div>
+            </nav>
           </div>
+
           <div class="row">
             <div id="statusbar" class="col-12" style="border: 1px solid pink">Status Bar</div>
           </div>
