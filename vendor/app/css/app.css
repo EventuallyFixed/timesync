@@ -15,6 +15,7 @@
 .apptoolbar { margin: 0px 0px 0px 0px; border-top: 1px solid lightgray; border-bottom: 1px solid gray; padding: 1px 2px 1px 2px; }
 
 /* Snapshot List */
+#snapshotnewbtn { display: none; }
 #snapshotlist { margin: 1px 0px 1px 0px; padding: 0px; border: 1px solid gray; }
 .textcentered { width: 50%; margin: 0 auto; }
 .snapdarkheading { background-color: darkgray; }

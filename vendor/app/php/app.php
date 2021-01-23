@@ -2,7 +2,6 @@
 
 // A file of backend functions for the application
 // Where required, JSON formatted text should be returned
-
 //
 // https://community.wd.com/t/how-can-i-restart-apache/241579/4
 // It is the apc module that is caching the php responses: https://www.php.net/manual/en/apc.configuration.php````
@@ -104,8 +103,11 @@ function db_create_schema() {
 
       -- Insert statuses
       INSERT INTO codelist (codetype, codename, codedesc) SELECT 'system', 'appname', 'timesync' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'system' and codelist.codename = 'appname');
-      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'proc', 'Processing snapshot' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'proc');
-      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'comp', 'Snapshot completed' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'comp');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'rsyn', 'Taking rsync snapshot' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'rsyn');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'snap', 'Rsync Snapshot Completed' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'snap');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'psac', 'Post Snapshot Actions being called' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'psac');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'smrt', 'Processing Smart Delete' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'smrt');
+      INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'comp', 'Process completed' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'comp');
       INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'comperr', 'Snapshot completed with errors' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'comperr');
       INSERT INTO codelist (codetype, codename, codedesc) SELECT 'snapstatus', 'fail', 'Snapshot failed' WHERE NOT EXISTS (SELECT id FROM codelist WHERE codelist.codetype = 'snapstatus' and codelist.codename = 'fail');
 
@@ -414,31 +416,34 @@ function dbSelectProfileSettingsId($ProfileId, $ProfileKey) {
 
 function dbSelectProfileSettings($ProfileId){
   // Selects all ProfileSettings for a ProfileId
-  $arr = array();
+  $rtn = array();
+  $rtn["items"] = array();
+  $rtn["result"] = "ko";
+  $rtn["message"] = "General Error";
 
   $db = new MyDB();
   if(!$db) {
-    $arr["result"] = "ko";
-    $arr["message"] = $db->lastErrorMsg();
-    $arr["items"] = array();
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
   } else {
     // Sort in ascending order - this is default
-    $rows = $db->query("SELECT profilekey setkey, profilevalue setval FROM profilesettings WHERE profileid = ".$ProfileId." AND profilekey != 'include' AND profilekey != 'exclude';");
+    $rows = $db->query("SELECT profilekey setkey, profilevalue setval FROM profilesettings WHERE profileid = ".$ProfileId.";");
     if (!$rows) {
-      $arr["result"] = "ko";
-      $arr["message"] = $db->lastErrorMsg();
-      $arr["items"] = array();
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
     }
     else {
       while($row = $rows->fetchArray(SQLITE3_ASSOC)){
-        array_push($arr["items"], $row);
+        array_push($rtn["items"], $row);
       }
-      $arr["result"] = "ok";
-      $arr["message"] = "Fetched Items";
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Fetched Items";
     }
     $db->close();
   }
-  return $arr;
+  return $rtn;
 }
 
 function dbSelectProfileSettingsRecord($ProfileId, $ProfileKey) {
@@ -891,7 +896,7 @@ function dbSelectSnapshotsList() {
     $rtn["items"] = array();
   } else {
     // Sort in ascending order - this is default
-    $rows = $db->query("SELECT snapshots.id, snapshots.profileid, snapshots.snaptime, snapshots.snapdesc, ifnull(ps.dontremovenamed,0) dontremovenamed FROM snapshots LEFT JOIN (SELECT profileid, profilevalue dontremovenamed FROM profilesettings WHERE profilekey = 'settingsdontremovenamed') ps ON ps.profileid = snapshots.profileid ORDER BY snaptime desc;");
+    $rows = $db->query("SELECT snapshots.id, snapshots.profileid, snapshots.snaptime, snapshots.snapdesc, ifnull(ps.dontremovenamed,0) dontremovenamed, snapstatus FROM snapshots LEFT JOIN (SELECT profileid, profilevalue dontremovenamed FROM profilesettings WHERE profilekey = 'settingsdontremovenamed') ps ON ps.profileid = snapshots.profileid ORDER BY snaptime desc;");
 
     if (!$rows) {
       $rtn["result"] = "ko";
@@ -908,6 +913,38 @@ function dbSelectSnapshotsList() {
       }
       $rtn["result"] = "ok";
       $rtn["message"] = "Items returned";
+    }
+    $db->close();
+  }
+  return $rtn;
+}
+
+function dbSelectSnapshotRecordForId($SnapshotId) {
+
+  $rtn = array();
+
+  $db = new MyDB();
+  if(!$db) {
+    $rtn["result"] = "ko";
+    $rtn["message"] = $db->lastErrorMsg();
+    $rtn["items"] = array();
+  } else {
+    // Get the snapshot
+//    $rows = $db->query("SELECT * FROM snapshots WHERE id = ".$SnapshotId.";");
+    $rows = $db->query("SELECT snapshots.*, stat.statusdesc AS statusdesc FROM snapshots JOIN (SELECT codename, codedesc AS statusdesc FROM codelist WHERE codetype = 'snapstatus') stat WHERE snapshots.snapstatus = snapshots.snapstatus AND stat.codename = snapshots.snapstatus;");
+
+    if (!$rows) {
+      $rtn["result"] = "ko";
+      $rtn["message"] = $db->lastErrorMsg();
+      $rtn["items"] = array();
+    }
+    else {
+      $rtn["items"] = array();
+      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+        array_push($rtn["items"], $row);
+      }
+      $rtn["result"] = "ok";
+      $rtn["message"] = "Records returned";
     }
     $db->close();
   }
@@ -945,9 +982,12 @@ function dbSelectSnapshotForId($SnapshotId) {
   return $rtn;
 }
 
-function dbSelectSnapshotsForStatus($SnapshotStatus) {
+function dbSelectSnapshotsForStatus($SnapshotStatusArr) {
 
   $rtn = array();
+  $rtn["items"] = array();
+  $rtn["result"] = "ko";
+  $rtn["message"] = "Unknown error";
 
   $db = new MyDB();
   if(!$db) {
@@ -955,23 +995,25 @@ function dbSelectSnapshotsForStatus($SnapshotStatus) {
     $rtn["message"] = $db->lastErrorMsg();
     $rtn["items"] = array();
   } else {
-    // Get the snapshot
-    $rows = $db->query("SELECT * FROM snapshots WHERE snapstatus = '".$SnapshotStatus."';");
-    if (!$rows) {
-      $rtn["result"] = "ko";
-      $rtn["message"] = $db->lastErrorMsg();
-      $rtn["items"] = array();
-    }
-    else {
-      $rtn["items"] = array();
-      while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
-        array_push($rtn["items"], $row);
+    // Get the snapshot records for each status
+    foreach($SnapshotStatusArr as $SnapshotStatus) {
+      $rows = $db->query("SELECT snapshots.*, stat.statusdesc AS statusdesc FROM snapshots JOIN (SELECT codename, codedesc AS statusdesc FROM codelist WHERE codetype = 'snapstatus') stat WHERE snapshots.snapstatus = '".$SnapshotStatus."' AND stat.codename = snapshots.snapstatus;");
+      if (!$rows) {
+        $rtn["result"] = "ko";
+        $rtn["message"] = $db->lastErrorMsg();
+        break;
       }
-      $rtn["result"] = "ok";
-      $rtn["message"] = "Items returned";
+      else {
+        while($row = $rows->fetchArray(SQLITE3_ASSOC)) {
+          array_push($rtn["items"], $row);
+        }
+        $rtn["result"] = "ok";
+        $rtn["message"] = "Items returned";
+      }
     }
     $db->close();
   }
+
   return $rtn;
 }
 
@@ -1084,7 +1126,6 @@ function dbGetTimeStampDirStr() {
   return $rtn;
 }
 
-
 function dbCreateSnapshotRecords($ProfileId, $TimeStr) {
   // Create a new record in the snapshots table, and copy the profile paths to the snapshotpaths table
   $arr = array();
@@ -1108,7 +1149,7 @@ function dbCreateSnapshotRecords($ProfileId, $TimeStr) {
     } else {
 
       // Insert a record for the snapshot.  Times created by sqlite are stored as UTC
-      $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus, snapbasepath) VALUES ('".$ProfileId."', '".$TimeStr."', '', 'proc', '".$BackupTSPath."');");
+      $ret = $db->exec("INSERT INTO snapshots (profileid, snaptime, snapdesc, snapstatus, snapbasepath) VALUES ('".$ProfileId."', '".$TimeStr."', '', 'rsyn', '".$BackupTSPath."');");
       if(!$ret){
         $arr["result"] = "ko";
         $arr["message"] = $db->lastErrorMsg();
@@ -2127,10 +2168,9 @@ function dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr) {
   $ProfileCount = 0;
   foreach($ProfileArr["items"] as $Profile) {
 
-    // Get the Profile ID
     $ProfileId = $Profile["id"];
 
-    // Initialise the return array
+    // Initialise the return array for this profile
     $arr["result"] = "ko";
     $arr["items"] = array();
     $arr["message"] = "Profile ID: ".$ProfileId." - unknown error";
@@ -2153,11 +2193,8 @@ function dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr) {
       }
     }
 
-    // Add the result to the output
-    $rtn["items"][$ProfileCount] = $arr;
-
-    // Increment the number of profiles counter
-    $ProfileCount = $ProfileCount + 1;
+    // Add the result to the output array
+    array_push($rtn["items"], $arr);
   } // foreach Profile
 
   return $rtn;
@@ -2182,9 +2219,6 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
   // ssh user1@server1 'df -H'
   // ssh root@nas01 uname -mrs
   
-  // Get the PID of the current php process
-  $SnapshotPid = getmypid();
-
   // Creates snapshot files on a locally connected filesystem/folder
 
   // Create the Snapshot records
@@ -2242,10 +2276,10 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
       }
 
       // Build the command for each include directory
+      // These will be run asynchronously
       foreach($InexArr["items"] as $item) {
         if ($item["snapshotinclexcl"] == "include" && $item["snapshotpathtype"] == "d") {
-          
-          
+
           // Work out the full path of the backup, base plus include
           $FullBackupPath = $BackupTSPath."/".$ProfileId."/".$item["snapshotpath"];
           $mdcmd = "mkdir -p \"".$FullBackupPath."\"";    
@@ -2254,65 +2288,23 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
           // Build the parameters part of the command
           $params = $inex." --link-dest=\"".$BackupCurrentPath."\" \"".$item["snapshotpath"]."\" \"".$FullBackupPath."\"";
 
-          // Save the PID to the snapshotpids table
-          $pidrtn = dbCreateSnapshotPid($SnapshotId, $item["snappathid"], $SnapshotPid);
-          array_push($arr["pid"], $SnapshotPid); 
+          // Execute the rsync command asynchronously and store the PID as returned
+          $cmd = "/usr/sbin/rsync -aPr --delete --log-file=/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/scripts/rsync.log ".$params. ' > /dev/null 2>&1 & echo $!; ';
+          $RsyncPid = exec($cmd, $output);
 
-          // Execute the rsync command
-          $cmd = "/usr/sbin/rsync --log-file=/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/scripts/rsync.log -aPv ".$params;
-          $cmdres = dbExecOSCommand($cmd);
+          // Save the PID to the snapshotpids table
+          $pidrtn = dbCreateSnapshotPid($SnapshotId, $item["snappathid"], $RsyncPid);
+          array_push($arr["pid"], $RsyncPid); 
+
+          // DEBUG
+          $f = fopen("log.txt", "w");
+          fwrite($f, "CMD: ".$cmd."\nPID: ".json_encode($RsyncPid)."\nOUTPUT: ".json_encode($output));
+          fclose($f);
         }
       }
 
-      // Copy across the database file
-      // Need to get the profilesetting backup dir
-      $cmd = "cp '/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/php/app.sqlite.db' '".$BackupTSPath."'";
-      exec($cmd, $cmdres, $int);
-
-      // Remove the old symbolic link, and point a new one
-      $rmres = dbExecOSCommand("rm \"".$BackupCurrentPath."\"");
-      // Point a new Symbolic Link
-      $lnres = dbExecOSCommand("ln -s \"".$BackupTSPath."\" \"".$BackupCurrentPath."\"");
-
       $arr["result"] = "ok";
       $arr["message"] = "Snapshot underway!";
-
-      // Remove snapshots over age
-      $arr["removeoverage"] = dbRemoveSnapshotsOverAge($ProfileId);
-
-      // Now deal with any Smart Remove options
-      $arr["smartremove"] = dbSmartRemove($ProfileId);
-
-      // Deal with deletions required by free inodes specifier
-      $max = 100;
-      $try = 0;
-      $chk = dbFreeInodesCheck($ProfileId);
-      $arr["freeinodes"][$try] = $chk;
-      while ($chk["freeok"] == "ko" && $try < $max) {
-        $arr["freeinodes"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
-
-        // Is there enough free inode yet?
-        $try = $try + 1;
-        $chk = dbFreeInodesCheck($ProfileId);
-        $arr["freeinodes"][$try] = $chk;
-      }
-
-      // Deal with deletions required by free space specifier
-      $max = 100;
-      $try = 0;
-      $chk = dbFreeSpaceCheck($ProfileId);
-      $arr["freespace"][$try] = $chk;
-      while ($chk[0]["freeok"] == "ko" && $try < $max) {
-        $arr["freespace"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
-
-        // Is there enough free space yet?
-        $try = $try + 1;
-        $chk = dbFreeSpaceCheck($ProfileId);
-        $arr["freespace"][$try] = $chk;
-      }
-
-      // Get rid of the SnapshotPIDs records
-      $arrdel = dbDeleteSnapshotPidsForSnapshotId($SnapshotId);
     }
   }
   else {
@@ -2323,63 +2315,202 @@ function dbTakeLocalSnapshot($ProfileId, $dbTimeStampStr) {
   return $arr;
 }
 
-function dbGetSnapshotStatus($SnapshotId) {
+function dbPostSnapshotActions() {
 
   $rtn = array();
 
-  // Get the Snapshot record
-  $SnapshotPids = dbSelectSnapshotPidForSnapshotId($SnapshotId);
+  $statuses = array();
+  array_push($statuses, "psac"); // post snapshot actions (smart-delete)
 
-  // Is the process ID still executing
-  foreach($SnapshotPids as $PidRec) {
-    $pid = $PidRec["items"]["snapshotpid"];
-    $cmd = 'if kill -0 '.$pid.' > /dev/null 2>&1; then echo "'.$pid.' is running" >&2; fi';
-
-    $res = dbExecOSCommand($cmd);
-
-    if ( empty($res) || $res == "" ) {
-      // The process is not running any more.
-      // Delete the PID record
-      $delpid = dbDeleteSnapshotPid( $PidRec["items"]["id"] );
-    }
-  }
-
-  // If there are no more PID records, update the snapshot status
-  $SnapshotPids = dbSelectSnapshotPidForSnapshotId($SnapshotId);
+  // Get all snapshots that are waiting
+  $Snapshots = dbSelectSnapshotsForStatus($statuses);
+  // Run the process to update the snapshot status
+  foreach($Snapshots["items"] as $Snapshot) {
+  
+    // Get the Profile ID of the current Snapshot
+    $ProfileId = $Snapshot["profileid"];
     
-  if ( count($SnapshotPids["items"]) == 0 ) {
-    // Update the snapshot status
-    $arr = dbUpdateSnapshotStatus($SnapshotId, 'comp');
+    // This is run after the backups are completed
+    // Called by a CURL script run asynchronouely from the command line
+        
+    // Remove the old symbolic link, and point a new one
+    $rmres = dbExecOSCommand("rm \"".$BackupCurrentPath."\"");
+    // Point a new Symbolic Link
+    $lnres = dbExecOSCommand("ln -s \"".$BackupTSPath."\" \"".$BackupCurrentPath."\"");
+
+
+    // Remove snapshots over age
+    $arr["removeoverage"] = dbRemoveSnapshotsOverAge($ProfileId);
+
+    // Now deal with any Smart Remove options
+    $arr["smartremove"] = dbSmartRemove($ProfileId);
+
+    // Deal with deletions required by free inodes specifier
+    $max = 100;
+    $try = 0;
+    $chk = dbFreeInodesCheck($ProfileId);
+    $arr["freeinodes"][$try] = $chk;
+    while ($chk["freeok"] == "ko" && $try < $max) {
+      $arr["freeinodes"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
+
+      // Is there enough free inode yet?
+      $try = $try + 1;
+      $chk = dbFreeInodesCheck($ProfileId);
+      $arr["freeinodes"][$try] = $chk;
+    }
+
+    // Deal with deletions required by free space specifier
+    $max = 100;
+    $try = 0;
+    $chk = dbFreeSpaceCheck($ProfileId);
+    $arr["freespace"][$try] = $chk;
+    while ($chk[0]["freeok"] == "ko" && $try < $max) {
+      $arr["freespace"][$try]["deletedsnapshot"] = dbDeleteLastSnapshot($ProfileId);
+
+      // Is there enough free space yet?
+      $try = $try + 1;
+      $chk = dbFreeSpaceCheck($ProfileId);
+      $arr["freespace"][$try] = $chk;
+    }
+    
+    // Mark as complete
+    $arr = dbUpdateSnapshotStatus($SnapshotId, "comp");
+  }
+  
+  // Copy across the database file
+  // Need to get the profilesetting backup dir
+  $cmd = "cp '/mnt/HD/HD_a2/Nas_Prog/timesync/vendor/app/php/app.sqlite.db' '".$BackupTSPath."'";
+  exec($cmd, $cmdres, $int);
+
+  $rtn["items"] = array();
+  $rtn["result"] = "ok";
+  $rtn["message"] = "Snapshots Completed";
+  
+}
+
+function dbUpdateSnapshotStatusForRsync($SnapshotId) {
+  // Checks whether or not the rsync process is running
+  // If not, it updates the status to 'auto'
+
+  $rtn = array();
+
+  // Get the Snapshot PID records
+  $SnapshotPids = dbSelectSnapshotPidForSnapshotId($SnapshotId);
+
+  // Are the process IDs still executing
+  if (count($SnapshotPids) > 0) {
+    foreach($SnapshotPids["items"] as $PidRec) {
+      // Get the pid and build the os command
+      $pid = $PidRec["snapshotpid"];
+      $cmd = 'ps -a | grep '.$pid.' | grep rsync';
+
+      $res = array();  // initialise
+      $cmdres = exec($cmd, $res, $return_var );
+
+      // Was there a valid pid? Check for a result line without grep
+      $liveprocess = false;
+      foreach($res as $resline) {
+        if (strpos($resline, 'grep') == false) { 
+          $liveprocess = true;
+          break;
+        }
+      }
+
+      // If the process is not running any more.
+      if ( $liveprocess == false ) {
+        // Delete the PID record
+        $delpid = dbDeleteSnapshotPid( $PidRec["id"] );
+      }
+    }
+
+    // Get a new count of snapshotpid records for the snapshot id
+    $SnapshotPids = dbSelectSnapshotPidForSnapshotId($SnapshotId); 
   }
 
-  // Get the snapshot record
-  $Snapshots = dbSelectSnapshotForId($SnapshotId);
+  if ( count($SnapshotPids["items"]) == 0 ) {
+    // No PID records remain - update the snapshot status to 'snap' - snapshot completed
+    $arr = dbUpdateSnapshotStatus($SnapshotId, "snap");
+  }
 
-  $arr = array();
-  $arr["items"] = $Snapshots;
-  $arr["result"] = "ok";
-  $arr["message"] = "Snapshot Status Returned";
+  // Get the snapshot record in case of reporting back on
+  $Snapshot = dbSelectSnapshotRecordForId($SnapshotId);
 
-  return $arr;
+  $rtn["items"] = $Snapshot["items"];
+  $rtn["result"] = "ok";
+  $rtn["message"] = "Snapshot Status Returned";
+
+  return $rtn;
+}
+
+function dbCallSmartDelete() {
+  $rtn = array();
+
+  $statuses = array();
+  array_push($statuses, "snap"); // snapshot completed (rsync)
+
+  // Get all snapshots that are complete
+  $Snapshots = dbSelectSnapshotsForStatus($statuses);
+  
+  if (count($Snapshots) > 0) {
+    // Update the snapshot statuses to signify Post Snapshot Actions to be run
+    foreach($Snapshots as $Snapshot) {
+      $arr = dbUpdateSnapshotStatus($Snapshot["id"], "psac");
+    }
+    // Now there's a need to call the auto delete process asynchronously
+    // It's a hack (well, pretty much all of this is!), but curl should do the trick!
+    // curl -X POST -H "Content-Type: text/json" -d '{"fn": "postSnapshotActions"}' https://localhost/timesync/vendor/app/php/app.php
+    shell_exec('curl -X POST -H "Content-Type: text/json" -d '."'".'{"fn": "postSnapshotActions"}'."'".' https://localhost/timesync/vendor/app/php/app.php &');
+  }
+
+  return $rtn;
 }
 
 function dbUpdateSnapshotStatuses() {
+  // This is called from the JS Front End and nudges on the snapshot a bit
   $rtn = array();
   $rtn["result"] = "ok";
   $rtn["items"] = array();
   $rtn["message"] = "Statuses Updated";
+  
+  $statuses = array();
+  array_push($statuses, "rsyn"); // processing snapshot (rsync)
 
-  // Get all snapshots that are processing
-  $Snapshots = dbSelectSnapshotsForStatus('proc');
+  // Get all snapshots that are processing (should only ever be one at a time)
+  $Snapshots = dbSelectSnapshotsForStatus($statuses);
+  // Run the process to update the snapshot status
+  foreach($Snapshots["items"] as $Snapshot) {
+    // The rsync happens asynchronously, so the JS callback enables this check
+    $arr = dbUpdateSnapshotStatusForRsync($Snapshot["id"]);
 
-  foreach($Snapshots as $Snapshot) {
-    $arr = dbGetSnapshotStatus($Snapshot["id"]);
-    array_push($rtn["items"], $arr);
+    array_push($rtn["items"], $arr["items"]);
   }
   
+  // This will call Post Snapshot Actions for the correct status ('snap' - snapshot completed)
+  dbCallSmartDelete();
+
   return $rtn;
 }
+/*
+function dbGetSnapshotsByStatus($SnapshotStatus) {
+  $rtn = array();
+  $rtn["result"] = "ok";
+  $rtn["items"] = array();
+  $rtn["message"] = "No snapshots are at status: ".$SnapshotStatus;
 
+  $statuses = array();
+  array_push($statuses, $SnapshotStatus);
+
+  // Get all snapshots that are processing
+  $arr = dbSelectSnapshotsForStatus($statuses);
+  $rtn["items"] = $arr["items"];
+
+  if (count($Snapshots) > 0) {
+    $rtn["message"] = "Found snapshots at status: ".$SnapshotStatus;
+  }
+
+  return $rtn;
+}
+*/
 // ==============================================================================
 // Web Method Functions
 // ==============================================================================
@@ -2649,20 +2780,39 @@ function selectFullProfile($ProfileId) {
   // ProfileInclExcl
   $AllProfile = array();
 
+  // Profile Info
   $ProfileItems = dbSelectProfileForId($ProfileId);
   $AllProfile["profile"] = $ProfileItems[items];
 
+  // Profile Settings
   $ProfileSettings = dbSelectProfileSettings($ProfileId);
-  $AllProfile["profilesettings"] = $ProfileSettings[items];
+  $AllProfile["profilesettings"] = $ProfileSettings["items"];
 
+  // Includes for the current Profile
   $ProfileIncl = dbSelectProfileIncludeExclude($ProfileId, "include");
   $AllProfile["profileinclude"] = $ProfileIncl[items];
 
+  // Excludes for the current Profile
   $ProfileExcl = dbSelectProfileIncludeExclude($ProfileId, "exclude");
   $AllProfile["profileexclude"] = $ProfileExcl[items];
 
+  // A list of all snapshots, for the side menu
   $SnapList = dbSelectSnapshotsList();
   $AllProfile["snaplist"] = $SnapList[items];
+
+  // Update any snapshots that might be in progress
+  $UpdatedStatuses = dbUpdateSnapshotStatuses();
+  if ( count($UpdatedStatuses["items"]) == 0 ) {
+    $UpdatedStatuses = array();
+  }
+  else {
+    $UpdatedStatuses = $UpdatedStatuses["items"][0];
+  }
+  $AllProfile["updatedstatuses"] = $UpdatedStatuses;
+  
+  // Return a list of any running snapshots
+//  $RunningSnapshots = dbGetSnapshotsByStatus("rsyn");
+//  $AllProfile["runningsnapshots"] = $RunningSnapshots[items];
 
   $dirArr = array();
   $dirArr["filetype"] = "-";
@@ -2684,10 +2834,6 @@ function selectSnapshotsList(){
 function removeTimestampPunct($TimeStamp) {
   return str_replace(".", "_", str_replace(":", "", str_replace("T", "_", str_replace("-", "", $TimeStamp))));
 }
-
-
-
-
 
 function buildRsyncSsh($SshOpt) {
   
@@ -2717,70 +2863,46 @@ function takeSnapshot() {
   $rtn["message"] = "No active snapshot configuration found";
   $rtn["items"] = array();
 
-  // Get all Profile records
-  $ProfileArr = dbSelectProfilesEnabledList();
+  // Get the TimeStampDir to save everything in
+  $dbTimeStampRes = dbGetTimeStampDirStr();
+  if ($dbTimeStampRes["result"] == 'ok') {
+    $dbTimeStampDirStr = $dbTimeStampRes["items"][0];
 
-  // For each profile
-  if ($ProfileArr["result"] == "ok") {
-    if (count($ProfileArr["items"]) > 0) {
-      
-      // Get the TimeStampDir to save everything in
-      $dbTimeStampRes = dbGetTimeStampDirStr();
-      if ($dbTimeStampRes["result"] == 'ok') {
-        $dbTimeStampDirStr = $dbTimeStampRes["items"][0];
+    // Get all Profile records
+    $ProfileArr = dbSelectProfilesEnabledList();
+
+    // For each profile
+    if ($ProfileArr["result"] == "ok") {
+      if (count($ProfileArr["items"]) > 0) {
+
+        // Now execute the code to take a snapshot
+        // Here the $rtn is returned as the snapshots are taken asynchronously
+        $rtn = dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr);
 
         $rtn["result"] = "ok";
         $rtn["message"] = "Snapshot started";
         $rtn["timestamp"] = $dbTimeStampDirStr;
-
-        // Return a new snapshot list to save making an extra ajax callback
-        $rtn["snaplist"] = dbSelectSnapshotsList();
-    
-        // Send headers hack to the browser, to avoid a timeout
-        ignore_user_abort(true);
-        set_time_limit(0);
-
-        ob_start();
-        // Do initial processing here
-        echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
-        // Disable compression (in case content length is compressed).
-        header("Content-Encoding: none");
-        header('Content-Length: '.ob_get_length());
-        header('Connection: close');
-        ob_end_flush();
-        ob_flush();
-        flush();
-
-        // Close current session (if it exists).
-        if(session_id()) session_write_close();
-
-        // Now execute the code to take a snapshot
-        // Here the $rtn is a dummy variable
-        $rtn = dbTakeSnapshot($ProfileArr, $dbTimeStampDirStr);
-        // Kill the thread
-        die;
       }
       else {
         $rtn["result"] = "ko";
-        $rtn["message"] = "Could not get a snapshot timestamp";
-
-        // Return a new snapshot list to save making an extra ajax callback
-        $rtn["snaplist"] = dbSelectSnapshotsList();
+        $rtn["message"] = "Could not get any profile items";
       }
     }
     else {
       $rtn["result"] = "ok";
       $rtn["message"] = "No enabled snapshot profiles found";
-      // Return a new snapshot list to save making an extra ajax callback
-      $rtn["snaplist"] = dbSelectSnapshotsList();
     }
+  }
+  else {
+    $rtn["result"] = "ok";
+    $rtn["message"] = "No timestamp directory string could be made";
   }
   
   // Return to the client
+  // Return a new snapshot list to save making an extra ajax callback
+  $rtn["snaplist"] = dbSelectSnapshotsList();
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
-
-
 
 function deleteSnapshot() {
   $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
@@ -2834,23 +2956,56 @@ function selectSnapshotData() {
   $rtn["snapshot"] = dbSelectSnapshotForId($SnapshotId);
 
   // Get the initial directory listing of the first snapshot backup path
-  
+
+
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
-function getSnapshotStatus() {
+function getSnapshotStatusForId() {
   // Gets the status of the snapshot
   $rtn = array();
   $SnapshotId = SQLite3::escapeString($_POST["snapshotid"]);
 
-  // Get the Snapshot backup paths
-  $rtn["status"] = dbGetSnapshotStatus($SnapshotId);
+  // Get the Snapshot Status
+  $rtn["snapshotstatus"] = dbGetSnapshotStatusForId($SnapshotId);
 
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
 function updateSnapshotStatuses(){
   $rtn = dbUpdateSnapshotStatuses();
+  if ( count($rtn["items"]) == 0 ) {
+    $rtn = array();
+  }
+  else {
+    $rtn = $rtn["items"][0];
+  }
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+/*
+function getCurrentSnapshotsStatus() {
+
+  $rtn = array();
+  // rsyn - rsync; snap - snapshot completed; psac - post-snapshot actions
+  $CurrentSnapshots = dbGetSnapshotsByStatus("rsyn","snap","psac");
+
+  foreach($SnapshotsInProgres as $Snapshots) {
+    // Get the Snapshots in progress
+    $rtn["currentsnapshotsstatus"] = dbSelectSnapshotRecordForId($SnapshotId);
+  }
+
+  // Return the snapshots in motion
+  echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
+}
+*/
+function postSnapshotActions() {
+  // Called by the CURL command
+  $rtn = array();
+  $rtn["result"] = "ok";
+  $rtn["message"] = "Post Snapshot Actions called";
+  $rtn["items"] = array();
+  
+  dbPostSnapshotActions();
   echo json_encode($rtn, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK);
 }
 
@@ -2937,11 +3092,16 @@ switch ($WhatToRun) {
   case "selectsnapshotdata":
     selectSnapshotData();
     break;
-  case "getsnapshotstatus":
-    getSnapshotStatus();
-    break;
-  case "":
+//  case "getsnapshotstatus":
+// Not called, as yet
+//    getSnapshotStatusForId();
+//    break;
+  case "updatesnapshotstatuses":
+    // Not called as yet
     updateSnapshotStatuses();
+    break;
+  case "postSnapshotActions":
+    postSnapshotActions();
     break;
   default:
     writeErrorMsg();

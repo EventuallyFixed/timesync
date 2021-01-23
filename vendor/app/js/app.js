@@ -12,10 +12,131 @@ BrowseSettings["ShowHidden"] = 0;
 var init = true;
 var snapshotid = "";
 var globallink = true;
+var snapcheckint = null;
 
 // OnLoadsaveto
 $(document).ready(function() {
 
+  // On change of Profile ID, get and apply the new settings to screen
+  $("#selectprofile").change(function(){
+
+    // Set screen initialisation to true
+    init=true;
+
+    // Enable or disable delete
+    if ($(this).find('option:selected').attr("candel") == 1) { $("#delprofilebtn").removeAttr("disabled"); }
+    else { $("#delprofilebtn").attr("disabled","disabled"); }
+
+    var pdata = new Object();
+    pdata.fn = "selectfullprofile";
+    pdata.profileid = $("#selectprofile").val();
+    pdata.dir       = $("#filedirinput").val();
+
+    $.ajax('./vendor/app/php/app.php',
+    {
+      dataType: 'json',
+      type: 'POST',
+      data: pdata,
+      success: function (data,status,xhr) {
+        console.log(data);
+
+        // Refresh the side menu
+        BuildSideMenu(data.snaplist);
+        
+        // Show the snapshotnewbtn if there are no snapshots in progress
+//        if (data.runningsnapshots.length == 0) $("#snapshotnewbtn").fadeIn();
+        if (data.updatedstatuses.length == 0) $("#snapshotnewbtn").fadeIn();
+        else {
+          // Create a JS setInterval(myFunction, milliseconds) call here, to 
+          // periodically check on the status of the running snapshot.  When 
+          // the running snapshot is complete, fadeIn the button again.
+          // The setInterval also needs to be called on the onClick event of
+          // the 'snapshotnewbtn' button.
+          snapcheckint = setInterval(checkSnapshotProgress, 2000);
+        }
+
+        // Refresh the files list, to show the files of the directory bar
+        var actiontype = "show";
+        if (data.showfiles.length > 0) {
+          $.each(data.showfiles, function (i, item) {
+            FLine = new Object();
+            FLine.cnt = i;
+            FLine.actionType = actiontype;
+            FLine.fileType = "-";
+            FLine.item = item;
+            FLine.celt = $("#"+actiontype+"filebrowsebody");
+            // Insert the folder up / back icon, and location
+            createFileLine(FLine);
+          });
+        }
+
+        // Reset all fields of the Settings
+        resetSettings();
+
+        // Set main settings elements
+        if (data.profilesettings != null) {
+          if (data.profilesettings.length > 0) {
+            $.each(data.profilesettings, function (i, item) {
+
+              var elt = $("#"+item.setkey);
+
+              switch (elt.attr('type')) {
+                case "checkbox":
+                case "radio":
+                  if (item.setval == 1) elt.prop("checked", true);
+                  break;
+                default:
+                  elt.val(item.setval);
+              }
+            });
+          }
+        }
+
+        // Include Files/Folders
+        // Backup Paths
+        // Remove current items
+        if (data.profileinclude.length > 0) {
+          insertIncludeItems(data.profileinclude);
+        }
+
+        // Exclude Files/Folders
+        // Remove current items
+        if (data.profileexclude.length > 0) {
+          insertExcludeItems(data.profileexclude);
+        }
+
+        // Trigger a change of those elements having dependent elements
+        $("#settingsdeleteolderthan").trigger("change");
+        $("#settingsdeletefreespacelessthan").trigger("change");
+        $("#settingsdeleteinodeslessthan").trigger("change");
+        $("#settingssmartkeepallfordays").trigger("change");
+        $("#settingssmartkeeponeperdayfordays").trigger("change");
+        $("#settingssmartkeeponeperdayforweeks").trigger("change");
+        $("#settingssmartkeeponepermonthformonths").trigger("change");
+        $("#settingssmartremove").trigger("change");
+        $("#selectmode").trigger("change");
+        SetSettingsFullSnapshotPath();
+        showScheduleElements();
+
+        // If there's a Private Key, hide the upload & show the private key fieldset
+        $("#privatekeyuploadgroup").css("display", "none");
+        $("#privatekeygroup").css("display", "none");
+        if ( $("#privatekey").val() ) {
+          $("#privatekeygroup").fadeIn();
+        }
+        else {
+          $("#privatekeyuploadgroup").fadeIn();
+        }
+
+        // Set screen initialisation to false
+        if (init==true) init=false;
+      },
+      error: function (jqXhr, textStatus, errorMessage) {
+        console.log('Error: ' + errorMessage);
+      }
+    });
+  });
+  
   $("#homelink").click(function(){
     var pdata = new Object();
     pdata.fn = "profiles_list";
@@ -33,7 +154,6 @@ $(document).ready(function() {
       }
     });
   });
-
 
   // Update a settings value on leaving the field
   $(".autoupd").change(function(){
@@ -108,109 +228,6 @@ $(document).ready(function() {
         }
       });
     }
-  });
-
-  // On change of Profile ID, get and apply the new settings to screen
-  $("#selectprofile").change(function(){
-
-    // Enable or disable delete
-    if ($(this).find('option:selected').attr("candel") == 1) { $("#delprofilebtn").removeAttr("disabled"); }
-    else { $("#delprofilebtn").attr("disabled","disabled"); }
-
-    var pdata = new Object();
-    pdata.fn = "selectfullprofile";
-    pdata.profileid = $("#selectprofile").val();
-    pdata.dir       = $("#filedirinput").val();
-
-    $.ajax('./vendor/app/php/app.php',
-    {
-      dataType: 'json',
-      type: 'POST',
-      data: pdata,
-      success: function (data,status,xhr) {
-        console.log(data);
-
-       // Refresh the side menu
-        BuildSideMenu(data.snaplist);
-        
-        // Refresh the files list, to show the files of the directory bar
-        var actiontype = "show";
-        if (data.showfiles.length > 0) {
-          $.each(data.showfiles, function (i, item) {
-            FLine = new Object();
-            FLine.cnt = i;
-            FLine.actionType = actiontype;
-            FLine.fileType = "-";
-            FLine.item = item;
-            FLine.celt = $("#"+actiontype+"filebrowsebody");
-            // Insert the folder up / back icon, and location
-            createFileLine(FLine);
-          });
-        }
-
-        // Reset all fields of the Settings
-        resetSettings();
-
-        // Set main settings elements
-        if (data.profilesettings.length > 0) {
-          $.each(data.profilesettings, function (i, item) {
-
-            var elt = $("#"+item.setkey);
-
-            switch (elt.attr('type')) {
-              case "checkbox":
-              case "radio":
-                if (item.setval == 1) elt.prop("checked", true);
-                break;
-              default:
-                elt.val(item.setval);
-            }
-          });
-        }
-
-        // Include Files/Folders
-        // Backup Paths
-        // Remove current items
-        if (data.profileinclude.length > 0) {
-          insertIncludeItems(data.profileinclude);
-        }
-
-        // Exclude Files/Folders
-        // Remove current items
-        if (data.profileexclude.length > 0) {
-          insertExcludeItems(data.profileexclude);
-        }
-
-        // Trigger a change of those elements having dependent elements
-        $("#settingsdeleteolderthan").trigger("change");
-        $("#settingsdeletefreespacelessthan").trigger("change");
-        $("#settingsdeleteinodeslessthan").trigger("change");
-        $("#settingssmartkeepallfordays").trigger("change");
-        $("#settingssmartkeeponeperdayfordays").trigger("change");
-        $("#settingssmartkeeponeperdayforweeks").trigger("change");
-        $("#settingssmartkeeponepermonthformonths").trigger("change");
-        $("#settingssmartremove").trigger("change");
-        $("#selectmode").trigger("change");
-        SetSettingsFullSnapshotPath();
-        showScheduleElements();
-
-        // If there's a Private Key, hide the upload & show the private key fieldset
-        $("#privatekeyuploadgroup").css("display", "none");
-        $("#privatekeygroup").css("display", "none");
-        if ( $("#privatekey").val() ) {
-          $("#privatekeygroup").fadeIn();
-        }
-        else {
-          $("#privatekeyuploadgroup").fadeIn();
-        }
-
-        // Set screen initialisation to false
-        if (init==true) init=false;
-      },
-      error: function (jqXhr, textStatus, errorMessage) {
-        console.log('Error: ' + errorMessage);
-      }
-    });
   });
 
   $("#selectmode").change(function(){
@@ -893,6 +910,36 @@ $(document).ready(function() {
 
 // ============================================================================================================================================
 
+function Init() {
+
+  var pdata = new Object();
+  pdata.fn = "init";
+
+  // Provide feedback to the user
+  var spinelt = createSpinner('showfilebrowsebody','large');
+  spinelt.css('top','50px');
+  spinelt.css('left','350px');
+
+  $.ajax('./vendor/app/php/app.php',
+  {
+    dataType: 'json',
+    type: 'POST',
+    data: pdata,
+    success: function (data,status,xhr) {
+      console.log(data);
+
+      // Get the Profiles select built
+      BuildProfilesSelect("");
+
+      spinelt.remove();
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+      console.log('Error: ' + errorMessage);
+      spinelt.remove();
+    }
+  });
+}
+
 function clearIncludeExcludeItemsBrowse(type) {
   $("#"+type+"filescontainer").find("."+type+"item").remove();
 }
@@ -1315,38 +1362,6 @@ function insertIncludeExcludeRow(ieObj) {
 }
 
 
-function Init() {
-
-  var pdata = new Object();
-  pdata.fn = "init";
-
-  // Provide feedback to the user
-  var spinelt = createSpinner('showfilebrowsebody','large');
-  spinelt.css('top','50px');
-  spinelt.css('left','350px');
-
-  $.ajax('./vendor/app/php/app.php',
-  {
-    dataType: 'json',
-    type: 'POST',
-    data: pdata,
-    success: function (data,status,xhr) {
-      console.log(data);
-
-      // Get the Profiles select built
-      BuildProfilesSelect("");
-
-      spinelt.remove();
-    },
-    error: function (jqXhr, textStatus, errorMessage) {
-      console.log('Error: ' + errorMessage);
-      spinelt.remove();
-    }
-  });
-
-}
-
-
 function BuildProfilesSelect(selId) {
 
   // Get the Profiles List for the DDL
@@ -1485,6 +1500,9 @@ function BuildSideMenu(data) {
   // Take Snapshot
   $("#snapshotnewbtn").click(function(){
     event.stopPropagation();
+    
+    // Hide the button to prevent double clicks
+    $("#snapshotnewbtn").css("display","none");
 
     // Request a new snapshot to be taken
     var pdata = new Object();
@@ -1492,7 +1510,7 @@ function BuildSideMenu(data) {
     pdata.profileid = $('#selectprofile').val();
 
     // Provide feedback to the user
-    var spinelt = createSpinner('snapshotssidemenu','large');
+    var spinelt = createSpinner('snapshotsheading','large');
     spinelt.css('top','100px');
     spinelt.css('left','50px');
 
@@ -1505,8 +1523,16 @@ function BuildSideMenu(data) {
         console.log(data);
         spinelt.remove();
 
-        if (data.result == "ok") BuildSideMenu(data.snaplist.items);
-        else alert(data.message);
+        if (data.result == "ok") {
+          // Rebuild the side menu
+          BuildSideMenu(data.snaplist.items);
+          // Periodically check the status of the snapshot
+          snapcheckint = setInterval(checkSnapshotProgress, 2000);
+        }
+        else {
+          // Some error taking the snapshot
+          alert(data.message);
+        }
       },
       error: function (jqXhr, textStatus, errorMessage) {
         console.log('Error: ' + errorMessage);
@@ -2062,4 +2088,55 @@ function insertExcludeItems(data) {
 
     });
   }  
+}
+
+function checkSnapshotProgress() {
+  
+  // Callback to update snapshot progress
+  $("#statusbar").text("");
+  
+  // Get the Profiles List for the DDL
+  var pdata = new Object();
+  pdata.fn = "updatesnapshotstatuses";
+//  pdata.profileid = $('#selectprofile').val();
+
+  // Provide feedback to the user
+//  var spinelt = createSpinner('selectprofilediv','');
+//  spinelt.css('top','10px');
+//  spinelt.css('left','100px');
+
+  $.ajax('./vendor/app/php/app.php',
+  {
+    dataType: 'json',
+    type: 'POST',
+    data: pdata,
+    success: function (data,status,xhr) {
+      console.log(data);
+
+      // Add saved items
+      if (data.length == 0) {
+//        console.log("There are no snapshots in progress." );
+        // Kill the interval
+        clearInterval(snapcheckint);
+        // Fade in the Take Snapshot button
+        $("#snapshotnewbtn").fadeIn();
+//        console.log("Completed for no snapshots in progress." );
+        $("#statusbar").text("No snapshots are in progress");
+      }
+      else {
+//        console.log("There are "+data.length+" snapshots in progress." );
+        $("#statusbar").text("Snapshot in progress");
+//        $.each(data.items, function (i, item) {
+//        });
+//        spinelt.remove();
+        
+      }
+
+    },
+    error: function (jqXhr, textStatus, errorMessage) {
+      console.log('Error: ' + errorMessage);
+      spinelt.remove();
+    }
+  });  
+
 }
